@@ -19,210 +19,387 @@
             --success: #10B981;
             --danger: #EF4444;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--gray-50);
-            color: var(--gray-900);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); }
         .container { display: flex; min-height: 100vh; }
-        .sidebar {
-            width: 260px;
-            background: var(--white);
-            border-right: 1px solid var(--gray-200);
-            padding: 24px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-        .logo h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            padding: 0 24px 32px;
-            border-bottom: 1px solid var(--gray-200);
-            margin-bottom: 16px;
-        }
-        .nav-link {
-            display: block;
-            padding: 12px 24px;
-            color: var(--gray-700);
-            cursor: pointer;
-            background: none;
-            border: none;
-            width: 100%;
-            text-align: left;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
+        .sidebar { width: 260px; background: var(--white); border-right: 1px solid var(--gray-200); padding: 24px 0; position: fixed; height: 100vh; overflow-y: auto; }
+        .logo h1 { font-size: 24px; font-weight: 700; color: var(--primary); padding: 0 24px 32px; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
+        .nav-link { display: block; padding: 12px 24px; color: var(--gray-700); cursor: pointer; background: none; border: none; width: 100%; text-align: left; font-weight: 500; transition: all 0.2s; }
         .nav-link:hover { background: var(--gray-50); color: var(--primary); }
         .nav-link.active { background: var(--primary); color: var(--white); }
         .main { margin-left: 260px; flex: 1; }
-        .header {
-            background: var(--white);
-            border-bottom: 1px solid var(--gray-200);
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .header { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
         .language-selector { display: flex; gap: 8px; }
-        .lang-btn {
-            padding: 8px 12px;
-            border: 1px solid var(--gray-200);
-            background: var(--white);
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: 600;
-        }
+        .lang-btn { padding: 8px 12px; border: 1px solid var(--gray-200); background: var(--white); cursor: pointer; border-radius: 4px; font-weight: 600; }
         .lang-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
         .content { padding: 32px; }
-        .card {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
+        .card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
         .card-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-        .kpis {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-        .kpi {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-        }
+        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+        .kpi { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; text-align: center; }
         .kpi-value { font-size: 32px; font-weight: 700; color: var(--primary); }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--gray-700); }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-200);
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-        }
+        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; font-family: inherit; }
         textarea { min-height: 100px; resize: vertical; }
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            background: var(--primary);
-            color: var(--white);
-        }
+        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--primary); color: var(--white); }
         .btn:hover { background: var(--primary-dark); }
         .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
         .btn-block { width: 100%; margin-top: 16px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th { padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--gray-200); background: var(--gray-50); }
         td { padding: 12px; border-bottom: 1px solid var(--gray-200); }
         .section { display: none; }
         .section.active { display: block; }
-        @media (max-width: 768px) {
-            .sidebar { width: 0; transform: translateX(-100%); }
-            .main { margin-left: 0; }
-        }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: #D1FAE5; color: #065F46; }
+        .badge-warning { background: #FEF3C7; color: #92400E; }
+        .badge-danger { background: #FEE2E2; color: #991B1B; }
+        .loading { text-align: center; color: var(--gray-500); padding: 20px; }
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
+        .alert-success { background: #D1FAE5; color: #065F46; }
+        .alert-error { background: #FEE2E2; color: #991B1B; }
+
+        /* Login */
+        #loginScreen { display: none; position: fixed; inset: 0; background: var(--gray-50); z-index: 1000; align-items: center; justify-content: center; }
+        #loginScreen.visible { display: flex; }
+        .login-box { background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; }
+        .login-box h2 { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .login-box p { color: var(--gray-500); margin-bottom: 24px; font-size: 14px; }
+
+        @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar">
-            <div class="logo"><h1>📋 AutoCita</h1></div>
-            <button class="nav-link active" onclick="showSection('dashboard')">Dashboard</button>
-            <button class="nav-link" onclick="showSection('pacientes')">Pacientes</button>
-            <button class="nav-link" onclick="showSection('expedientes')">Expedientes</button>
-            <button class="nav-link" onclick="showSection('horarios')">Horarios</button>
-            <button class="nav-link" onclick="showSection('citas')">Citas</button>
-            <button class="nav-link" onclick="showSection('reportes')">Reportes</button>
-            <button class="nav-link" onclick="showSection('settings')">Settings</button>
-            <button class="nav-link" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
-        </aside>
-        <div class="main">
-            <header class="header">
-                <h2>AutoCita</h2>
-                <div class="language-selector">
-                    <button class="lang-btn active" onclick="changeLang('es')">ES</button>
-                    <button class="lang-btn" onclick="changeLang('en')">EN</button>
-                    <button class="lang-btn" onclick="changeLang('pt')">PT</button>
-                </div>
-            </header>
-            <div class="content">
-                <section class="section active" id="dashboard">
-                    <h2 style="margin-bottom: 24px;">Dashboard</h2>
-                    <div class="kpis">
-                        <div class="kpi"><div>Citas Hoy</div><div class="kpi-value">0</div></div>
-                        <div class="kpi"><div>Pacientes</div><div class="kpi-value">2</div></div>
-                        <div class="kpi"><div>Ingresos</div><div class="kpi-value">$0</div></div>
-                        <div class="kpi"><div>Doctores</div><div class="kpi-value">3</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Próximas Citas</div>
-                        <table>
-                            <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th></tr></thead>
-                            <tbody><tr><td colspan="4" style="text-align: center;">No hay citas</td></tr></tbody>
-                        </table>
-                    </div>
-                </section>
-                <section class="section" id="pacientes">
-                    <h2 style="margin-bottom: 24px;">Pacientes</h2>
-                    <div class="card">
-                        <div class="card-title">Agregar Paciente</div>
-                        <form id="formPaciente">
-                            <div class="form-group"><label>Nombre</label><input type="text" required></div>
-                            <div class="form-group"><label>Teléfono</label><input type="tel" required></div>
-                            <div class="form-group"><label>Email</label><input type="email" required></div>
-                            <button type="submit" class="btn btn-block">Agregar</button>
-                        </form>
-                    </div>
-                </section>
-                <section class="section" id="expedientes">
-                    <h2 style="margin-bottom: 24px;">Expedientes Médicos</h2>
-                    <div class="card"><div class="card-title">Expediente Médico</div><p>Selecciona un paciente para ver expediente</p></div>
-                </section>
-                <section class="section" id="horarios">
-                    <h2 style="margin-bottom: 24px;">Horarios</h2>
-                    <div class="card"><div class="card-title">Doctores Disponibles</div><p>Dr. Juan García - Medicina General: 09:00 - 17:00</p></div>
-                </section>
-                <section class="section" id="citas">
-                    <h2 style="margin-bottom: 24px;">Citas</h2>
-                    <div class="card"><div class="card-title">Crear Cita</div><p>Sistema de citas disponible</p></div>
-                </section>
-                <section class="section" id="reportes">
-                    <h2 style="margin-bottom: 24px;">Reportes</h2>
-                    <div class="card"><div class="card-title">Resumen</div><p>Reportes y análisis</p></div>
-                </section>
-                <section class="section" id="settings">
-                    <h2 style="margin-bottom: 24px;">Configuración</h2>
-                    <div class="card"><div class="card-title">Perfil</div><p>Configura tu clínica</p></div>
-                </section>
+
+<!-- Login -->
+<div id="loginScreen" class="visible">
+    <div class="login-box">
+        <h2>📋 AutoCita</h2>
+        <p>Ingresá con tu cuenta de clínica</p>
+        <div id="loginAlert"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="email@clinica.com"></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+        <button class="btn btn-block" onclick="login()">Ingresar</button>
+    </div>
+</div>
+
+<!-- App -->
+<div class="container" id="appContainer" style="display:none">
+    <aside class="sidebar">
+        <div class="logo"><h1>📋 AutoCita</h1></div>
+        <button class="nav-link active" onclick="showSection('dashboard', this)">Dashboard</button>
+        <button class="nav-link" onclick="showSection('pacientes', this)">Pacientes</button>
+        <button class="nav-link" onclick="showSection('citas', this)">Citas</button>
+        <button class="nav-link" onclick="showSection('doctores', this)">Doctores</button>
+        <button class="nav-link" onclick="showSection('expedientes', this)">Expedientes</button>
+        <button class="nav-link" onclick="showSection('settings', this)">Settings</button>
+        <button class="nav-link" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
+    </aside>
+    <div class="main">
+        <header class="header">
+            <h2 id="headerClinica">AutoCita</h2>
+            <div class="language-selector">
+                <button class="lang-btn active" onclick="changeLang('es', this)">ES</button>
+                <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
+                <button class="lang-btn" onclick="changeLang('pt', this)">PT</button>
             </div>
+        </header>
+        <div class="content">
+
+            <!-- Dashboard -->
+            <section class="section active" id="dashboard">
+                <h2 style="margin-bottom: 24px;">Dashboard</h2>
+                <div class="kpis">
+                    <div class="kpi"><div>Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
+                    <div class="kpi"><div>Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
+                    <div class="kpi"><div>Pacientes</div><div class="kpi-value" id="kpiPacientes">—</div></div>
+                    <div class="kpi"><div>Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Próximas Citas</div>
+                    <table>
+                        <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+                        <tbody id="tablaCitasProximas"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Pacientes -->
+            <section class="section" id="pacientes">
+                <h2 style="margin-bottom: 24px;">Pacientes</h2>
+                <div class="card">
+                    <div class="card-title">Agregar Paciente</div>
+                    <div id="alertPaciente"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="pNombre" placeholder="Juan Pérez"></div>
+                    <div class="form-group"><label>Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="pEmail" placeholder="juan@email.com"></div>
+                    <div class="form-group"><label>Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
+                    <button class="btn btn-block" onclick="crearPaciente()">Agregar Paciente</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">Lista de Pacientes</div>
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Cédula</th><th>Registrado</th></tr></thead>
+                        <tbody id="tablaPacientes"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Citas -->
+            <section class="section" id="citas">
+                <h2 style="margin-bottom: 24px;">Citas</h2>
+                <div class="card">
+                    <div class="card-title">Todas las Citas</div>
+                    <table>
+                        <thead><tr><th>Paciente ID</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <tbody id="tablaCitas"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Doctores -->
+            <section class="section" id="doctores">
+                <h2 style="margin-bottom: 24px;">Doctores</h2>
+                <div class="card">
+                    <div class="card-title">Doctores Disponibles</div>
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Estado</th></tr></thead>
+                        <tbody id="tablaDoctores"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Expedientes -->
+            <section class="section" id="expedientes">
+                <h2 style="margin-bottom: 24px;">Expedientes</h2>
+                <div class="card"><div class="card-title">Expedientes Médicos</div><p style="color:var(--gray-500)">Próximamente — módulo de expedientes clínicos</p></div>
+            </section>
+
+            <!-- Settings -->
+            <section class="section" id="settings">
+                <h2 style="margin-bottom: 24px;">Configuración</h2>
+                <div class="card">
+                    <div class="card-title">Tu Clínica</div>
+                    <div id="settingsInfo" class="loading">Cargando...</div>
+                </div>
+            </section>
+
         </div>
     </div>
-    <script>
-        function changeLang(lang) {
-            alert('Idioma: ' + lang.toUpperCase());
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+</div>
+
+<script>
+const API = 'https://autocita-production.up.railway.app';
+const getToken = () => localStorage.getItem('autocita_token');
+const setToken = (t) => localStorage.setItem('autocita_token', t);
+const authH = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` });
+
+async function apiFetch(path, opts = {}) {
+    const res = await fetch(API + path, { headers: authH(), ...opts });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    return data;
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    const alertEl = document.getElementById('loginAlert');
+    try {
+        const data = await fetch(API + '/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass })
+        });
+        const json = await data.json();
+        if (!data.ok) throw new Error(json.error || 'Credenciales inválidas');
+        const token = json.session?.access_token || json.session?.session?.access_token;
+        if (!token) throw new Error('No se recibió token');
+        setToken(token);
+        showApp();
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('autocita_token');
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loginScreen').classList.add('visible');
+}
+
+function showApp() {
+    document.getElementById('loginScreen').classList.remove('visible');
+    document.getElementById('appContainer').style.display = 'flex';
+    loadAll();
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────────
+async function loadAll() {
+    loadDashboard();
+    loadPacientes();
+    loadCitas();
+    loadDoctores();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDashboard() {
+    try {
+        const [dashboard, doctores] = await Promise.all([
+            apiFetch('/dashboard'),
+            apiFetch('/doctores')
+        ]);
+        document.getElementById('kpiCitasTotal').textContent = dashboard.citas ?? '—';
+        document.getElementById('kpiPacientes').textContent = dashboard.pacientes ?? '—';
+        document.getElementById('kpiDoctores').textContent = doctores.length ?? '—';
+
+        // Citas de hoy
+        const citas = await apiFetch('/citas');
+        const hoy = new Date().toISOString().split('T')[0];
+        const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
+        document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
+
+        // Próximas citas (primeras 5)
+        const proximas = citas.filter(c => c.estado !== 'cancelada').slice(0, 5);
+        const tbody = document.getElementById('tablaCitasProximas');
+        if (!proximas.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay citas próximas</td></tr>';
+        } else {
+            tbody.innerHTML = proximas.map(c => {
+                const fecha = c.fecha ? new Date(c.fecha) : null;
+                const fechaStr = fecha ? fecha.toLocaleDateString('es-CR') : '—';
+                const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const badge = estadoBadge(c.estado);
+                return `<tr><td>${c.paciente_id?.slice(0,8) || '—'}...</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
+            }).join('');
         }
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+    } catch (e) { console.error('Dashboard:', e); }
+}
+
+// ── PACIENTES ─────────────────────────────────────────────────────
+async function loadPacientes() {
+    try {
+        const data = await apiFetch('/pacientes');
+        const tbody = document.getElementById('tablaPacientes');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay pacientes aún</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td><strong>${p.nombre || '—'}</strong></td>
+                    <td>${p.telefono || '—'}</td>
+                    <td>${p.cedula || '—'}</td>
+                    <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('es-CR') : '—'}</td>
+                </tr>`).join('');
         }
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/';
+    } catch (e) { console.error('Pacientes:', e); }
+}
+
+async function crearPaciente() {
+    const alertEl = document.getElementById('alertPaciente');
+    try {
+        await apiFetch('/pacientes', {
+            method: 'POST',
+            body: JSON.stringify({
+                nombre: document.getElementById('pNombre').value,
+                telefono: document.getElementById('pTelefono').value,
+                email: document.getElementById('pEmail').value,
+                cedula: document.getElementById('pCedula').value,
+            })
+        });
+        alertEl.innerHTML = '<div class="alert alert-success">Paciente agregado ✓</div>';
+        ['pNombre','pTelefono','pEmail','pCedula'].forEach(id => document.getElementById(id).value = '');
+        loadPacientes();
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+// ── CITAS ─────────────────────────────────────────────────────────
+async function loadCitas() {
+    try {
+        const data = await apiFetch('/citas');
+        const tbody = document.getElementById('tablaCitas');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">No hay citas aún</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(c => {
+                const fecha = c.fecha ? new Date(c.fecha) : null;
+                const fechaStr = fecha ? fecha.toLocaleDateString('es-CR') : '—';
+                const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const badge = estadoBadge(c.estado);
+                const btnCancelar = c.estado !== 'cancelada'
+                    ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="cancelarCita('${c.id}')">Cancelar</button>`
+                    : '—';
+                return `<tr>
+                    <td>${c.paciente_id?.slice(0,8) || '—'}...</td>
+                    <td>${fechaStr}</td>
+                    <td>${horaStr}</td>
+                    <td>${c.calendar_id || '—'}</td>
+                    <td>${badge}</td>
+                    <td>${btnCancelar}</td>
+                </tr>`;
+            }).join('');
         }
-    </script>
+    } catch (e) { console.error('Citas:', e); }
+}
+
+async function cancelarCita(citaId) {
+    if (!confirm('¿Cancelar esta cita?')) return;
+    try {
+        await apiFetch('/cita/cancelar', {
+            method: 'POST',
+            body: JSON.stringify({ cita_id: citaId })
+        });
+        loadCitas();
+        loadDashboard();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── DOCTORES ──────────────────────────────────────────────────────
+async function loadDoctores() {
+    try {
+        const data = await apiFetch('/doctores');
+        const tbody = document.getElementById('tablaDoctores');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(d => `
+                <tr>
+                    <td><strong>${d.nombre}</strong></td>
+                    <td>${d.especialidad}</td>
+                    <td>${d.duracion_cita || 30} min</td>
+                    <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? 'Activo' : 'Inactivo'}</span></td>
+                </tr>`).join('');
+        }
+    } catch (e) { console.error('Doctores:', e); }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function estadoBadge(estado) {
+    const map = { pendiente: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
+    return `<span class="badge ${map[estado] || 'badge-warning'}">${estado || 'pendiente'}</span>`;
+}
+
+function showSection(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+function changeLang(lang, btn) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+if (getToken()) {
+    showApp();
+}
+</script>
 </body>
 </html>
