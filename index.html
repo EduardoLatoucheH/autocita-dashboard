@@ -197,9 +197,21 @@ const authH = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bea
 
 async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, { headers: authH(), ...opts });
+    if (res.status === 401) {
+        sessionExpired();
+        throw new Error('Sesión expirada');
+    }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error');
     return data;
+}
+
+function sessionExpired() {
+    localStorage.removeItem('autocita_token');
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loginScreen').classList.add('visible');
+    document.getElementById('loginAlert').innerHTML =
+        '<div class="alert alert-error">Tu sesión expiró. Ingresá de nuevo.</div>';
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────
@@ -242,6 +254,7 @@ async function loadAll() {
     loadPacientes();
     loadCitas();
     loadDoctores();
+    loadSettings();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -376,6 +389,29 @@ async function loadDoctores() {
                 </tr>`).join('');
         }
     } catch (e) { console.error('Doctores:', e); }
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────
+async function loadSettings() {
+    const infoEl = document.getElementById('settingsInfo');
+    try {
+        const clinica = await apiFetch('/clinica');
+        if (!clinica) {
+            infoEl.innerHTML = '<p style="color:var(--gray-500)">No se encontró información de la clínica</p>';
+            return;
+        }
+        document.getElementById('headerClinica').textContent = clinica.nombre || 'AutoCita';
+        infoEl.innerHTML = `
+            <div class="form-group"><label>Nombre</label><input type="text" value="${clinica.nombre || ''}" disabled></div>
+            <div class="form-group"><label>Teléfono</label><input type="text" value="${clinica.telefono || '—'}" disabled></div>
+            <div class="form-group"><label>Dirección</label><input type="text" value="${clinica.direccion || '—'}" disabled></div>
+            <div class="form-group"><label>Horario</label><input type="text" value="${clinica.horario || '—'}" disabled></div>
+            <div class="form-group"><label>Plan</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
+            <div class="form-group"><label>Estado</label><input type="text" value="${clinica.status || '—'}" disabled></div>
+        `;
+    } catch (e) {
+        infoEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
