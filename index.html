@@ -67,6 +67,12 @@
         .bloque-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .bloque-fila select { flex: 2; }
         .bloque-fila .hora-preview { flex: 1; font-size: 13px; color: var(--gray-500); white-space: nowrap; }
+        .cal-grid { display: grid; grid-template-columns: 56px repeat(7, minmax(110px, 1fr)); border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; min-width: 820px; }
+        .cal-head { background: var(--gray-50); padding: 8px 4px; text-align: center; font-size: 12px; font-weight: 700; border-bottom: 1px solid var(--gray-200); border-left: 1px solid var(--gray-200); }
+        .cal-time-col { position: relative; border-right: 1px solid var(--gray-200); background: var(--gray-50); }
+        .cal-time-label { position: absolute; right: 6px; transform: translateY(-50%); font-size: 11px; color: var(--gray-500); }
+        .cal-day-col { position: relative; border-left: 1px solid var(--gray-200); }
+        .cal-cita { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 2px 5px; font-size: 10.5px; color: #fff; overflow: hidden; line-height: 1.25; }
 
         /* Login */
         #loginScreen { display: none; position: fixed; inset: 0; background: var(--gray-50); z-index: 1000; align-items: center; justify-content: center; }
@@ -99,6 +105,7 @@
         <button class="nav-link active" onclick="showSection('dashboard', this)">Dashboard</button>
         <button class="nav-link" onclick="showSection('pacientes', this)">Pacientes</button>
         <button class="nav-link" onclick="showSection('citas', this)">Citas</button>
+        <button class="nav-link" onclick="showSection('calendario', this)">Calendario</button>
         <button class="nav-link" onclick="showSection('doctores', this)">Doctores</button>
         <button class="nav-link" onclick="showSection('expedientes', this)">Expedientes</button>
         <button class="nav-link" onclick="showSection('settings', this)">Settings</button>
@@ -190,6 +197,21 @@
                 </div>
             </section>
 
+            <section class="section" id="calendario">
+                <h2 style="margin-bottom: 24px;">Calendario</h2>
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <button class="btn" style="background:var(--gray-200);color:var(--gray-700);padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
+                            <strong id="calRangoSemana">—</strong>
+                            <button class="btn" style="background:var(--gray-200);color:var(--gray-700);padding:8px 14px" onclick="cambiarSemana(1)">→</button>
+                        </div>
+                        <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
+                    </div>
+                    <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
+                </div>
+            </section>
+
             <!-- Doctores -->
             <section class="section" id="doctores">
                 <h2 style="margin-bottom: 24px;">Doctores</h2>
@@ -205,7 +227,24 @@
             <!-- Expedientes -->
             <section class="section" id="expedientes">
                 <h2 style="margin-bottom: 24px;">Expedientes</h2>
-                <div class="card"><div class="card-title">Expedientes Médicos</div><p style="color:var(--gray-500)">Próximamente — módulo de expedientes clínicos</p></div>
+                <div class="card">
+                    <div class="card-title">Seleccionar paciente</div>
+                    <select id="expedientePaciente" onchange="loadExpediente()"><option value="">Elegir paciente...</option></select>
+                </div>
+                <div class="card" id="expedienteFormCard" style="display:none">
+                    <div class="card-title">Agregar nota</div>
+                    <div id="alertExpediente"></div>
+                    <div class="form-group"><label>Nota</label><textarea id="expedienteContenido" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
+                    <div class="form-group"><label>Medicamentos recetados (opcional)</label><input type="text" id="expedienteMedicamentos" placeholder="Ej: Acetaminofén 500mg cada 8h"></div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <button class="btn" style="flex:1" onclick="agregarNotaExpediente()">Guardar nota</button>
+                        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-500);cursor:not-allowed" disabled title="Próximamente — grabación + transcripción automática">🎤 Nota de voz (próximamente)</button>
+                    </div>
+                </div>
+                <div class="card" id="expedienteListaCard" style="display:none">
+                    <div class="card-title">Historial</div>
+                    <div id="expedienteLista"></div>
+                </div>
             </section>
 
             <!-- Settings -->
@@ -229,8 +268,111 @@ const authH = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bea
 
 let doctoresCache = [];
 let pacientesCache = [];
+let citasCache = [];
 let doctoresSeleccionados = []; // ordered doctor ids para el form de Agregar Paciente
 let bloqueFilasDoctores = [];   // ordered doctor ids para Cita en bloque
+let currentWeekStart = getMonday(new Date());
+
+const DOCTOR_COLORS = ['#2D6A4F','#1D4ED8','#B45309','#9D174D','#0E7490','#6D28D9','#B91C1C','#15803D'];
+const CAL_START_HOUR = 7;
+const CAL_END_HOUR = 19;
+const CAL_PX_PER_MIN = 1;
+
+function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}
+
+function isSameDay(a, b) {
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function colorForDoctor(id) {
+    if (!id) return '#9CA3AF';
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    return DOCTOR_COLORS[Math.abs(hash) % DOCTOR_COLORS.length];
+}
+
+function cambiarSemana(delta) {
+    currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
+    renderCalendar();
+}
+
+function renderCalendarLeyenda() {
+    const el = document.getElementById('calLeyenda');
+    if (!el) return;
+    el.innerHTML = doctoresCache.map(d => `
+        <span style="display:flex;align-items:center;gap:5px">
+            <span style="width:10px;height:10px;border-radius:3px;background:${colorForDoctor(d.id)};display:inline-block"></span>
+            ${d.nombre}
+        </span>
+    `).join('');
+}
+
+function renderCalendar() {
+    const gridEl = document.getElementById('calGrid');
+    const rangoEl = document.getElementById('calRangoSemana');
+    if (!gridEl || !rangoEl) return;
+
+    const dias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(currentWeekStart);
+        d.setDate(d.getDate() + i);
+        weekDates.push(d);
+    }
+
+    rangoEl.textContent = `${weekDates[0].toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })} – ${weekDates[6].toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+
+    const totalMinutos = (CAL_END_HOUR - CAL_START_HOUR) * 60;
+    const colHeight = totalMinutos * CAL_PX_PER_MIN;
+
+    let html = `<div class="cal-head"></div>`;
+    weekDates.forEach((d, i) => {
+        const hoy = isSameDay(d, new Date());
+        html += `<div class="cal-head" style="${hoy ? 'color:var(--primary)' : ''}">${dias[i]}<br>${d.getDate()}</div>`;
+    });
+
+    let timeColHtml = `<div class="cal-time-col" style="height:${colHeight}px">`;
+    for (let h = CAL_START_HOUR; h <= CAL_END_HOUR; h++) {
+        const top = (h - CAL_START_HOUR) * 60 * CAL_PX_PER_MIN;
+        timeColHtml += `<span class="cal-time-label" style="top:${top}px">${h}:00</span>`;
+    }
+    timeColHtml += `</div>`;
+    html += timeColHtml;
+
+    weekDates.forEach(d => {
+        let dayHtml = `<div class="cal-day-col" style="height:${colHeight}px">`;
+        for (let h = CAL_START_HOUR; h <= CAL_END_HOUR; h++) {
+            const top = (h - CAL_START_HOUR) * 60 * CAL_PX_PER_MIN;
+            dayHtml += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:1px solid var(--gray-100)"></div>`;
+        }
+
+        const citasDelDia = citasCache.filter(c => c.fecha && isSameDay(new Date(c.fecha), d) && c.estado !== 'cancelada');
+        citasDelDia.forEach(c => {
+            const fechaCita = new Date(c.fecha);
+            const minutosDesdeInicio = (fechaCita.getHours() - CAL_START_HOUR) * 60 + fechaCita.getMinutes();
+            if (minutosDesdeInicio < 0 || minutosDesdeInicio > totalMinutos) return;
+            const dur = c.duracion || 30;
+            const top = minutosDesdeInicio * CAL_PX_PER_MIN;
+            const height = Math.max(dur * CAL_PX_PER_MIN, 18);
+            const color = colorForDoctor(c.doctor_id);
+            const horaStr = fechaCita.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color}" title="${horaStr}">${horaStr}<br>${(c.paciente_id || '').slice(0, 6)}</div>`;
+        });
+
+        dayHtml += `</div>`;
+        html += dayHtml;
+    });
+
+    gridEl.innerHTML = html;
+    renderCalendarLeyenda();
+}
 
 async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, { headers: authH(), ...opts });
@@ -456,6 +598,8 @@ function construirFechaISO(fechaBase, minutos) {
 async function loadCitas() {
     try {
         const data = await apiFetch('/citas');
+        citasCache = data || [];
+        renderCalendar();
         const tbody = document.getElementById('tablaCitas');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">No hay citas aún</td></tr>';
@@ -496,11 +640,18 @@ async function cancelarCita(citaId) {
 // ── CITA EN BLOQUE ────────────────────────────────────────────────
 function populatePacienteSelectBloque() {
     const sel = document.getElementById('bloquePaciente');
-    if (!sel) return;
-    const actual = sel.value;
-    sel.innerHTML = '<option value="">Seleccionar paciente...</option>' +
-        pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
-    if (actual) sel.value = actual;
+    const selExp = document.getElementById('expedientePaciente');
+    const opciones = pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+    if (sel) {
+        const actual = sel.value;
+        sel.innerHTML = '<option value="">Seleccionar paciente...</option>' + opciones;
+        if (actual) sel.value = actual;
+    }
+    if (selExp) {
+        const actual = selExp.value;
+        selExp.innerHTML = '<option value="">Elegir paciente...</option>' + opciones;
+        if (actual) selExp.value = actual;
+    }
 }
 
 function agregarFilaBloque() {
@@ -592,6 +743,7 @@ async function loadDoctores() {
         doctoresCache = data || [];
         renderDoctorBubblesPaciente();
         renderFilasBloque();
+        renderCalendarLeyenda();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
@@ -631,6 +783,62 @@ async function loadSettings() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
+// ── EXPEDIENTES ───────────────────────────────────────────────────
+async function loadExpediente() {
+    const pacienteId = document.getElementById('expedientePaciente').value;
+    const formCard = document.getElementById('expedienteFormCard');
+    const listaCard = document.getElementById('expedienteListaCard');
+    if (!pacienteId) {
+        formCard.style.display = 'none';
+        listaCard.style.display = 'none';
+        return;
+    }
+    formCard.style.display = 'block';
+    listaCard.style.display = 'block';
+    const listaEl = document.getElementById('expedienteLista');
+    listaEl.innerHTML = '<p class="loading">Cargando...</p>';
+    try {
+        const notas = await apiFetch(`/expediente?paciente_id=${pacienteId}`);
+        if (!notas.length) {
+            listaEl.innerHTML = '<p style="color:var(--gray-500)">Sin notas todavía</p>';
+        } else {
+            listaEl.innerHTML = notas.map(n => `
+                <div style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${new Date(n.created_at).toLocaleString('es-CR')}</div>
+                    <div>${n.contenido}</div>
+                    ${n.medicamentos ? `<div style="font-size:13px;color:var(--primary);margin-top:4px">💊 ${n.medicamentos}</div>` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        listaEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+}
+
+async function agregarNotaExpediente() {
+    const alertEl = document.getElementById('alertExpediente');
+    const pacienteId = document.getElementById('expedientePaciente').value;
+    const contenido = document.getElementById('expedienteContenido').value;
+    const medicamentos = document.getElementById('expedienteMedicamentos').value;
+    if (!contenido) {
+        alertEl.innerHTML = '<div class="alert alert-error">Escribí una nota</div>';
+        return;
+    }
+    try {
+        await apiFetch('/expediente', {
+            method: 'POST',
+            body: JSON.stringify({ paciente_id: pacienteId, contenido, medicamentos })
+        });
+        alertEl.innerHTML = '<div class="alert alert-success">Nota guardada ✓</div>';
+        document.getElementById('expedienteContenido').value = '';
+        document.getElementById('expedienteMedicamentos').value = '';
+        loadExpediente();
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
 function estadoBadge(estado) {
     const map = { pendiente: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
     return `<span class="badge ${map[estado] || 'badge-warning'}">${estado || 'pendiente'}</span>`;
