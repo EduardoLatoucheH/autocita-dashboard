@@ -61,6 +61,12 @@
         .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
         .alert-success { background: #D1FAE5; color: #065F46; }
         .alert-error { background: #FEE2E2; color: #991B1B; }
+        .bubble-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .bubble { padding: 8px 14px; border: 1.5px solid var(--gray-200); border-radius: 100px; cursor: pointer; font-size: 13px; font-weight: 600; background: var(--white); color: var(--gray-700); transition: all .15s; }
+        .bubble.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+        .bloque-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .bloque-fila select { flex: 2; }
+        .bloque-fila .hora-preview { flex: 1; font-size: 13px; color: var(--gray-500); white-space: nowrap; }
 
         /* Login */
         #loginScreen { display: none; position: fixed; inset: 0; background: var(--gray-50); z-index: 1000; align-items: center; justify-content: center; }
@@ -137,6 +143,15 @@
                     <div class="form-group"><label>Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
                     <div class="form-group"><label>Email</label><input type="email" id="pEmail" placeholder="juan@email.com"></div>
                     <div class="form-group"><label>Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
+                    <div class="form-group">
+                        <label>Asociar doctor(es) para esta visita (opcional)</label>
+                        <div id="doctorBubblesPaciente" class="bubble-group"><span style="color:var(--gray-500);font-size:13px">Cargando doctores...</span></div>
+                    </div>
+                    <div class="form-group" id="fechaVisitaGroup" style="display:none">
+                        <label>Fecha de la visita</label>
+                        <input type="date" id="pFechaVisita" onchange="actualizarResumenBloquePaciente()">
+                        <div id="resumenBloquePaciente" style="margin-top:8px;font-size:13px;color:var(--gray-500)"></div>
+                    </div>
                     <button class="btn btn-block" onclick="crearPaciente()">Agregar Paciente</button>
                 </div>
                 <div class="card">
@@ -151,6 +166,21 @@
             <!-- Citas -->
             <section class="section" id="citas">
                 <h2 style="margin-bottom: 24px;">Citas</h2>
+                <div class="card">
+                    <div class="card-title">Cita en bloque (un paciente, varios doctores el mismo día)</div>
+                    <div id="alertBloque"></div>
+                    <div class="form-group">
+                        <label>Paciente</label>
+                        <select id="bloquePaciente"><option value="">Cargando pacientes...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="bloqueFecha">
+                    </div>
+                    <div id="bloqueFilas"></div>
+                    <button class="btn" style="background:var(--gray-200);color:var(--gray-700);margin-top:4px;margin-bottom:12px" onclick="agregarFilaBloque()">+ Agregar doctor</button>
+                    <button class="btn btn-block" onclick="crearCitasBloque()">Crear citas en bloque</button>
+                </div>
                 <div class="card">
                     <div class="card-title">Todas las Citas</div>
                     <table>
@@ -196,6 +226,11 @@ const API = 'https://autocita-production.up.railway.app';
 const getToken = () => localStorage.getItem('autocita_token');
 const setToken = (t) => localStorage.setItem('autocita_token', t);
 const authH = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` });
+
+let doctoresCache = [];
+let pacientesCache = [];
+let doctoresSeleccionados = []; // ordered doctor ids para el form de Agregar Paciente
+let bloqueFilasDoctores = [];   // ordered doctor ids para Cita en bloque
 
 async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, { headers: authH(), ...opts });
@@ -297,6 +332,8 @@ async function loadDashboard() {
 async function loadPacientes() {
     try {
         const data = await apiFetch('/pacientes');
+        pacientesCache = data || [];
+        populatePacienteSelectBloque();
         const tbody = document.getElementById('tablaPacientes');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay pacientes aún</td></tr>';
@@ -315,7 +352,7 @@ async function loadPacientes() {
 async function crearPaciente() {
     const alertEl = document.getElementById('alertPaciente');
     try {
-        await apiFetch('/pacientes', {
+        const paciente = await apiFetch('/pacientes', {
             method: 'POST',
             body: JSON.stringify({
                 nombre: document.getElementById('pNombre').value,
@@ -324,13 +361,95 @@ async function crearPaciente() {
                 cedula: document.getElementById('pCedula').value,
             })
         });
-        alertEl.innerHTML = '<div class="alert alert-success">Paciente agregado ✓</div>';
+
+        let citasCreadas = 0;
+        const fechaVisita = document.getElementById('pFechaVisita').value;
+        if (doctoresSeleccionados.length && fechaVisita) {
+            let horaActual = 9 * 60; // arranca 9:00am
+            for (const docId of doctoresSeleccionados) {
+                const doc = doctoresCache.find(d => d.id === docId);
+                if (!doc) continue;
+                const dur = doc.duracion_cita || 30;
+                await apiFetch('/cita/crear', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        paciente_id: paciente.id,
+                        fecha: construirFechaISO(fechaVisita, horaActual),
+                        duracion: dur,
+                        tipo_consulta: 'Primera vez',
+                        doctor_id: doc.id,
+                        calendar_id: doc.calendar_id || null
+                    })
+                });
+                horaActual += dur;
+                citasCreadas++;
+            }
+        }
+
+        alertEl.innerHTML = `<div class="alert alert-success">Paciente agregado ✓${citasCreadas ? ` con ${citasCreadas} cita(s)` : ''}</div>`;
         ['pNombre','pTelefono','pEmail','pCedula'].forEach(id => document.getElementById(id).value = '');
+        doctoresSeleccionados = [];
+        document.getElementById('pFechaVisita').value = '';
+        document.getElementById('fechaVisitaGroup').style.display = 'none';
+        document.getElementById('resumenBloquePaciente').innerHTML = '';
+        renderDoctorBubblesPaciente();
         loadPacientes();
-        setTimeout(() => alertEl.innerHTML = '', 3000);
+        if (citasCreadas) { loadCitas(); loadDashboard(); }
+        setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
+}
+
+// ── BUBBLES DE DOCTORES (form Agregar Paciente) ─────────────────────
+function renderDoctorBubblesPaciente() {
+    const el = document.getElementById('doctorBubblesPaciente');
+    if (!el) return;
+    if (!doctoresCache.length) {
+        el.innerHTML = '<span style="color:var(--gray-500);font-size:13px">No hay doctores disponibles todavía</span>';
+        return;
+    }
+    el.innerHTML = doctoresCache.map(d => `
+        <button type="button" class="bubble ${doctoresSeleccionados.includes(d.id) ? 'selected' : ''}" onclick="toggleDoctorBubble('${d.id}')">${d.nombre}</button>
+    `).join('');
+}
+
+function toggleDoctorBubble(id) {
+    const idx = doctoresSeleccionados.indexOf(id);
+    if (idx === -1) doctoresSeleccionados.push(id); else doctoresSeleccionados.splice(idx, 1);
+    renderDoctorBubblesPaciente();
+    document.getElementById('fechaVisitaGroup').style.display = doctoresSeleccionados.length ? 'block' : 'none';
+    actualizarResumenBloquePaciente();
+}
+
+function actualizarResumenBloquePaciente() {
+    const fecha = document.getElementById('pFechaVisita').value;
+    const resumenEl = document.getElementById('resumenBloquePaciente');
+    if (!doctoresSeleccionados.length || !fecha) { resumenEl.innerHTML = ''; return; }
+    let horaActual = 9 * 60;
+    const lineas = doctoresSeleccionados.map(id => {
+        const doc = doctoresCache.find(d => d.id === id);
+        if (!doc) return '';
+        const dur = doc.duracion_cita || 30;
+        const inicio = horaActual;
+        const fin = horaActual + dur;
+        horaActual = fin;
+        return `${doc.nombre}: ${minToHora(inicio)} – ${minToHora(fin)}`;
+    });
+    resumenEl.innerHTML = lineas.join('<br>');
+}
+
+// ── HELPERS DE TIEMPO ────────────────────────────────────────────────
+function minToHora(min) {
+    const h = Math.floor(min / 60), m = min % 60;
+    const ampm = h >= 12 ? 'pm' : 'am';
+    let h12 = h % 12; if (h12 === 0) h12 = 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+function construirFechaISO(fechaBase, minutos) {
+    const h = Math.floor(minutos / 60), m = minutos % 60;
+    return `${fechaBase}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
 }
 
 // ── CITAS ─────────────────────────────────────────────────────────
@@ -374,10 +493,105 @@ async function cancelarCita(citaId) {
     } catch (e) { alert('Error: ' + e.message); }
 }
 
+// ── CITA EN BLOQUE ────────────────────────────────────────────────
+function populatePacienteSelectBloque() {
+    const sel = document.getElementById('bloquePaciente');
+    if (!sel) return;
+    const actual = sel.value;
+    sel.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+        pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+    if (actual) sel.value = actual;
+}
+
+function agregarFilaBloque() {
+    bloqueFilasDoctores.push('');
+    renderFilasBloque();
+}
+
+function quitarFilaBloque(idx) {
+    bloqueFilasDoctores.splice(idx, 1);
+    renderFilasBloque();
+}
+
+function actualizarFilaBloque(idx, docId) {
+    bloqueFilasDoctores[idx] = docId;
+    renderFilasBloque();
+}
+
+function renderFilasBloque() {
+    const el = document.getElementById('bloqueFilas');
+    if (!el) return;
+    if (!bloqueFilasDoctores.length) {
+        el.innerHTML = '<p style="color:var(--gray-500);font-size:13px;margin-bottom:8px">Agregá al menos un doctor</p>';
+        return;
+    }
+    let horaActual = 9 * 60;
+    el.innerHTML = bloqueFilasDoctores.map((docId, idx) => {
+        const doc = doctoresCache.find(d => d.id === docId);
+        const dur = doc ? (doc.duracion_cita || 30) : 30;
+        const inicio = horaActual, fin = horaActual + dur;
+        horaActual = fin;
+        const opciones = doctoresCache.map(d => `<option value="${d.id}" ${d.id === docId ? 'selected' : ''}>${d.nombre}</option>`).join('');
+        return `
+        <div class="bloque-fila">
+            <select onchange="actualizarFilaBloque(${idx}, this.value)">
+                <option value="">Elegir doctor...</option>${opciones}
+            </select>
+            <span class="hora-preview">${doc ? minToHora(inicio) + ' – ' + minToHora(fin) : '—'}</span>
+            <button type="button" class="btn btn-danger" style="padding:6px 10px" onclick="quitarFilaBloque(${idx})">✕</button>
+        </div>`;
+    }).join('');
+}
+
+async function crearCitasBloque() {
+    const alertEl = document.getElementById('alertBloque');
+    const pacienteId = document.getElementById('bloquePaciente').value;
+    const fecha = document.getElementById('bloqueFecha').value;
+    const filas = bloqueFilasDoctores.filter(d => d);
+
+    if (!pacienteId || !fecha || !filas.length) {
+        alertEl.innerHTML = '<div class="alert alert-error">Elegí paciente, fecha y al menos un doctor</div>';
+        return;
+    }
+
+    try {
+        let horaActual = 9 * 60;
+        for (const docId of filas) {
+            const doc = doctoresCache.find(d => d.id === docId);
+            const dur = doc.duracion_cita || 30;
+            await apiFetch('/cita/crear', {
+                method: 'POST',
+                body: JSON.stringify({
+                    paciente_id: pacienteId,
+                    fecha: construirFechaISO(fecha, horaActual),
+                    duracion: dur,
+                    tipo_consulta: 'Seguimiento',
+                    doctor_id: doc.id,
+                    calendar_id: doc.calendar_id || null
+                })
+            });
+            horaActual += dur;
+        }
+        alertEl.innerHTML = `<div class="alert alert-success">${filas.length} cita(s) creada(s) ✓</div>`;
+        bloqueFilasDoctores = [];
+        renderFilasBloque();
+        document.getElementById('bloquePaciente').value = '';
+        document.getElementById('bloqueFecha').value = '';
+        loadCitas();
+        loadDashboard();
+        setTimeout(() => alertEl.innerHTML = '', 4000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
 // ── DOCTORES ──────────────────────────────────────────────────────
 async function loadDoctores() {
     try {
         const data = await apiFetch('/doctores');
+        doctoresCache = data || [];
+        renderDoctorBubblesPaciente();
+        renderFilasBloque();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
