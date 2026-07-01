@@ -102,13 +102,13 @@
 <div class="container" id="appContainer" style="display:none">
     <aside class="sidebar">
         <div class="logo"><h1>AutoCita</h1></div>
-        <button class="nav-link active" onclick="showSection('dashboard', this)">Dashboard</button>
-        <button class="nav-link" onclick="showSection('pacientes', this)">Pacientes</button>
-        <button class="nav-link" onclick="showSection('citas', this)">Citas</button>
-        <button class="nav-link" onclick="showSection('calendario', this)">Calendario</button>
-        <button class="nav-link" onclick="showSection('doctores', this)">Doctores</button>
-        <button class="nav-link" onclick="showSection('expedientes', this)">Expedientes</button>
-        <button class="nav-link" onclick="showSection('settings', this)">Settings</button>
+        <button class="nav-link active" data-section="dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
+        <button class="nav-link" data-section="pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
+        <button class="nav-link" data-section="citas" onclick="showSection('citas', this)">Citas</button>
+        <button class="nav-link" data-section="calendario" onclick="showSection('calendario', this)">Calendario</button>
+        <button class="nav-link" data-section="doctores" onclick="showSection('doctores', this)">Doctores</button>
+        <button class="nav-link" data-section="expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
+        <button class="nav-link" data-section="settings" onclick="showSection('settings', this)">Settings</button>
         <button class="nav-link" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
     </aside>
     <div class="main">
@@ -253,6 +253,40 @@
                 <div class="card">
                     <div class="card-title">Tu Clínica</div>
                     <div id="settingsInfo" class="loading">Cargando...</div>
+                </div>
+
+                <!-- Solo visible para el dueño -->
+                <div id="equipoSection" style="display:none">
+                    <div class="card">
+                        <div class="card-title">Equipo</div>
+                        <div id="alertEquipo"></div>
+                        <div class="form-group">
+                            <label>Email del nuevo miembro</label>
+                            <input type="email" id="equipoEmail" placeholder="doctor@clinica.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Rol</label>
+                            <select id="equipoRol">
+                                <option value="recepcionista">Recepcionista</option>
+                                <option value="doctor">Doctor</option>
+                                <option value="dueno">Dueño</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="equipoDoctorGroup" style="display:none">
+                            <label>Doctor asociado (si el rol es Doctor)</label>
+                            <select id="equipoDoctor">
+                                <option value="">Elegir doctor...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-block" onclick="invitarMiembro()">Enviar invitación</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Miembros del equipo</div>
+                        <table>
+                            <thead><tr><th>Email</th><th>Rol</th><th>Estado</th><th>Acción</th></tr></thead>
+                            <tbody id="tablaEquipo"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -428,12 +462,47 @@ function showApp() {
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────────
+let userRol = 'dueno'; // default hasta que cargue
+let userDoctorId = null;
+
 async function loadAll() {
+    await loadRol(); // primero el rol, luego el resto según permisos
     loadDashboard();
     loadPacientes();
     loadCitas();
     loadDoctores();
     loadSettings();
+}
+
+async function loadRol() {
+    try {
+        const data = await apiFetch('/mi-rol');
+        userRol = data.rol;
+        userDoctorId = data.doctor_id || null;
+        aplicarPermisos();
+    } catch (e) {
+        userRol = 'dueno'; // fallback: si falla, asumir dueño
+    }
+}
+
+function aplicarPermisos() {
+    // Secciones visibles por rol
+    const permisos = {
+        dueno:          ['dashboard','pacientes','citas','calendario','doctores','expedientes','settings'],
+        recepcionista:  ['dashboard','pacientes','citas','calendario','doctores'],
+        doctor:         ['citas','calendario','expedientes'],
+    };
+    const visibles = permisos[userRol] || permisos['dueno'];
+
+    // Ocultar/mostrar nav links
+    document.querySelectorAll('.nav-link[data-section]').forEach(btn => {
+        const sec = btn.getAttribute('data-section');
+        btn.style.display = visibles.includes(sec) ? 'block' : 'none';
+    });
+
+    // Mostrar panel de equipo solo al dueño
+    const equipoSec = document.getElementById('equipoSection');
+    if (equipoSec) equipoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
@@ -839,6 +908,67 @@ async function agregarNotaExpediente() {
     }
 }
 
+// ── EQUIPO ────────────────────────────────────────────────────────
+async function loadEquipo() {
+    try {
+        const data = await apiFetch('/equipo');
+        const tbody = document.getElementById('tablaEquipo');
+        if (!tbody) return;
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">Sin miembros todavía</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(m => `
+                <tr>
+                    <td>${m.email}</td>
+                    <td><span class="badge badge-success">${m.rol}</span></td>
+                    <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
+                    <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarMiembro('${m.id}')">Eliminar</button></td>
+                </tr>
+            `).join('');
+        }
+    } catch (e) { console.error('Equipo:', e); }
+}
+
+document.getElementById('equipoRol')?.addEventListener('change', function() {
+    const doctorGroup = document.getElementById('equipoDoctorGroup');
+    if (doctorGroup) doctorGroup.style.display = this.value === 'doctor' ? 'block' : 'none';
+    if (this.value === 'doctor') {
+        const sel = document.getElementById('equipoDoctor');
+        if (sel) {
+            sel.innerHTML = '<option value="">Elegir doctor...</option>' +
+                doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        }
+    }
+});
+
+async function invitarMiembro() {
+    const alertEl = document.getElementById('alertEquipo');
+    const email = document.getElementById('equipoEmail').value;
+    const rol = document.getElementById('equipoRol').value;
+    const doctor_id = document.getElementById('equipoDoctor')?.value || null;
+    if (!email) { alertEl.innerHTML = '<div class="alert alert-error">Ingresá un email</div>'; return; }
+    try {
+        await apiFetch('/equipo/invitar', {
+            method: 'POST',
+            body: JSON.stringify({ email, rol, doctor_id: rol === 'doctor' ? doctor_id : null })
+        });
+        alertEl.innerHTML = `<div class="alert alert-success">Invitación enviada a ${email} ✓</div>`;
+        document.getElementById('equipoEmail').value = '';
+        loadEquipo();
+        setTimeout(() => alertEl.innerHTML = '', 4000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+async function eliminarMiembro(id) {
+    if (!confirm('¿Eliminar este miembro del equipo?')) return;
+    try {
+        await apiFetch(`/equipo/${id}`, { method: 'DELETE' });
+        loadEquipo();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
 function estadoBadge(estado) {
     const map = { pendiente: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
     return `<span class="badge ${map[estado] || 'badge-warning'}">${estado || 'pendiente'}</span>`;
@@ -849,6 +979,7 @@ function showSection(id, btn) {
     document.getElementById(id).classList.add('active');
     document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
+    if (id === 'settings' && userRol === 'dueno') loadEquipo();
 }
 
 function changeLang(lang, btn) {
