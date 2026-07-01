@@ -269,7 +269,7 @@
                             <select id="equipoRol">
                                 <option value="recepcionista">Recepcionista</option>
                                 <option value="doctor">Doctor</option>
-                                <option value="dueno">Dueño</option>
+                                <option value="dueno">Administrador</option>
                             </select>
                         </div>
                         <div class="form-group" id="equipoDoctorGroup" style="display:none">
@@ -920,7 +920,7 @@ async function loadEquipo() {
             tbody.innerHTML = data.map(m => `
                 <tr>
                     <td>${m.email}</td>
-                    <td><span class="badge badge-success">${m.rol}</span></td>
+                    <td><span class="badge badge-success">${m.rol === 'dueno' ? 'Administrador' : m.rol === 'recepcionista' ? 'Recepcionista' : 'Doctor'}</span></td>
                     <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
                     <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarMiembro('${m.id}')">Eliminar</button></td>
                 </tr>
