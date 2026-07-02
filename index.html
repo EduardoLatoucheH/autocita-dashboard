@@ -212,7 +212,7 @@
                 <div class="card">
                     <div class="card-title">Todas las Citas</div>
                     <table>
-                        <thead><tr><th>Paciente ID</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tablaCitas"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
@@ -353,6 +353,17 @@ function colorForDoctor(id) {
     return DOCTOR_COLORS[Math.abs(hash) % DOCTOR_COLORS.length];
 }
 
+// ── HELPER: nombre del paciente ──────────────────────────────────
+// La API ahora devuelve cada cita con cita.pacientes.nombre (join con
+// la tabla pacientes). Si por alguna razón no viniera, buscamos en
+// pacientesCache como respaldo, y si tampoco está, mostramos un guion.
+function nombrePaciente(cita) {
+    if (cita.pacientes && cita.pacientes.nombre) return cita.pacientes.nombre;
+    const p = pacientesCache.find(p => p.id === cita.paciente_id);
+    if (p && p.nombre) return p.nombre;
+    return cita.paciente_id ? 'Paciente sin nombre' : '—';
+}
+
 function cambiarSemana(delta) {
     currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
     renderCalendar();
@@ -418,7 +429,9 @@ function renderCalendar() {
             const height = Math.max(dur * CAL_PX_PER_MIN, 18);
             const color = colorForDoctor(c.doctor_id);
             const horaStr = fechaCita.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color}" title="${horaStr}">${horaStr}<br>${(c.paciente_id || '').slice(0, 6)}</div>`;
+            const nombreFull = nombrePaciente(c);
+            const nombreCorto = nombreFull.split(' ')[0];
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color}" title="${horaStr} — ${nombreFull}">${horaStr}<br>${nombreCorto}</div>`;
         });
 
         dayHtml += `</div>`;
@@ -532,8 +545,8 @@ let userDoctorId = null;
 
 async function loadAll() {
     await loadRol(); // primero el rol, luego el resto según permisos
+    await loadPacientes(); // primero pacientes, así el respaldo de nombre ya está listo
     loadDashboard();
-    loadPacientes();
     loadCitas();
     loadDoctores();
     loadSettings();
@@ -598,7 +611,7 @@ async function loadDashboard() {
                 const fechaStr = fecha ? fecha.toLocaleDateString('es-CR') : '—';
                 const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
-                return `<tr><td>${c.paciente_id?.slice(0,8) || '—'}...</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
+                return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
             }).join('');
         }
     } catch (e) { console.error('Dashboard:', e); }
@@ -747,7 +760,7 @@ async function loadCitas() {
                     ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="cancelarCita('${c.id}')">Cancelar</button>`
                     : '—';
                 return `<tr>
-                    <td>${c.paciente_id?.slice(0,8) || '—'}...</td>
+                    <td>${nombrePaciente(c)}</td>
                     <td>${fechaStr}</td>
                     <td>${horaStr}</td>
                     <td>${c.calendar_id || '—'}</td>
