@@ -126,6 +126,7 @@
         <button class="nav-link active" data-section="dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
         <button class="nav-link" data-section="pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
         <button class="nav-link" data-section="citas" onclick="showSection('citas', this)">Citas</button>
+        <button class="nav-link" data-section="listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
         <button class="nav-link" data-section="calendario" onclick="showSection('calendario', this)">Calendario</button>
         <button class="nav-link" data-section="doctores" onclick="showSection('doctores', this)">Doctores</button>
         <button class="nav-link" data-section="expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
@@ -214,6 +215,39 @@
                     <table>
                         <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tablaCitas"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Lista de Espera -->
+            <section class="section" id="listaEspera">
+                <h2 style="margin-bottom: 24px;">Lista de Espera</h2>
+                <div class="card">
+                    <div class="card-title">Agregar a la lista de espera</div>
+                    <div id="alertListaEspera"></div>
+                    <div class="form-group">
+                        <label>Paciente</label>
+                        <select id="lePaciente"><option value="">Cargando pacientes...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Doctor preferido (opcional)</label>
+                        <select id="leDoctor"><option value="">Cualquier doctor</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha deseada (opcional)</label>
+                        <input type="date" id="leFecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Notas</label>
+                        <input type="text" id="leNotas" placeholder="Ej: prefiere mañanas">
+                    </div>
+                    <button class="btn btn-block" onclick="agregarListaEspera()">Agregar a la lista</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">En espera</div>
+                    <table>
+                        <thead><tr><th>Paciente</th><th>Doctor</th><th>Fecha deseada</th><th>Notas</th><th>Acción</th></tr></thead>
+                        <tbody id="tablaListaEspera"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
@@ -549,6 +583,7 @@ async function loadAll() {
     loadDashboard();
     loadCitas();
     loadDoctores();
+    loadListaEspera();
     loadSettings();
 }
 
@@ -566,8 +601,8 @@ async function loadRol() {
 function aplicarPermisos() {
     // Secciones visibles por rol
     const permisos = {
-        dueno:          ['dashboard','pacientes','citas','calendario','doctores','expedientes','settings'],
-        recepcionista:  ['dashboard','pacientes','citas','calendario','doctores'],
+        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','expedientes','settings'],
+        recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores'],
         doctor:         ['citas','calendario','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
@@ -784,6 +819,97 @@ async function cancelarCita(citaId) {
     } catch (e) { alert('Error: ' + e.message); }
 }
 
+// ── LISTA DE ESPERA ───────────────────────────────────────────────
+async function loadListaEspera() {
+    try {
+        const data = await apiFetch('/lista-espera');
+        populateListaEsperaSelects();
+        const tbody = document.getElementById('tablaListaEspera');
+        if (!tbody) return;
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">Nadie en espera por ahora</td></tr>';
+        } else {
+            tbody.innerHTML = data.map(le => {
+                const nombrePac = le.pacientes?.nombre || 'Paciente sin nombre';
+                const nombreDoc = le.doctores?.nombre || 'Cualquiera';
+                const fecha = le.fecha_deseada ? new Date(le.fecha_deseada + 'T00:00:00').toLocaleDateString('es-CR') : '—';
+                return `<tr>
+                    <td><strong>${nombrePac}</strong></td>
+                    <td>${nombreDoc}</td>
+                    <td>${fecha}</td>
+                    <td>${le.notas || '—'}</td>
+                    <td>
+                        <button class="btn btn-success" style="padding:4px 8px;font-size:12px;margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">Atendido</button>
+                        <button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarListaEspera('${le.id}')">Quitar</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+    } catch (e) { console.error('Lista de espera:', e); }
+}
+
+function populateListaEsperaSelects() {
+    const selPac = document.getElementById('lePaciente');
+    if (selPac) {
+        const actual = selPac.value;
+        selPac.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+            pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+        if (actual) selPac.value = actual;
+    }
+    const selDoc = document.getElementById('leDoctor');
+    if (selDoc) {
+        const actual = selDoc.value;
+        selDoc.innerHTML = '<option value="">Cualquier doctor</option>' +
+            doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        if (actual) selDoc.value = actual;
+    }
+}
+
+async function agregarListaEspera() {
+    const alertEl = document.getElementById('alertListaEspera');
+    const paciente_id = document.getElementById('lePaciente').value;
+    const doctor_id = document.getElementById('leDoctor').value || null;
+    const fecha_deseada = document.getElementById('leFecha').value || null;
+    const notas = document.getElementById('leNotas').value || null;
+    if (!paciente_id) {
+        alertEl.innerHTML = '<div class="alert alert-error">Elegí un paciente</div>';
+        return;
+    }
+    try {
+        await apiFetch('/lista-espera', {
+            method: 'POST',
+            body: JSON.stringify({ paciente_id, doctor_id, fecha_deseada, notas })
+        });
+        alertEl.innerHTML = '<div class="alert alert-success">Agregado a la lista de espera ✓</div>';
+        document.getElementById('lePaciente').value = '';
+        document.getElementById('leDoctor').value = '';
+        document.getElementById('leFecha').value = '';
+        document.getElementById('leNotas').value = '';
+        loadListaEspera();
+        setTimeout(() => alertEl.innerHTML = '', 4000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+async function marcarAtendidoListaEspera(id) {
+    try {
+        await apiFetch(`/lista-espera/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado: 'atendido' })
+        });
+        loadListaEspera();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function eliminarListaEspera(id) {
+    if (!confirm('¿Quitar de la lista de espera?')) return;
+    try {
+        await apiFetch(`/lista-espera/${id}`, { method: 'DELETE' });
+        loadListaEspera();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
 // ── CITA EN BLOQUE ────────────────────────────────────────────────
 function populatePacienteSelectBloque() {
     const sel = document.getElementById('bloquePaciente');
@@ -891,6 +1017,7 @@ async function loadDoctores() {
         renderDoctorBubblesPaciente();
         renderFilasBloque();
         renderCalendarLeyenda();
+        populateListaEsperaSelects();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
