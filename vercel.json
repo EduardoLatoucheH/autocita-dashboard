@@ -1,7 +1,5 @@
 {
   "routes": [
-    { "src": "/register", "dest": "/register.html" },
-    { "src": "/register.html", "dest": "/register.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
