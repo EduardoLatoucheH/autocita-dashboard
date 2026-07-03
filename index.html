@@ -129,6 +129,7 @@
         <button class="nav-link" data-section="listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
         <button class="nav-link" data-section="calendario" onclick="showSection('calendario', this)">Calendario</button>
         <button class="nav-link" data-section="doctores" onclick="showSection('doctores', this)">Doctores</button>
+        <button class="nav-link" data-section="facturacion" onclick="showSection('facturacion', this)">Facturación</button>
         <button class="nav-link" data-section="expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
         <button class="nav-link" data-section="settings" onclick="showSection('settings', this)">Settings</button>
         <button class="nav-link" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
@@ -217,6 +218,28 @@
                         <tbody id="tablaCitas"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
+                <div class="card">
+                    <div class="card-title">⚠️ Herramientas de emergencia</div>
+                    <div id="alertEmergencia"></div>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+                        Estas acciones afectan muchas citas a la vez y <strong>no avisan a los pacientes automáticamente</strong>.
+                        Después de usarlas, contactalos por WhatsApp a mano.
+                    </p>
+                    <div class="form-group">
+                        <label>Día a modificar</label>
+                        <input type="date" id="emergDia">
+                    </div>
+                    <div class="form-group">
+                        <label>Doctor (opcional — vacío afecta a todos)</label>
+                        <select id="emergDoctor"><option value="">Todos los doctores</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
+                        <input type="number" id="emergMinutos" placeholder="30">
+                    </div>
+                    <button class="btn btn-block" style="background:#B45309" onclick="correrAgendaDia()">🕐 Correr agenda del día</button>
+                    <button class="btn btn-block btn-danger" style="margin-top:10px" onclick="cancelarDiaCompleto()">⛔ Cancelar todo el día</button>
+                </div>
             </section>
 
             <!-- Lista de Espera -->
@@ -273,9 +296,35 @@
                 <div class="card">
                     <div class="card-title">Doctores Disponibles</div>
                     <table>
-                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Estado</th></tr></thead>
-                        <tbody id="tablaDoctores"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Precio</th><th>Estado</th></tr></thead>
+                        <tbody id="tablaDoctores"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Facturación -->
+            <section class="section" id="facturacion">
+                <h2 style="margin-bottom: 24px;">Facturación</h2>
+                <div class="card">
+                    <div class="card-title">Catálogo de servicios y precios</div>
+                    <div id="alertServicios"></div>
+                    <div class="form-group"><label>Nombre del servicio</label><input type="text" id="servNombre" placeholder="Ej: Radiografía"></div>
+                    <div class="form-group"><label>Precio (₡)</label><input type="number" id="servPrecio" placeholder="15000"></div>
+                    <button class="btn btn-block" onclick="crearServicio()">Agregar al catálogo</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">Catálogo actual</div>
+                    <table>
+                        <thead><tr><th>Servicio</th><th>Precio</th><th>Acción</th></tr></thead>
+                        <tbody id="tablaServicios"><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-title">Factura de una cita</div>
+                    <div class="form-group">
+                        <select id="facturaCita" onchange="loadFactura()"><option value="">Elegir cita...</option></select>
+                    </div>
+                    <div id="facturaDetalle"></div>
                 </div>
             </section>
 
@@ -584,6 +633,7 @@ async function loadAll() {
     loadCitas();
     loadDoctores();
     loadListaEspera();
+    loadServicios();
     loadSettings();
 }
 
@@ -601,8 +651,8 @@ async function loadRol() {
 function aplicarPermisos() {
     // Secciones visibles por rol
     const permisos = {
-        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','expedientes','settings'],
-        recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores'],
+        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion','expedientes','settings'],
+        recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion'],
         doctor:         ['citas','calendario','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
@@ -782,6 +832,7 @@ async function loadCitas() {
         const data = await apiFetch('/citas');
         citasCache = data || [];
         renderCalendar();
+        populateFacturaCitaSelect();
         const tbody = document.getElementById('tablaCitas');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">No hay citas aún</td></tr>';
@@ -817,6 +868,181 @@ async function cancelarCita(citaId) {
         loadCitas();
         loadDashboard();
     } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── SERVICIOS Y FACTURACIÓN ───────────────────────────────────────
+let serviciosCache = [];
+
+async function loadServicios() {
+    try {
+        const data = await apiFetch('/servicios');
+        serviciosCache = data || [];
+        const tbody = document.getElementById('tablaServicios');
+        if (tbody) {
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gray-500)">Sin servicios en el catálogo</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(s => `
+                    <tr>
+                        <td><strong>${s.nombre}</strong></td>
+                        <td>₡${Number(s.precio).toLocaleString('es-CR')}</td>
+                        <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarServicio('${s.id}')">Eliminar</button></td>
+                    </tr>`).join('');
+            }
+        }
+        populateFacturaCitaSelect();
+    } catch (e) { console.error('Servicios:', e); }
+}
+
+async function crearServicio() {
+    const alertEl = document.getElementById('alertServicios');
+    const nombre = document.getElementById('servNombre').value;
+    const precio = parseFloat(document.getElementById('servPrecio').value);
+    if (!nombre || isNaN(precio)) {
+        alertEl.innerHTML = '<div class="alert alert-error">Completá nombre y precio</div>';
+        return;
+    }
+    try {
+        await apiFetch('/servicios', { method: 'POST', body: JSON.stringify({ nombre, precio }) });
+        alertEl.innerHTML = '<div class="alert alert-success">Agregado ✓</div>';
+        document.getElementById('servNombre').value = '';
+        document.getElementById('servPrecio').value = '';
+        loadServicios();
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+async function eliminarServicio(id) {
+    if (!confirm('¿Eliminar este servicio del catálogo?')) return;
+    try {
+        await apiFetch(`/servicios/${id}`, { method: 'DELETE' });
+        loadServicios();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+function populateFacturaCitaSelect() {
+    const sel = document.getElementById('facturaCita');
+    if (!sel) return;
+    const actual = sel.value;
+    sel.innerHTML = '<option value="">Elegir cita...</option>' +
+        citasCache.filter(c => c.estado !== 'cancelada').map(c => {
+            const nombrePac = nombrePaciente(c);
+            const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-CR') : '';
+            const hora = c.fecha ? new Date(c.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
+            return `<option value="${c.id}">${nombrePac} — ${fecha} ${hora}</option>`;
+        }).join('');
+    if (actual) sel.value = actual;
+}
+
+async function loadFactura() {
+    const citaId = document.getElementById('facturaCita').value;
+    const detalleEl = document.getElementById('facturaDetalle');
+    if (!citaId) { detalleEl.innerHTML = ''; return; }
+    detalleEl.innerHTML = '<p class="loading">Cargando...</p>';
+    try {
+        const data = await apiFetch(`/cita/${citaId}/factura`);
+        const opcionesServicio = serviciosCache.map(s => `<option value="${s.id}">${s.nombre} — ₡${Number(s.precio).toLocaleString('es-CR')}</option>`).join('');
+        detalleEl.innerHTML = `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200)">
+                <span>Consulta (${data.cita.doctores?.nombre || '—'})</span>
+                <strong>₡${Number(data.precio_consulta).toLocaleString('es-CR')}</strong>
+            </div>
+            ${data.servicios.map(s => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-200)">
+                    <span>${s.servicios?.nombre || 'Servicio'}</span>
+                    <span style="display:flex;align-items:center;gap:8px">
+                        ₡${Number(s.precio).toLocaleString('es-CR')}
+                        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px" onclick="quitarServicioCita('${citaId}','${s.id}')">✕</button>
+                    </span>
+                </div>
+            `).join('')}
+            <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:16px">
+                <span>Total</span><span>₡${Number(data.total).toLocaleString('es-CR')}</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <select id="facturaServicioNuevo" style="flex:1">
+                    <option value="">Agregar servicio...</option>
+                    ${opcionesServicio}
+                </select>
+                <button class="btn" onclick="agregarServicioCita('${citaId}')">Agregar</button>
+            </div>
+        `;
+    } catch (e) {
+        detalleEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+}
+
+async function agregarServicioCita(citaId) {
+    const servicio_id = document.getElementById('facturaServicioNuevo').value;
+    if (!servicio_id) return;
+    try {
+        await apiFetch(`/cita/${citaId}/servicios`, { method: 'POST', body: JSON.stringify({ servicio_id }) });
+        loadFactura();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function quitarServicioCita(citaId, servicioAplicadoId) {
+    try {
+        await apiFetch(`/cita/${citaId}/servicios/${servicioAplicadoId}`, { method: 'DELETE' });
+        loadFactura();
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── HERRAMIENTAS DE EMERGENCIA ───────────────────────────────────────
+function populateEmergDoctorSelect() {
+    const sel = document.getElementById('emergDoctor');
+    if (!sel) return;
+    const actual = sel.value;
+    sel.innerHTML = '<option value="">Todos los doctores</option>' +
+        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    if (actual) sel.value = actual;
+}
+
+async function correrAgendaDia() {
+    const alertEl = document.getElementById('alertEmergencia');
+    const fecha = document.getElementById('emergDia').value;
+    const doctor_id = document.getElementById('emergDoctor').value || null;
+    const minutos = parseInt(document.getElementById('emergMinutos').value);
+    if (!fecha || !minutos) {
+        alertEl.innerHTML = '<div class="alert alert-error">Elegí el día y cuántos minutos correr</div>';
+        return;
+    }
+    if (!confirm(`¿Correr TODAS las citas del ${fecha}${doctor_id ? '' : ' (todos los doctores)'} por ${minutos} minutos? Esto no avisa a los pacientes.`)) return;
+    try {
+        const data = await apiFetch('/citas/dia/correr', {
+            method: 'POST',
+            body: JSON.stringify({ fecha, doctor_id, minutos })
+        });
+        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. Avisá a los pacientes manualmente.</div>`;
+        loadCitas();
+        loadDashboard();
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
+async function cancelarDiaCompleto() {
+    const alertEl = document.getElementById('alertEmergencia');
+    const fecha = document.getElementById('emergDia').value;
+    const doctor_id = document.getElementById('emergDoctor').value || null;
+    if (!fecha) {
+        alertEl.innerHTML = '<div class="alert alert-error">Elegí el día</div>';
+        return;
+    }
+    if (!confirm(`¿CANCELAR TODAS las citas del ${fecha}${doctor_id ? '' : ' (todos los doctores)'}? No se avisa a los pacientes automáticamente.`)) return;
+    try {
+        const data = await apiFetch('/citas/dia/cancelar', {
+            method: 'POST',
+            body: JSON.stringify({ fecha, doctor_id })
+        });
+        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. Avisá a los pacientes manualmente.</div>`;
+        loadCitas();
+        loadDashboard();
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
 }
 
 // ── LISTA DE ESPERA ───────────────────────────────────────────────
@@ -1018,6 +1244,7 @@ async function loadDoctores() {
         renderFilasBloque();
         renderCalendarLeyenda();
         populateListaEsperaSelects();
+        populateEmergDoctorSelect();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
@@ -1027,6 +1254,7 @@ async function loadDoctores() {
                     <td><strong>${d.nombre}</strong></td>
                     <td>${d.especialidad}</td>
                     <td>${d.duracion_cita || 30} min</td>
+                    <td>₡${Number(d.precio || 0).toLocaleString('es-CR')}</td>
                     <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? 'Activo' : 'Inactivo'}</span></td>
                 </tr>`).join('');
         }
