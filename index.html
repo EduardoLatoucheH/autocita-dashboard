@@ -294,10 +294,22 @@
             <section class="section" id="doctores">
                 <h2 style="margin-bottom: 24px;">Doctores</h2>
                 <div class="card">
+                    <div class="card-title" id="doctorFormTitle">Agregar Doctor</div>
+                    <div id="alertDoctor"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
+                    <div class="form-group"><label>Especialidad</label><input type="text" id="docEspecialidad" placeholder="Medicina General"></div>
+                    <div class="form-group"><label>Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
+                    <div class="form-group"><label>Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()">Agregar Doctor</button>
+                        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-700)" onclick="cancelarEdicionDoctor()">Cancelar</button>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-title">Doctores Disponibles</div>
                     <table>
-                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Precio</th><th>Estado</th></tr></thead>
-                        <tbody id="tablaDoctores"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Precio</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <tbody id="tablaDoctores"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
@@ -843,7 +855,10 @@ async function loadCitas() {
                 const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
                 const btnCancelar = c.estado !== 'cancelada'
-                    ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="cancelarCita('${c.id}')">Cancelar</button>`
+                    ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px;margin-right:4px" onclick="cancelarCita('${c.id}')">Cancelar</button>`
+                    : '';
+                const btnRecordatorio = c.estado !== 'cancelada'
+                    ? `<button class="btn" style="padding:4px 8px;font-size:12px;background:var(--gray-200);color:var(--gray-700)" onclick="enviarRecordatorio('${c.id}')">🔔 Recordatorio</button>`
                     : '—';
                 return `<tr>
                     <td>${nombrePaciente(c)}</td>
@@ -851,11 +866,18 @@ async function loadCitas() {
                     <td>${horaStr}</td>
                     <td>${c.calendar_id || '—'}</td>
                     <td>${badge}</td>
-                    <td>${btnCancelar}</td>
+                    <td>${btnCancelar}${btnRecordatorio}</td>
                 </tr>`;
             }).join('');
         }
     } catch (e) { console.error('Citas:', e); }
+}
+
+async function enviarRecordatorio(citaId) {
+    try {
+        await apiFetch(`/cita/${citaId}/recordatorio`, { method: 'POST' });
+        alert('Recordatorio enviado ✓');
+    } catch (e) { alert('Error: ' + e.message); }
 }
 
 async function cancelarCita(citaId) {
@@ -1256,9 +1278,66 @@ async function loadDoctores() {
                     <td>${d.duracion_cita || 30} min</td>
                     <td>₡${Number(d.precio || 0).toLocaleString('es-CR')}</td>
                     <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? 'Activo' : 'Inactivo'}</span></td>
+                    <td><button class="btn" style="padding:4px 8px;font-size:12px;background:var(--gray-200);color:var(--gray-700)" onclick="editarDoctor('${d.id}')">Editar</button></td>
                 </tr>`).join('');
         }
     } catch (e) { console.error('Doctores:', e); }
+}
+
+// ── FORMULARIO DE DOCTOR (crear / editar) ────────────────────────
+let editandoDoctorId = null;
+
+function editarDoctor(id) {
+    const doc = doctoresCache.find(d => d.id === id);
+    if (!doc) return;
+    editandoDoctorId = id;
+    document.getElementById('docNombre').value = doc.nombre || '';
+    document.getElementById('docEspecialidad').value = doc.especialidad || '';
+    document.getElementById('docDuracion').value = doc.duracion_cita || 30;
+    document.getElementById('docPrecio').value = doc.precio || 0;
+    document.getElementById('doctorFormTitle').textContent = 'Editar Doctor';
+    document.getElementById('doctorSubmitBtn').textContent = 'Guardar cambios';
+    document.getElementById('doctorFormTitle').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelarEdicionDoctor() {
+    editandoDoctorId = null;
+    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('doctorFormTitle').textContent = 'Agregar Doctor';
+    document.getElementById('doctorSubmitBtn').textContent = 'Agregar Doctor';
+    document.getElementById('alertDoctor').innerHTML = '';
+}
+
+async function guardarDoctor() {
+    const alertEl = document.getElementById('alertDoctor');
+    const nombre = document.getElementById('docNombre').value;
+    const especialidad = document.getElementById('docEspecialidad').value;
+    const duracion_cita = parseInt(document.getElementById('docDuracion').value) || 30;
+    const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
+    if (!nombre) {
+        alertEl.innerHTML = '<div class="alert alert-error">El nombre es requerido</div>';
+        return;
+    }
+    try {
+        if (editandoDoctorId) {
+            await apiFetch(`/doctores/${editandoDoctorId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio })
+            });
+            alertEl.innerHTML = '<div class="alert alert-success">Doctor actualizado ✓</div>';
+        } else {
+            await apiFetch('/doctores', {
+                method: 'POST',
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio })
+            });
+            alertEl.innerHTML = '<div class="alert alert-success">Doctor agregado ✓</div>';
+        }
+        cancelarEdicionDoctor();
+        loadDoctores();
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────
