@@ -123,16 +123,16 @@
 <div class="container" id="appContainer" style="display:none">
     <aside class="sidebar">
         <div class="logo"><h1>AutoCita</h1></div>
-        <button class="nav-link active" data-section="dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
-        <button class="nav-link" data-section="pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
-        <button class="nav-link" data-section="citas" onclick="showSection('citas', this)">Citas</button>
-        <button class="nav-link" data-section="listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
-        <button class="nav-link" data-section="calendario" onclick="showSection('calendario', this)">Calendario</button>
-        <button class="nav-link" data-section="doctores" onclick="showSection('doctores', this)">Doctores</button>
-        <button class="nav-link" data-section="facturacion" onclick="showSection('facturacion', this)">Facturación</button>
-        <button class="nav-link" data-section="expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
-        <button class="nav-link" data-section="settings" onclick="showSection('settings', this)">Settings</button>
-        <button class="nav-link" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
+        <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
+        <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
+        <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Citas</button>
+        <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
+        <button class="nav-link" data-section="calendario" data-i18n="nav.calendario" onclick="showSection('calendario', this)">Calendario</button>
+        <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
+        <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
+        <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
+        <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
+        <button class="nav-link" data-i18n="nav.logout" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
     </aside>
     <div class="main">
         <header class="header">
@@ -147,7 +147,7 @@
 
             <!-- Dashboard -->
             <section class="section active" id="dashboard">
-                <h2 style="margin-bottom: 24px;">Dashboard</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.dashboard">Dashboard</h2>
                 <div class="kpis">
                     <div class="kpi"><div>Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
                     <div class="kpi"><div>Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
@@ -165,7 +165,7 @@
 
             <!-- Pacientes -->
             <section class="section" id="pacientes">
-                <h2 style="margin-bottom: 24px;">Pacientes</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.pacientes">Pacientes</h2>
                 <div class="card">
                     <div class="card-title">Agregar Paciente</div>
                     <div id="alertPaciente"></div>
@@ -203,7 +203,7 @@
 
             <!-- Citas -->
             <section class="section" id="citas">
-                <h2 style="margin-bottom: 24px;">Citas</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.citas">Citas</h2>
                 <div class="card">
                     <div class="card-title">Cita en bloque (un paciente, varios doctores el mismo día)</div>
                     <div id="alertBloque"></div>
@@ -285,7 +285,7 @@
 
             <!-- Lista de Espera -->
             <section class="section" id="listaEspera">
-                <h2 style="margin-bottom: 24px;">Lista de Espera</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.listaEspera">Lista de Espera</h2>
                 <div class="card">
                     <div class="card-title">Agregar a la lista de espera</div>
                     <div id="alertListaEspera"></div>
@@ -317,7 +317,7 @@
             </section>
 
             <section class="section" id="calendario">
-                <h2 style="margin-bottom: 24px;">Calendario</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.calendario">Calendario</h2>
                 <div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
                         <div style="display:flex;align-items:center;gap:12px">
@@ -333,7 +333,7 @@
 
             <!-- Doctores -->
             <section class="section" id="doctores">
-                <h2 style="margin-bottom: 24px;">Doctores</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.doctores">Doctores</h2>
                 <div class="card">
                     <div class="card-title" id="doctorFormTitle">Agregar Doctor</div>
                     <div id="alertDoctor"></div>
@@ -358,7 +358,7 @@
 
             <!-- Facturación -->
             <section class="section" id="facturacion">
-                <h2 style="margin-bottom: 24px;">Facturación</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.facturacion">Facturación</h2>
                 <div class="card">
                     <div class="card-title">Catálogo de servicios y precios</div>
                     <div id="alertServicios"></div>
@@ -384,7 +384,7 @@
 
             <!-- Expedientes -->
             <section class="section" id="expedientes">
-                <h2 style="margin-bottom: 24px;">Expedientes</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.expedientes">Expedientes</h2>
                 <div class="card">
                     <div class="card-title">Seleccionar paciente</div>
                     <select id="expedientePaciente" onchange="loadExpediente()"><option value="">Elegir paciente...</option></select>
@@ -412,7 +412,7 @@
 
             <!-- Settings -->
             <section class="section" id="settings">
-                <h2 style="margin-bottom: 24px;">Configuración</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.settings">Configuración</h2>
                 <div class="card">
                     <div class="card-title">Tu Clínica</div>
                     <div id="settingsInfo" class="loading">Cargando...</div>
@@ -1636,9 +1636,46 @@ function showSection(id, btn) {
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
 }
 
+// ── IDIOMA DEL PANEL (Fase 1: menú lateral + títulos de sección) ────
+const panelTranslations = {
+    es: {
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Citas',
+        'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
+        'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Citas',
+        'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
+        'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
+    },
+    en: {
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Appointments',
+        'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
+        'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Appointments',
+        'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
+        'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
+    },
+    pt: {
+        'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Consultas',
+        'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
+        'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
+        'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Consultas',
+        'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
+        'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
+    }
+};
+
+function applyPanelLang(lang) {
+    const t = panelTranslations[lang] || panelTranslations.es;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+    });
+}
+
 function changeLang(lang, btn) {
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
+    applyPanelLang(lang);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
