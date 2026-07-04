@@ -441,6 +441,14 @@
                     <div class="card-title">Tu Clínica</div>
                     <div id="settingsInfo" class="loading">Cargando...</div>
                 </div>
+                <div class="card">
+                    <div class="card-title">Configuración de recordatorios</div>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.</p>
+                    <div id="alertRecordatorios"></div>
+                    <div class="form-group"><label>Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
+                    <div class="form-group"><label>Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2"></div>
+                    <button class="btn btn-block" onclick="guardarConfigRecordatorios()">Guardar</button>
+                </div>
 
                 <!-- Solo visible para el dueño -->
                 <div id="equipoSection" style="display:none">
@@ -1516,8 +1524,26 @@ async function loadSettings() {
             <div class="form-group"><label>Plan</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
             <div class="form-group"><label>Estado</label><input type="text" value="${clinica.status || '—'}" disabled></div>
         `;
+        document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
+        document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
     } catch (e) {
         infoEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+}
+
+async function guardarConfigRecordatorios() {
+    const alertEl = document.getElementById('alertRecordatorios');
+    const recordatorio_horas_1 = parseInt(document.getElementById('recHoras1').value) || 24;
+    const recordatorio_horas_2 = parseInt(document.getElementById('recHoras2').value) || 2;
+    try {
+        await apiFetch('/clinica/setup', {
+            method: 'PATCH',
+            body: JSON.stringify({ recordatorio_horas_1, recordatorio_horas_2 })
+        });
+        alertEl.innerHTML = '<div class="alert alert-success">Guardado ✓</div>';
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
 
