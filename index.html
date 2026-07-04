@@ -86,7 +86,27 @@
         .auth-pane { display: none; }
         .auth-pane.active { display: block; }
 
-        @media (max-width: 768px) { .sidebar { display: none; } .main { margin-left: 0; } }
+        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--gray-700); font-size: 22px; }
+        .sidebar-overlay { display: none; }
+        @media (max-width: 768px) {
+            .sidebar {
+                display: block;
+                left: -280px;
+                z-index: 1000;
+                transition: left 0.25s ease;
+                box-shadow: 2px 0 16px rgba(0,0,0,0.15);
+            }
+            .sidebar.open { left: 0; }
+            .main { margin-left: 0; }
+            .mobile-menu-btn { display: block; }
+            .sidebar-overlay {
+                display: none;
+                position: fixed; inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 999;
+            }
+            .sidebar-overlay.open { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -121,7 +141,8 @@
 
 <!-- App -->
 <div class="container" id="appContainer" style="display:none">
-    <aside class="sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
+    <aside class="sidebar" id="sidebar">
         <div class="logo"><h1>AutoCita</h1></div>
         <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
         <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
@@ -136,7 +157,10 @@
     </aside>
     <div class="main">
         <header class="header">
-            <h2 id="headerClinica">AutoCita</h2>
+            <div style="display:flex;align-items:center;gap:8px">
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menú">☰</button>
+                <h2 id="headerClinica">AutoCita</h2>
+            </div>
             <div class="language-selector">
                 <button class="lang-btn active" onclick="changeLang('es', this)">ES</button>
                 <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
@@ -1634,6 +1658,17 @@ function showSection(id, btn) {
     document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
+    closeMobileMenu();
+}
+
+function toggleMobileMenu() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+
+function closeMobileMenu() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
 }
 
 // ── IDIOMA DEL PANEL (Fase 1: menú lateral + títulos de sección) ────
