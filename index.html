@@ -300,6 +300,7 @@
                     <div class="form-group"><label>Especialidad</label><input type="text" id="docEspecialidad" placeholder="Medicina General"></div>
                     <div class="form-group"><label>Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
                     <div class="form-group"><label>Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div class="form-group"><label>Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
                         <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()">Agregar Doctor</button>
                         <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-700)" onclick="cancelarEdicionDoctor()">Cancelar</button>
@@ -352,6 +353,11 @@
                     <div id="alertExpediente"></div>
                     <div class="form-group"><label>Nota</label><textarea id="expedienteContenido" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
                     <div class="form-group"><label>Medicamentos recetados (opcional)</label><input type="text" id="expedienteMedicamentos" placeholder="Ej: Acetaminofén 500mg cada 8h"></div>
+                    <div style="display:flex;gap:12px">
+                        <div class="form-group" style="flex:1"><label>Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
+                        <div class="form-group" style="flex:1"><label>Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
+                    </div>
+                    <div class="form-group"><label>Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
                     <div style="display:flex;gap:10px;align-items:center">
                         <button class="btn" style="flex:1" onclick="agregarNotaExpediente()">Guardar nota</button>
                         <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-500);cursor:not-allowed" disabled title="Próximamente — grabación + transcripción automática">🎤 Nota de voz (próximamente)</button>
@@ -1295,6 +1301,7 @@ function editarDoctor(id) {
     document.getElementById('docEspecialidad').value = doc.especialidad || '';
     document.getElementById('docDuracion').value = doc.duracion_cita || 30;
     document.getElementById('docPrecio').value = doc.precio || 0;
+    document.getElementById('docInstrucciones').value = doc.instrucciones || '';
     document.getElementById('doctorFormTitle').textContent = 'Editar Doctor';
     document.getElementById('doctorSubmitBtn').textContent = 'Guardar cambios';
     document.getElementById('doctorFormTitle').scrollIntoView({ behavior: 'smooth' });
@@ -1302,7 +1309,7 @@ function editarDoctor(id) {
 
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
-    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio'].forEach(id => document.getElementById(id).value = '');
+    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('doctorFormTitle').textContent = 'Agregar Doctor';
     document.getElementById('doctorSubmitBtn').textContent = 'Agregar Doctor';
     document.getElementById('alertDoctor').innerHTML = '';
@@ -1314,6 +1321,7 @@ async function guardarDoctor() {
     const especialidad = document.getElementById('docEspecialidad').value;
     const duracion_cita = parseInt(document.getElementById('docDuracion').value) || 30;
     const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
+    const instrucciones = document.getElementById('docInstrucciones').value || null;
     if (!nombre) {
         alertEl.innerHTML = '<div class="alert alert-error">El nombre es requerido</div>';
         return;
@@ -1322,13 +1330,13 @@ async function guardarDoctor() {
         if (editandoDoctorId) {
             await apiFetch(`/doctores/${editandoDoctorId}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio })
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
             });
             alertEl.innerHTML = '<div class="alert alert-success">Doctor actualizado ✓</div>';
         } else {
             await apiFetch('/doctores', {
                 method: 'POST',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio })
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
             });
             alertEl.innerHTML = '<div class="alert alert-success">Doctor agregado ✓</div>';
         }
@@ -1388,6 +1396,8 @@ async function loadExpediente() {
                     <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${new Date(n.created_at).toLocaleString('es-CR')}</div>
                     <div>${n.contenido}</div>
                     ${n.medicamentos ? `<div style="font-size:13px;color:var(--primary);margin-top:4px">💊 ${n.medicamentos}</div>` : ''}
+                    ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 Dolor: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
+                    ${n.plan_tratamiento ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📋 ${n.plan_tratamiento}</div>` : ''}
                 </div>
             `).join('');
         }
@@ -1401,6 +1411,9 @@ async function agregarNotaExpediente() {
     const pacienteId = document.getElementById('expedientePaciente').value;
     const contenido = document.getElementById('expedienteContenido').value;
     const medicamentos = document.getElementById('expedienteMedicamentos').value;
+    const dolor_inicial = document.getElementById('expedienteDolorInicial').value;
+    const dolor_actual = document.getElementById('expedienteDolorActual').value;
+    const plan_tratamiento = document.getElementById('expedientePlanTratamiento').value;
     if (!contenido) {
         alertEl.innerHTML = '<div class="alert alert-error">Escribí una nota</div>';
         return;
@@ -1408,11 +1421,14 @@ async function agregarNotaExpediente() {
     try {
         await apiFetch('/expediente', {
             method: 'POST',
-            body: JSON.stringify({ paciente_id: pacienteId, contenido, medicamentos })
+            body: JSON.stringify({ paciente_id: pacienteId, contenido, medicamentos, dolor_inicial, dolor_actual, plan_tratamiento })
         });
         alertEl.innerHTML = '<div class="alert alert-success">Nota guardada ✓</div>';
         document.getElementById('expedienteContenido').value = '';
         document.getElementById('expedienteMedicamentos').value = '';
+        document.getElementById('expedienteDolorInicial').value = '';
+        document.getElementById('expedienteDolorActual').value = '';
+        document.getElementById('expedientePlanTratamiento').value = '';
         loadExpediente();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
