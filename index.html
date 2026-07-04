@@ -174,6 +174,14 @@
                     <div class="form-group"><label>Email</label><input type="email" id="pEmail" placeholder="juan@email.com"></div>
                     <div class="form-group"><label>Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
                     <div class="form-group">
+                        <label>Idioma preferido</label>
+                        <select id="pIdioma">
+                            <option value="es" selected>Español</option>
+                            <option value="en">English</option>
+                            <option value="pt">Português</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Asociar doctor(es) para esta visita (opcional)</label>
                         <div id="doctorBubblesPaciente" class="bubble-group"><span style="color:var(--gray-500);font-size:13px">Cargando doctores...</span></div>
                     </div>
@@ -210,6 +218,39 @@
                     <div id="bloqueFilas"></div>
                     <button class="btn" style="background:var(--gray-200);color:var(--gray-700);margin-top:4px;margin-bottom:12px" onclick="agregarFilaBloque()">+ Agregar doctor</button>
                     <button class="btn btn-block" onclick="crearCitasBloque()">Crear citas en bloque</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">Citas recurrentes (varias semanas)</div>
+                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.</p>
+                    <div id="alertRecurrente"></div>
+                    <div class="form-group">
+                        <label>Paciente</label>
+                        <select id="recurrentePaciente"><option value="">Cargando pacientes...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Doctor</label>
+                        <select id="recurrenteDoctor"><option value="">Elegir doctor...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de la primera cita</label>
+                        <input type="date" id="recurrenteFecha" oninput="actualizarPreviewRecurrente()">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora</label>
+                        <input type="time" id="recurrenteHora" value="09:00" oninput="actualizarPreviewRecurrente()">
+                    </div>
+                    <div style="display:flex;gap:12px">
+                        <div class="form-group" style="flex:1">
+                            <label>Repetir cada (semanas)</label>
+                            <input type="number" id="recurrenteCadaSemanas" value="1" min="1" oninput="actualizarPreviewRecurrente()">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label>Cantidad de citas</label>
+                            <input type="number" id="recurrenteCantidad" value="4" min="1" max="52" oninput="actualizarPreviewRecurrente()">
+                        </div>
+                    </div>
+                    <div id="recurrentePreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
+                    <button class="btn btn-block" onclick="crearCitasRecurrentes()">Crear citas recurrentes</button>
                 </div>
                 <div class="card">
                     <div class="card-title">Todas las Citas</div>
@@ -726,6 +767,7 @@ async function loadPacientes() {
         const data = await apiFetch('/pacientes');
         pacientesCache = data || [];
         populatePacienteSelectBloque();
+        populateRecurrenteSelects();
         const tbody = document.getElementById('tablaPacientes');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay pacientes aún</td></tr>';
@@ -751,6 +793,7 @@ async function crearPaciente() {
                 telefono: document.getElementById('pTelefono').value,
                 email: document.getElementById('pEmail').value,
                 cedula: document.getElementById('pCedula').value,
+                idioma: document.getElementById('pIdioma').value,
             })
         });
 
@@ -780,6 +823,7 @@ async function crearPaciente() {
 
         alertEl.innerHTML = `<div class="alert alert-success">Paciente agregado ✓${citasCreadas ? ` con ${citasCreadas} cita(s)` : ''}</div>`;
         ['pNombre','pTelefono','pEmail','pCedula'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('pIdioma').value = 'es';
         doctoresSeleccionados = [];
         document.getElementById('pFechaVisita').value = '';
         document.getElementById('fechaVisitaGroup').style.display = 'none';
@@ -1263,6 +1307,87 @@ async function crearCitasBloque() {
     }
 }
 
+// ── CITAS RECURRENTES (varias semanas) ───────────────────────────
+function populateRecurrenteSelects() {
+    const selPac = document.getElementById('recurrentePaciente');
+    if (selPac) {
+        const actual = selPac.value;
+        selPac.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+            pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+        if (actual) selPac.value = actual;
+    }
+    const selDoc = document.getElementById('recurrenteDoctor');
+    if (selDoc) {
+        const actual = selDoc.value;
+        selDoc.innerHTML = '<option value="">Elegir doctor...</option>' +
+            doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        if (actual) selDoc.value = actual;
+    }
+}
+
+function actualizarPreviewRecurrente() {
+    const fechaInicio = document.getElementById('recurrenteFecha').value;
+    const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
+    const cantidad = parseInt(document.getElementById('recurrenteCantidad').value) || 1;
+    const previewEl = document.getElementById('recurrentePreview');
+    if (!fechaInicio) { previewEl.innerHTML = ''; return; }
+    const fechas = [];
+    for (let i = 0; i < Math.min(cantidad, 52); i++) {
+        const fecha = new Date(fechaInicio + 'T00:00:00');
+        fecha.setDate(fecha.getDate() + i * cadaSemanas * 7);
+        fechas.push(fecha.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' }));
+    }
+    previewEl.innerHTML = 'Se crearán citas: ' + fechas.join(', ');
+}
+
+async function crearCitasRecurrentes() {
+    const alertEl = document.getElementById('alertRecurrente');
+    const paciente_id = document.getElementById('recurrentePaciente').value;
+    const doctor_id = document.getElementById('recurrenteDoctor').value;
+    const fechaInicio = document.getElementById('recurrenteFecha').value;
+    const hora = document.getElementById('recurrenteHora').value;
+    const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
+    const cantidad = parseInt(document.getElementById('recurrenteCantidad').value) || 1;
+
+    if (!paciente_id || !doctor_id || !fechaInicio || !hora) {
+        alertEl.innerHTML = '<div class="alert alert-error">Completá paciente, doctor, fecha y hora</div>';
+        return;
+    }
+    if (!confirm(`¿Crear ${cantidad} cita(s), una cada ${cadaSemanas} semana(s), empezando el ${fechaInicio}?`)) return;
+
+    const doc = doctoresCache.find(d => d.id === doctor_id);
+    const duracion = doc ? (doc.duracion_cita || 30) : 30;
+    const [horaH, horaM] = hora.split(':').map(Number);
+
+    try {
+        let creadas = 0;
+        for (let i = 0; i < cantidad; i++) {
+            const fecha = new Date(fechaInicio + 'T00:00:00');
+            fecha.setDate(fecha.getDate() + i * cadaSemanas * 7);
+            const fechaISO = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}T${String(horaH).padStart(2, '0')}:${String(horaM).padStart(2, '0')}:00`;
+            await apiFetch('/cita/crear', {
+                method: 'POST',
+                body: JSON.stringify({
+                    paciente_id,
+                    fecha: fechaISO,
+                    duracion,
+                    tipo_consulta: 'Seguimiento recurrente',
+                    doctor_id,
+                    calendar_id: doc?.calendar_id || null
+                })
+            });
+            creadas++;
+        }
+        alertEl.innerHTML = `<div class="alert alert-success">${creadas} cita(s) creada(s) ✓</div>`;
+        document.getElementById('recurrentePreview').innerHTML = '';
+        loadCitas();
+        loadDashboard();
+        setTimeout(() => alertEl.innerHTML = '', 4000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+
 // ── DOCTORES ──────────────────────────────────────────────────────
 async function loadDoctores() {
     try {
@@ -1273,6 +1398,7 @@ async function loadDoctores() {
         renderCalendarLeyenda();
         populateListaEsperaSelects();
         populateEmergDoctorSelect();
+        populateRecurrenteSelects();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
