@@ -318,8 +318,8 @@
                         <select id="lePaciente"><option value="">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Doctor preferido (opcional)</label>
-                        <select id="leDoctor"><option value="">Cualquier doctor</option></select>
+                        <label>Doctor</label>
+                        <select id="leDoctor"><option value="">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
                         <label>Fecha deseada (opcional)</label>
@@ -1189,7 +1189,7 @@ function populateListaEsperaSelects() {
     const selDoc = document.getElementById('leDoctor');
     if (selDoc) {
         const actual = selDoc.value;
-        selDoc.innerHTML = '<option value="">Cualquier doctor</option>' +
+        selDoc.innerHTML = '<option value="">Elegir doctor...</option>' +
             doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
         if (actual) selDoc.value = actual;
     }
@@ -1201,8 +1201,8 @@ async function agregarListaEspera() {
     const doctor_id = document.getElementById('leDoctor').value || null;
     const fecha_deseada = document.getElementById('leFecha').value || null;
     const notas = document.getElementById('leNotas').value || null;
-    if (!paciente_id) {
-        alertEl.innerHTML = '<div class="alert alert-error">Elegí un paciente</div>';
+    if (!paciente_id || !doctor_id) {
+        alertEl.innerHTML = '<div class="alert alert-error">Elegí paciente y doctor</div>';
         return;
     }
     try {
