@@ -957,7 +957,7 @@ async function loadCitas() {
 
 async function enviarRecordatorio(citaId) {
     try {
-        await apiFetch(`/cita/${citaId}/recordatorio`, { method: 'POST' });
+        await apiFetch(`/cita/${citaId}/enviar-recordatorio`, { method: 'POST' });
         alert('Recordatorio enviado ✓');
     } catch (e) { alert('Error: ' + e.message); }
 }
