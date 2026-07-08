@@ -1742,6 +1742,9 @@ function changeLang(lang, btn) {
 // ── INIT ──────────────────────────────────────────────────────────
 if (getToken()) {
     showApp();
+    // Auto-refresh: vuelve a cargar los datos cada 45s, sin que el usuario
+    // tenga que recargar la página. Solo corre si hay sesión activa.
+    setInterval(() => { if (getToken()) loadAll(); }, 45000);
 }
 </script>
 </body>
