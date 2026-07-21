@@ -4,156 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoCita - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --primary: #2D6A4F;
             --primary-dark: #1B4332;
-            --gray-50: #F7FAF8;
-            --gray-100: #F0F4F1;
-            --gray-200: #E2E8E4;
-            --gray-500: #6B7672;
-            --gray-700: #37423D;
-            --gray-900: #14201A;
+            --primary-soft: #EAF4EE;
+            --gray-50: #FAFBFA;
+            --gray-100: #F2F5F3;
+            --gray-200: #E5EAE6;
+            --gray-300: #D3DAD5;
+            --gray-500: #71807A;
+            --gray-700: #3C4A43;
+            --gray-900: #16211B;
             --white: #FFFFFF;
             --success: #40916C;
-            --danger: #EF4444;
+            --danger: #E5484D;
+            --danger-soft: #FDECEC;
+            --warning: #B45309;
+            --warning-soft: #FEF3E2;
             --leaf: #52B788;
-            --leaf-light: #95D5B2;
+            --shadow-sm: 0 1px 2px rgba(20,32,26,0.05);
+            --shadow-md: 0 2px 10px rgba(20,32,26,0.06);
+            --shadow-lg: 0 8px 28px rgba(20,32,26,0.10);
+            --radius: 12px;
+            --radius-sm: 8px;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
         .container { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: var(--white); border-right: 1px solid var(--gray-200); padding: 24px 0; position: fixed; height: 100vh; overflow-y: auto; }
-        .logo h1 { font-size: 24px; font-weight: 700; color: var(--primary); padding: 0 24px 32px; border-bottom: 1px solid var(--gray-200); margin-bottom: 16px; }
-        .nav-link { display: block; padding: 12px 24px; color: var(--gray-700); cursor: pointer; background: none; border: none; width: 100%; text-align: left; font-weight: 500; transition: all 0.2s; }
-        .nav-link:hover { background: var(--gray-50); color: var(--primary); }
-        .nav-link.active { background: var(--primary); color: var(--white); }
-        .main { margin-left: 260px; flex: 1; }
-        .header { background: var(--white); border-bottom: 1px solid var(--gray-200); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
-        .language-selector { display: flex; gap: 8px; }
-        .lang-btn { padding: 8px 12px; border: 1px solid var(--gray-200); background: var(--white); cursor: pointer; border-radius: 4px; font-weight: 600; }
-        .lang-btn.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
-        .content { padding: 32px; }
-        .card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
-        .card-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
-        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
-        .kpi { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 20px; text-align: center; }
-        .kpi-value { font-size: 32px; font-weight: 700; color: var(--primary); }
+
+        /* Sidebar */
+        .sidebar { width: 252px; background: var(--white); border-right: 1px solid var(--gray-200); padding: 20px 12px; position: fixed; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+        .logo { padding: 8px 12px 24px; }
+        .logo h1 { font-size: 20px; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.02em; }
+        .logo span { display: block; font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+        .nav-group { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--gray-700); cursor: pointer; background: none; border: none; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; width: 100%; text-align: left; font-family: inherit; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+        .nav-link:hover { background: var(--gray-100); color: var(--gray-900); }
+        .nav-link.active { background: var(--primary-soft); color: var(--primary-dark); border-left-color: var(--primary); font-weight: 600; }
+        .nav-link.logout-link { margin-top: 24px; color: var(--danger); }
+        .nav-link.logout-link:hover { background: var(--danger-soft); }
+
+        .main { margin-left: 252px; flex: 1; min-width: 0; }
+        .header { background: var(--white); box-shadow: var(--shadow-sm); padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .header h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+        .content { padding: 28px 32px 60px; max-width: 1200px; }
+
+        .card { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.01em; }
+        .card-subtitle { font-size: 13px; color: var(--gray-500); margin-top: -10px; margin-bottom: 18px; line-height: 1.5; }
+
+        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .kpi { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+        .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
+        .kpi-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+        .kpi-value { font-size: 30px; font-weight: 800; color: var(--gray-900); letter-spacing: -0.02em; }
+
         .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--gray-700); }
-        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 14px; font-family: inherit; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--gray-700); }
+        input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); background: var(--gray-50); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; color: var(--gray-900); transition: border-color .15s, background .15s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: var(--white); }
         textarea { min-height: 100px; resize: vertical; }
-        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--primary); color: var(--white); }
-        .btn:hover { background: var(--primary-dark); }
+
+        .btn { padding: 10px 18px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; background: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); transition: transform .1s, box-shadow .1s, background .15s; }
+        .btn:hover { background: var(--primary-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
         .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: #C2373C; }
         .btn-success { background: var(--success); }
+        .btn-ghost { background: var(--gray-100); color: var(--gray-700); box-shadow: none; }
+        .btn-ghost:hover { background: var(--gray-200); color: var(--gray-900); box-shadow: none; }
         .btn-block { width: 100%; margin-top: 16px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--gray-200); background: var(--gray-50); }
-        td { padding: 12px; border-bottom: 1px solid var(--gray-200); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; box-shadow: none; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th { padding: 10px 12px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); border-bottom: 1px solid var(--gray-200); }
+        td { padding: 12px; border-bottom: 1px solid var(--gray-100); }
+        tbody tr:hover { background: var(--gray-50); }
+        tbody tr:last-child td { border-bottom: none; }
+
         .section { display: none; }
-        .section.active { display: block; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .badge-success { background: #D1FAE5; color: #065F46; }
-        .badge-warning { background: #FEF3C7; color: #92400E; }
-        .badge-danger { background: #FEE2E2; color: #991B1B; }
-        .loading { text-align: center; color: var(--gray-500); padding: 20px; }
-        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
-        .alert-success { background: #D1FAE5; color: #065F46; }
-        .alert-error { background: #FEE2E2; color: #991B1B; }
+        .section.active { display: block; animation: fadein .15s ease; }
+        @keyframes fadein { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: translateY(0);} }
+
+        .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
+        .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .badge-success { background: #E3F5EC; color: #1B7A47; }
+        .badge-warning { background: var(--warning-soft); color: #92400E; }
+        .badge-danger { background: var(--danger-soft); color: #B4232A; }
+
+        .loading { text-align: center; color: var(--gray-500); padding: 20px; font-size: 13px; }
+        .alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13.5px; font-weight: 500; }
+        .alert-success { background: #E3F5EC; color: #1B7A47; }
+        .alert-error { background: var(--danger-soft); color: #B4232A; }
+
         .bubble-group { display: flex; flex-wrap: wrap; gap: 8px; }
-        .bubble { padding: 8px 14px; border: 1.5px solid var(--gray-200); border-radius: 100px; cursor: pointer; font-size: 13px; font-weight: 600; background: var(--white); color: var(--gray-700); transition: all .15s; }
+        .bubble { padding: 7px 14px; border: 1.5px solid var(--gray-200); border-radius: 100px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--white); color: var(--gray-700); transition: all .15s; }
         .bubble.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
         .bloque-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .bloque-fila select { flex: 2; }
-        .bloque-fila .hora-preview { flex: 1; font-size: 13px; color: var(--gray-500); white-space: nowrap; }
-        .cal-grid { display: grid; grid-template-columns: 56px repeat(7, minmax(110px, 1fr)); border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; min-width: 820px; }
-        .cal-head { background: var(--gray-50); padding: 8px 4px; text-align: center; font-size: 12px; font-weight: 700; border-bottom: 1px solid var(--gray-200); border-left: 1px solid var(--gray-200); }
+        .bloque-fila .hora-preview { flex: 1; font-size: 12.5px; color: var(--gray-500); white-space: nowrap; }
+
+        .cal-grid { display: grid; grid-template-columns: 56px repeat(7, minmax(110px, 1fr)); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; min-width: 820px; }
+        .cal-head { background: var(--gray-50); padding: 8px 4px; text-align: center; font-size: 11.5px; font-weight: 700; border-bottom: 1px solid var(--gray-200); border-left: 1px solid var(--gray-200); }
         .cal-time-col { position: relative; border-right: 1px solid var(--gray-200); background: var(--gray-50); }
-        .cal-time-label { position: absolute; right: 6px; transform: translateY(-50%); font-size: 11px; color: var(--gray-500); }
+        .cal-time-label { position: absolute; right: 6px; transform: translateY(-50%); font-size: 10.5px; color: var(--gray-500); }
         .cal-day-col { position: relative; border-left: 1px solid var(--gray-200); }
-        .cal-cita { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 2px 5px; font-size: 10.5px; color: #fff; overflow: hidden; line-height: 1.25; }
+        .cal-cita { position: absolute; left: 2px; right: 2px; border-radius: 5px; padding: 2px 5px; font-size: 10.5px; color: #fff; overflow: hidden; line-height: 1.25; box-shadow: var(--shadow-sm); }
 
         /* Login */
-        #loginScreen { display: none; position: fixed; inset: 0; background: var(--gray-50); z-index: 1000; align-items: center; justify-content: center; }
+        #loginScreen { display: none; position: fixed; inset: 0; background: linear-gradient(180deg, var(--gray-50), var(--primary-soft)); z-index: 1000; align-items: center; justify-content: center; }
         #loginScreen.visible { display: flex; }
-        .login-box { background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; padding: 40px; width: 100%; max-width: 420px; }
-        .login-box h2 { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 24px; text-align:center; }
-        .auth-tabs { display: flex; border: 1.5px solid var(--gray-200); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-        .auth-tab { flex: 1; padding: 10px; border: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
-        .auth-tab.active { background: var(--primary); color: var(--white); }
-        .auth-tab.inactive { background: var(--white); color: var(--gray-500); }
+        .login-box { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; }
+        .login-box h2 { font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 24px; text-align:center; letter-spacing: -0.02em; }
+        .auth-tabs { display: flex; border-bottom: 1.5px solid var(--gray-200); margin-bottom: 24px; }
+        .auth-tab { flex: 1; padding: 10px; border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border-bottom: 2px solid transparent; margin-bottom: -1.5px; }
+        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .auth-tab.inactive { color: var(--gray-500); }
         .auth-pane { display: none; }
         .auth-pane.active { display: block; }
 
-        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--gray-700); font-size: 22px; }
+        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: var(--gray-700); font-size: 20px; }
         .sidebar-overlay { display: none; }
+
+        .lang-toggle { display: inline-flex; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; }
+        .lang-btn { padding: 8px 16px; border: none; background: var(--white); cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12.5px; color: var(--gray-500); border-right: 1px solid var(--gray-200); transition: all .15s; }
+        .lang-btn:last-child { border-right: none; }
+        .lang-btn.active { background: var(--primary); color: var(--white); }
+
         @media (max-width: 768px) {
-            .sidebar {
-                display: block;
-                left: -280px;
-                z-index: 1000;
-                transition: left 0.25s ease;
-                box-shadow: 2px 0 16px rgba(0,0,0,0.15);
-            }
+            .sidebar { left: -280px; z-index: 1000; transition: left 0.25s ease; box-shadow: 2px 0 16px rgba(0,0,0,0.15); }
             .sidebar.open { left: 0; }
             .main { margin-left: 0; }
             .mobile-menu-btn { display: block; }
-            .sidebar-overlay {
-                display: none;
-                position: fixed; inset: 0;
-                background: rgba(0,0,0,0.4);
-                z-index: 999;
-            }
+            .content { padding: 20px 16px 48px; }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
             .sidebar-overlay.open { display: block; }
         }
     </style>
 </head>
 <body>
-
 <!-- Login / Registro -->
 <div id="loginScreen" class="visible">
     <div class="login-box">
         <h2>AutoCita</h2>
         <div class="auth-tabs">
-            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Iniciar sesión</button>
-            <button class="auth-tab inactive" id="tabRegister" onclick="switchAuthTab('register')">Crear cuenta</button>
+            <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')" data-i18n="login.tabLogin">Iniciar sesión</button>
+            <button class="auth-tab inactive" id="tabRegister" onclick="switchAuthTab('register')" data-i18n="login.tabRegister">Crear cuenta</button>
         </div>
         <div id="loginAlert"></div>
-
         <!-- Login -->
         <div id="paneLogin" class="auth-pane active">
-            <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="email@clinica.com"></div>
-            <div class="form-group"><label>Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-            <button class="btn btn-block" onclick="login()">Iniciar sesión</button>
+            <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="loginEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
+            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+            <button class="btn btn-block" onclick="login()" data-i18n="login.tabLogin">Iniciar sesión</button>
         </div>
-
         <!-- Registro -->
         <div id="paneRegister" class="auth-pane">
-            <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="email@clinica.com"></div>
-            <div class="form-group"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 8 caracteres"></div>
-            <div class="form-group"><label>Confirmar contraseña</label><input type="password" id="regPass2" placeholder="Repetí la contraseña"></div>
-            <div class="form-group"><label>Nombre de la clínica</label><input type="text" id="regNombre" placeholder="Clínica San José"></div>
-            <button class="btn btn-block" onclick="register()">Crear cuenta</button>
+            <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
+            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="regPass" data-i18n-placeholder="login.passwordPh" placeholder="Mínimo 8 caracteres"></div>
+            <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="regPass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
+            <div class="form-group"><label data-i18n="login.clinicName">Nombre de la clínica</label><input type="text" id="regNombre" data-i18n-placeholder="login.clinicNamePh" placeholder="Clínica San José"></div>
+            <button class="btn btn-block" onclick="register()" data-i18n="login.tabRegister">Crear cuenta</button>
         </div>
     </div>
 </div>
-
 <!-- App -->
 <div class="container" id="appContainer" style="display:none">
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
     <aside class="sidebar" id="sidebar">
-        <div class="logo"><h1>AutoCita</h1></div>
-        <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
-        <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
-        <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Citas</button>
-        <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
-        <button class="nav-link" data-section="calendario" data-i18n="nav.calendario" onclick="showSection('calendario', this)">Calendario</button>
-        <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
-        <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
-        <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
-        <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
-        <button class="nav-link" data-i18n="nav.logout" onclick="logout()" style="color: var(--danger); margin-top: 40px;">Logout</button>
+        <div class="logo"><h1>AutoCita</h1><span>Booking AI</span></div>
+        <div class="nav-group">
+            <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
+            <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
+            <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Citas</button>
+            <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
+            <button class="nav-link" data-section="calendario" data-i18n="nav.calendario" onclick="showSection('calendario', this)">Calendario</button>
+            <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
+            <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
+            <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
+            <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
+        </div>
+        <button class="nav-link logout-link" data-i18n="nav.logout" onclick="logout()">Logout</button>
     </aside>
     <div class="main">
         <header class="header">
@@ -161,352 +197,340 @@
                 <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menú">☰</button>
                 <h2 id="headerClinica">AutoCita</h2>
             </div>
-            <div class="language-selector">
-                <button class="lang-btn active" onclick="changeLang('es', this)">ES</button>
-                <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
-                <button class="lang-btn" onclick="changeLang('pt', this)">PT</button>
-            </div>
         </header>
         <div class="content">
-
             <!-- Dashboard -->
             <section class="section active" id="dashboard">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.dashboard">Dashboard</h2>
                 <div class="kpis">
-                    <div class="kpi"><div>Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
-                    <div class="kpi"><div>Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
-                    <div class="kpi"><div>Pacientes</div><div class="kpi-value" id="kpiPacientes">—</div></div>
-                    <div class="kpi"><div>Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
+                    <div class="kpi"><div class="kpi-label" data-i18n="dash.citasHoy">Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
+                    <div class="kpi"><div class="kpi-label" data-i18n="dash.totalCitas">Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
+                    <div class="kpi"><div class="kpi-label" data-i18n="dash.pacientes">Pacientes</div><div class="kpi-value" id="kpiPacientes">—</div></div>
+                    <div class="kpi"><div class="kpi-label" data-i18n="dash.doctores">Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Próximas Citas</div>
+                    <div class="card-title" data-i18n="dash.proximasCitas">Próximas Citas</div>
                     <table>
-                        <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
-                        <tbody id="tablaCitasProximas"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th></tr></thead>
+                        <tbody id="tablaCitasProximas"><tr><td colspan="4" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
-
             <!-- Pacientes -->
             <section class="section" id="pacientes">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.pacientes">Pacientes</h2>
                 <div class="card">
-                    <div class="card-title">Agregar Paciente</div>
+                    <div class="card-title" data-i18n="pac.addTitle">Agregar Paciente</div>
                     <div id="alertPaciente"></div>
-                    <div class="form-group"><label>Nombre</label><input type="text" id="pNombre" placeholder="Juan Pérez"></div>
-                    <div class="form-group"><label>Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="pEmail" placeholder="juan@email.com"></div>
-                    <div class="form-group"><label>Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
+                    <div class="form-group"><label data-i18n="pac.nombre">Nombre</label><input type="text" id="pNombre" data-i18n-placeholder="pac.nombrePh" placeholder="Juan Pérez"></div>
+                    <div class="form-group"><label data-i18n="pac.telefono">Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
+                    <div class="form-group"><label data-i18n="pac.email">Email</label><input type="email" id="pEmail" data-i18n-placeholder="pac.emailPh" placeholder="juan@email.com"></div>
+                    <div class="form-group"><label data-i18n="pac.cedula">Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
                     <div class="form-group">
-                        <label>Idioma preferido</label>
+                        <label data-i18n="pac.idioma">Idioma preferido</label>
                         <select id="pIdioma">
-                            <option value="es" selected>Español</option>
-                            <option value="en">English</option>
-                            <option value="pt">Português</option>
+                            <option value="es" selected data-i18n="pac.idiomaEs">Español</option>
+                            <option value="en" data-i18n="pac.idiomaEn">English</option>
+                            <option value="pt" data-i18n="pac.idiomaPt">Português</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Asociar doctor(es) para esta visita (opcional)</label>
-                        <div id="doctorBubblesPaciente" class="bubble-group"><span style="color:var(--gray-500);font-size:13px">Cargando doctores...</span></div>
+                        <label data-i18n="pac.asociarDoctores">Asociar doctor(es) para esta visita (opcional)</label>
+                        <div id="doctorBubblesPaciente" class="bubble-group"><span style="color:var(--gray-500);font-size:13px" data-i18n="pac.cargandoDoctores">Cargando doctores...</span></div>
                     </div>
                     <div class="form-group" id="fechaVisitaGroup" style="display:none">
-                        <label>Fecha de la visita</label>
+                        <label data-i18n="pac.fechaVisita">Fecha de la visita</label>
                         <input type="date" id="pFechaVisita" onchange="actualizarResumenBloquePaciente()">
                         <div id="resumenBloquePaciente" style="margin-top:8px;font-size:13px;color:var(--gray-500)"></div>
                     </div>
-                    <button class="btn btn-block" onclick="crearPaciente()">Agregar Paciente</button>
+                    <button class="btn btn-block" onclick="crearPaciente()" data-i18n="pac.btnAgregar">Agregar Paciente</button>
                 </div>
                 <div class="card">
-                    <div class="card-title">Lista de Pacientes</div>
+                    <div class="card-title" data-i18n="pac.listaTitle">Lista de Pacientes</div>
                     <table>
-                        <thead><tr><th>Nombre</th><th>Teléfono</th><th>Cédula</th><th>Registrado</th></tr></thead>
-                        <tbody id="tablaPacientes"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colNombre">Nombre</th><th data-i18n="pac.telefono">Teléfono</th><th data-i18n="pac.cedula">Cédula</th><th data-i18n="pac.colRegistrado">Registrado</th></tr></thead>
+                        <tbody id="tablaPacientes"><tr><td colspan="4" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
-
             <!-- Citas -->
             <section class="section" id="citas">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.citas">Citas</h2>
                 <div class="card">
-                    <div class="card-title">Cita en bloque (un paciente, varios doctores el mismo día)</div>
+                    <div class="card-title" data-i18n="citas.bloqueTitle">Cita en bloque (un paciente, varios doctores el mismo día)</div>
                     <div id="alertBloque"></div>
                     <div class="form-group">
-                        <label>Paciente</label>
-                        <select id="bloquePaciente"><option value="">Cargando pacientes...</option></select>
+                        <label data-i18n="common.paciente">Paciente</label>
+                        <select id="bloquePaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Fecha</label>
+                        <label data-i18n="common.fecha">Fecha</label>
                         <input type="date" id="bloqueFecha">
                     </div>
                     <div id="bloqueFilas"></div>
-                    <button class="btn" style="background:var(--gray-200);color:var(--gray-700);margin-top:4px;margin-bottom:12px" onclick="agregarFilaBloque()">+ Agregar doctor</button>
-                    <button class="btn btn-block" onclick="crearCitasBloque()">Crear citas en bloque</button>
+                    <button class="btn btn-ghost" style="margin-top:4px;margin-bottom:12px" onclick="agregarFilaBloque()" data-i18n="citas.btnAgregarDoctor">+ Agregar doctor</button>
+                    <button class="btn btn-block" onclick="crearCitasBloque()" data-i18n="citas.btnCrearBloque">Crear citas en bloque</button>
                 </div>
                 <div class="card">
-                    <div class="card-title">Citas recurrentes (varias semanas)</div>
-                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.</p>
+                    <div class="card-title" data-i18n="citas.recurrenteTitle">Citas recurrentes (varias semanas)</div>
+                    <p class="card-subtitle" data-i18n="citas.recurrenteDesc">Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.</p>
                     <div id="alertRecurrente"></div>
                     <div class="form-group">
-                        <label>Paciente</label>
-                        <select id="recurrentePaciente"><option value="">Cargando pacientes...</option></select>
+                        <label data-i18n="common.paciente">Paciente</label>
+                        <select id="recurrentePaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Doctor</label>
-                        <select id="recurrenteDoctor"><option value="">Elegir doctor...</option></select>
+                        <label data-i18n="common.doctor">Doctor</label>
+                        <select id="recurrenteDoctor"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Fecha de la primera cita</label>
+                        <label data-i18n="citas.fechaPrimera">Fecha de la primera cita</label>
                         <input type="date" id="recurrenteFecha" oninput="actualizarPreviewRecurrente()">
                     </div>
                     <div class="form-group">
-                        <label>Hora</label>
+                        <label data-i18n="common.hora">Hora</label>
                         <input type="time" id="recurrenteHora" value="09:00" oninput="actualizarPreviewRecurrente()">
                     </div>
                     <div style="display:flex;gap:12px">
                         <div class="form-group" style="flex:1">
-                            <label>Repetir cada (semanas)</label>
+                            <label data-i18n="citas.repetirCada">Repetir cada (semanas)</label>
                             <input type="number" id="recurrenteCadaSemanas" value="1" min="1" oninput="actualizarPreviewRecurrente()">
                         </div>
                         <div class="form-group" style="flex:1">
-                            <label>Cantidad de citas</label>
+                            <label data-i18n="citas.cantidad">Cantidad de citas</label>
                             <input type="number" id="recurrenteCantidad" value="4" min="1" max="52" oninput="actualizarPreviewRecurrente()">
                         </div>
                     </div>
                     <div id="recurrentePreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
-                    <button class="btn btn-block" onclick="crearCitasRecurrentes()">Crear citas recurrentes</button>
+                    <button class="btn btn-block" onclick="crearCitasRecurrentes()" data-i18n="citas.btnCrearRecurrente">Crear citas recurrentes</button>
                 </div>
                 <div class="card">
-                    <div class="card-title">Todas las Citas</div>
+                    <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
                     <table>
-                        <thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Doctor</th><th>Estado</th><th>Acción</th></tr></thead>
-                        <tbody id="tablaCitas"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.doctor">Doctor</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaCitas"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
                 <div class="card">
-                    <div class="card-title">⚠️ Herramientas de emergencia</div>
+                    <div class="card-title" data-i18n="citas.emergTitle">⚠️ Herramientas de emergencia</div>
                     <div id="alertEmergencia"></div>
-                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
-                        Estas acciones afectan muchas citas a la vez y <strong>no avisan a los pacientes automáticamente</strong>.
-                        Después de usarlas, contactalos por WhatsApp a mano.
+                    <p class="card-subtitle" data-i18n="citas.emergDesc">
+                        Estas acciones afectan muchas citas a la vez y no avisan a los pacientes automáticamente. Después de usarlas, contactalos por WhatsApp a mano.
                     </p>
                     <div class="form-group">
-                        <label>Día a modificar</label>
+                        <label data-i18n="citas.diaModificar">Día a modificar</label>
                         <input type="date" id="emergDia">
                     </div>
                     <div class="form-group">
-                        <label>Doctor (opcional — vacío afecta a todos)</label>
-                        <select id="emergDoctor"><option value="">Todos los doctores</option></select>
+                        <label data-i18n="citas.doctorOpcional">Doctor (opcional — vacío afecta a todos)</label>
+                        <select id="emergDoctor"><option value="" data-i18n="common.todosDoctores">Todos los doctores</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
+                        <label data-i18n="citas.minutosLabel">Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
                         <input type="number" id="emergMinutos" placeholder="30">
                     </div>
-                    <button class="btn btn-block" style="background:#B45309" onclick="correrAgendaDia()">🕐 Correr agenda del día</button>
-                    <button class="btn btn-block btn-danger" style="margin-top:10px" onclick="cancelarDiaCompleto()">⛔ Cancelar todo el día</button>
+                    <button class="btn btn-block" style="background:var(--warning)" onclick="correrAgendaDia()" data-i18n="citas.btnCorrer">🕐 Correr agenda del día</button>
+                    <button class="btn btn-block btn-danger" style="margin-top:10px" onclick="cancelarDiaCompleto()" data-i18n="citas.btnCancelarDia">⛔ Cancelar todo el día</button>
                 </div>
             </section>
-
             <!-- Lista de Espera -->
             <section class="section" id="listaEspera">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.listaEspera">Lista de Espera</h2>
                 <div class="card">
-                    <div class="card-title">Agregar a la lista de espera</div>
+                    <div class="card-title" data-i18n="le.addTitle">Agregar a la lista de espera</div>
                     <div id="alertListaEspera"></div>
                     <div class="form-group">
-                        <label>Paciente</label>
-                        <select id="lePaciente"><option value="">Cargando pacientes...</option></select>
+                        <label data-i18n="common.paciente">Paciente</label>
+                        <select id="lePaciente"><option value="" data-i18n="common.seleccionarPaciente">Seleccionar paciente...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Doctor</label>
-                        <select id="leDoctor"><option value="">Elegir doctor...</option></select>
+                        <label data-i18n="common.doctor">Doctor</label>
+                        <select id="leDoctor"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
-                        <label>Fecha deseada (opcional)</label>
+                        <label data-i18n="le.fechaDeseada">Fecha deseada (opcional)</label>
                         <input type="date" id="leFecha">
                     </div>
                     <div class="form-group">
-                        <label>Notas</label>
-                        <input type="text" id="leNotas" placeholder="Ej: prefiere mañanas">
+                        <label data-i18n="le.notas">Notas</label>
+                        <input type="text" id="leNotas" data-i18n-placeholder="le.notasPh" placeholder="Ej: prefiere mañanas">
                     </div>
-                    <button class="btn btn-block" onclick="agregarListaEspera()">Agregar a la lista</button>
+                    <button class="btn btn-block" onclick="agregarListaEspera()" data-i18n="le.btnAgregar">Agregar a la lista</button>
                 </div>
                 <div class="card">
-                    <div class="card-title">En espera</div>
+                    <div class="card-title" data-i18n="le.enEsperaTitle">En espera</div>
                     <table>
-                        <thead><tr><th>Paciente</th><th>Doctor</th><th>Fecha deseada</th><th>Notas</th><th>Acción</th></tr></thead>
-                        <tbody id="tablaListaEspera"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.doctor">Doctor</th><th data-i18n="le.colFecha">Fecha deseada</th><th data-i18n="le.notas">Notas</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaListaEspera"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
-
             <section class="section" id="calendario">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.calendario">Calendario</h2>
                 <div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
                         <div style="display:flex;align-items:center;gap:12px">
-                            <button class="btn" style="background:var(--gray-200);color:var(--gray-700);padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
+                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
                             <strong id="calRangoSemana">—</strong>
-                            <button class="btn" style="background:var(--gray-200);color:var(--gray-700);padding:8px 14px" onclick="cambiarSemana(1)">→</button>
+                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(1)">→</button>
                         </div>
                         <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
                     </div>
                     <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
                 </div>
             </section>
-
             <!-- Doctores -->
             <section class="section" id="doctores">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.doctores">Doctores</h2>
                 <div class="card">
-                    <div class="card-title" id="doctorFormTitle">Agregar Doctor</div>
+                    <div class="card-title" id="doctorFormTitle" data-i18n="doc.addTitle">Agregar Doctor</div>
                     <div id="alertDoctor"></div>
-                    <div class="form-group"><label>Nombre</label><input type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
-                    <div class="form-group"><label>Especialidad</label><input type="text" id="docEspecialidad" placeholder="Medicina General"></div>
-                    <div class="form-group"><label>Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
-                    <div class="form-group"><label>Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
-                    <div class="form-group"><label>Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
+                    <div class="form-group"><label data-i18n="common.colNombre">Nombre</label><input type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
+                    <div class="form-group"><label data-i18n="doc.especialidad">Especialidad</label><input type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
+                    <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
+                    <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div class="form-group"><label data-i18n="doc.instrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
-                        <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()">Agregar Doctor</button>
-                        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-700)" onclick="cancelarEdicionDoctor()">Cancelar</button>
+                        <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()" data-i18n="doc.addTitle">Agregar Doctor</button>
+                        <button class="btn btn-ghost" style="flex:1" onclick="cancelarEdicionDoctor()" data-i18n="common.cancelar">Cancelar</button>
                     </div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Doctores Disponibles</div>
+                    <div class="card-title" data-i18n="doc.listTitle">Doctores Disponibles</div>
                     <table>
-                        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Duración Cita</th><th>Precio</th><th>Estado</th><th>Acción</th></tr></thead>
-                        <tbody id="tablaDoctores"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colNombre">Nombre</th><th data-i18n="doc.especialidad">Especialidad</th><th data-i18n="doc.colDuracion">Duración Cita</th><th data-i18n="doc.precio">Precio</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaDoctores"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
-
             <!-- Facturación -->
             <section class="section" id="facturacion">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.facturacion">Facturación</h2>
                 <div class="card">
-                    <div class="card-title">Catálogo de servicios y precios</div>
+                    <div class="card-title" data-i18n="fact.catalogoTitle">Catálogo de servicios y precios</div>
                     <div id="alertServicios"></div>
-                    <div class="form-group"><label>Nombre del servicio</label><input type="text" id="servNombre" placeholder="Ej: Radiografía"></div>
-                    <div class="form-group"><label>Precio (₡)</label><input type="number" id="servPrecio" placeholder="15000"></div>
-                    <button class="btn btn-block" onclick="crearServicio()">Agregar al catálogo</button>
+                    <div class="form-group"><label data-i18n="fact.servNombre">Nombre del servicio</label><input type="text" id="servNombre" data-i18n-placeholder="fact.servNombrePh" placeholder="Ej: Radiografía"></div>
+                    <div class="form-group"><label data-i18n="doc.precio">Precio (₡)</label><input type="number" id="servPrecio" placeholder="15000"></div>
+                    <button class="btn btn-block" onclick="crearServicio()" data-i18n="fact.btnAgregarCatalogo">Agregar al catálogo</button>
                 </div>
                 <div class="card">
-                    <div class="card-title">Catálogo actual</div>
+                    <div class="card-title" data-i18n="fact.catalogoActualTitle">Catálogo actual</div>
                     <table>
-                        <thead><tr><th>Servicio</th><th>Precio</th><th>Acción</th></tr></thead>
-                        <tbody id="tablaServicios"><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="fact.colServicio">Servicio</th><th data-i18n="doc.precio">Precio</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaServicios"><tr><td colspan="3" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
                 <div class="card">
-                    <div class="card-title">Factura de una cita</div>
+                    <div class="card-title" data-i18n="fact.facturaTitle">Factura de una cita</div>
                     <div class="form-group">
-                        <select id="facturaCita" onchange="loadFactura()"><option value="">Elegir cita...</option></select>
+                        <select id="facturaCita" onchange="loadFactura()"><option value="" data-i18n="fact.elegirCita">Elegir cita...</option></select>
                     </div>
                     <div id="facturaDetalle"></div>
                 </div>
             </section>
-
             <!-- Expedientes -->
             <section class="section" id="expedientes">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.expedientes">Expedientes</h2>
                 <div class="card">
-                    <div class="card-title">Seleccionar paciente</div>
-                    <select id="expedientePaciente" onchange="loadExpediente()"><option value="">Elegir paciente...</option></select>
+                    <div class="card-title" data-i18n="exp.seleccionarPaciente">Seleccionar paciente</div>
+                    <select id="expedientePaciente" onchange="loadExpediente()"><option value="" data-i18n="exp.elegirPaciente">Elegir paciente...</option></select>
                 </div>
                 <div class="card" id="expedienteFormCard" style="display:none">
-                    <div class="card-title">Agregar nota</div>
+                    <div class="card-title" data-i18n="exp.agregarNotaTitle">Agregar nota</div>
                     <div id="alertExpediente"></div>
-                    <div class="form-group"><label>Nota</label><textarea id="expedienteContenido" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
-                    <div class="form-group"><label>Medicamentos recetados (opcional)</label><input type="text" id="expedienteMedicamentos" placeholder="Ej: Acetaminofén 500mg cada 8h"></div>
+                    <div class="form-group"><label data-i18n="exp.nota">Nota</label><textarea id="expedienteContenido" data-i18n-placeholder="exp.notaPh" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
+                    <div class="form-group"><label data-i18n="exp.medicamentos">Medicamentos recetados (opcional)</label><input type="text" id="expedienteMedicamentos" data-i18n-placeholder="exp.medicamentosPh" placeholder="Ej: Acetaminofén 500mg cada 8h"></div>
                     <div style="display:flex;gap:12px">
-                        <div class="form-group" style="flex:1"><label>Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
-                        <div class="form-group" style="flex:1"><label>Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
+                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorInicial">Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
+                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorActual">Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
                     </div>
-                    <div class="form-group"><label>Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
+                    <div class="form-group"><label data-i18n="exp.planTratamiento">Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" data-i18n-placeholder="exp.planTratamientoPh" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
                     <div style="display:flex;gap:10px;align-items:center">
-                        <button class="btn" style="flex:1" onclick="agregarNotaExpediente()">Guardar nota</button>
-                        <button class="btn" style="flex:1;background:var(--gray-200);color:var(--gray-500);cursor:not-allowed" disabled title="Próximamente — grabación + transcripción automática">🎤 Nota de voz (próximamente)</button>
+                        <button class="btn" style="flex:1" onclick="agregarNotaExpediente()" data-i18n="exp.btnGuardar">Guardar nota</button>
+                        <button class="btn btn-ghost" style="flex:1;cursor:not-allowed" disabled data-i18n="exp.notaVoz" data-i18n-title="exp.notaVozTitle" title="Próximamente — grabación + transcripción automática">🎤 Nota de voz (próximamente)</button>
                     </div>
                 </div>
                 <div class="card" id="expedienteListaCard" style="display:none">
-                    <div class="card-title">Historial</div>
+                    <div class="card-title" data-i18n="exp.historialTitle">Historial</div>
                     <div id="expedienteLista"></div>
                 </div>
             </section>
-
             <!-- Settings -->
             <section class="section" id="settings">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.settings">Configuración</h2>
                 <div class="card">
-                    <div class="card-title">Tu Clínica</div>
-                    <div id="settingsInfo" class="loading">Cargando...</div>
+                    <div class="card-title" data-i18n="set.idiomaTitle">Idioma del panel</div>
+                    <p class="card-subtitle" data-i18n="set.idiomaDesc">Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.</p>
+                    <div class="lang-toggle">
+                        <button class="lang-btn active" onclick="changeLang('es', this)">ES</button>
+                        <button class="lang-btn" onclick="changeLang('en', this)">EN</button>
+                        <button class="lang-btn" onclick="changeLang('pt', this)">PT</button>
+                    </div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Configuración de recordatorios</div>
-                    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.</p>
-                    <div id="alertRecordatorios"></div>
-                    <div class="form-group"><label>Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
-                    <div class="form-group"><label>Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2"></div>
-                    <button class="btn btn-block" onclick="guardarConfigRecordatorios()">Guardar</button>
+                    <div class="card-title" data-i18n="set.clinicaTitle">Tu Clínica</div>
+                    <div id="settingsInfo" class="loading" data-i18n="common.loading">Cargando...</div>
                 </div>
-
+                <div class="card">
+                    <div class="card-title" data-i18n="set.recordatoriosTitle">Configuración de recordatorios</div>
+                    <p class="card-subtitle" data-i18n="set.recordatoriosDesc">Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.</p>
+                    <div id="alertRecordatorios"></div>
+                    <div class="form-group"><label data-i18n="set.rec1">Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
+                    <div class="form-group"><label data-i18n="set.rec2">Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2"></div>
+                    <button class="btn btn-block" onclick="guardarConfigRecordatorios()" data-i18n="set.btnGuardar">Guardar</button>
+                </div>
                 <!-- Solo visible para el dueño -->
                 <div id="equipoSection" style="display:none">
                     <div class="card">
-                        <div class="card-title">Equipo</div>
+                        <div class="card-title" data-i18n="set.equipoTitle">Equipo</div>
                         <div id="alertEquipo"></div>
                         <div class="form-group">
-                            <label>Email del nuevo miembro</label>
-                            <input type="email" id="equipoEmail" placeholder="doctor@clinica.com">
+                            <label data-i18n="set.emailNuevo">Email del nuevo miembro</label>
+                            <input type="email" id="equipoEmail" data-i18n-placeholder="set.emailNuevoPh" placeholder="doctor@clinica.com">
                         </div>
                         <div class="form-group">
-                            <label>Rol</label>
+                            <label data-i18n="set.rol">Rol</label>
                             <select id="equipoRol">
-                                <option value="recepcionista">Recepcionista</option>
-                                <option value="doctor">Doctor</option>
-                                <option value="dueno">Administrador</option>
+                                <option value="recepcionista" data-i18n="set.rolRecepcionista">Recepcionista</option>
+                                <option value="doctor" data-i18n="set.rolDoctor">Doctor</option>
+                                <option value="dueno" data-i18n="set.rolAdmin">Administrador</option>
                             </select>
                         </div>
                         <div class="form-group" id="equipoDoctorGroup" style="display:none">
-                            <label>Doctor asociado (si el rol es Doctor)</label>
+                            <label data-i18n="set.doctorAsociado">Doctor asociado (si el rol es Doctor)</label>
                             <select id="equipoDoctor">
-                                <option value="">Elegir doctor...</option>
+                                <option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option>
                             </select>
                         </div>
-                        <button class="btn btn-block" onclick="invitarMiembro()">Enviar invitación</button>
+                        <button class="btn btn-block" onclick="invitarMiembro()" data-i18n="set.btnInvitar">Enviar invitación</button>
                     </div>
                     <div class="card">
-                        <div class="card-title">Miembros del equipo</div>
+                        <div class="card-title" data-i18n="set.miembrosTitle">Miembros del equipo</div>
                         <table>
-                            <thead><tr><th>Email</th><th>Rol</th><th>Estado</th><th>Acción</th></tr></thead>
-                            <tbody id="tablaEquipo"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                            <thead><tr><th data-i18n="set.colEmail">Email</th><th data-i18n="set.rol">Rol</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                            <tbody id="tablaEquipo"><tr><td colspan="4" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
             </section>
-
         </div>
     </div>
 </div>
-
 <script>
 const API = 'https://autocita-production.up.railway.app';
 const getToken = () => localStorage.getItem('autocita_token');
 const setToken = (t) => localStorage.setItem('autocita_token', t);
 const authH = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` });
-
 let doctoresCache = [];
 let pacientesCache = [];
 let citasCache = [];
 let doctoresSeleccionados = []; // ordered doctor ids para el form de Agregar Paciente
 let bloqueFilasDoctores = [];   // ordered doctor ids para Cita en bloque
 let currentWeekStart = getMonday(new Date());
-
 const DOCTOR_COLORS = ['#2D6A4F','#1D4ED8','#B45309','#9D174D','#0E7490','#6D28D9','#B91C1C','#15803D'];
 const CAL_START_HOUR = 7;
 const CAL_END_HOUR = 19;
 const CAL_PX_PER_MIN = 1;
-
 function getMonday(d) {
     const date = new Date(d);
     const day = date.getDay();
@@ -515,34 +539,26 @@ function getMonday(d) {
     date.setHours(0, 0, 0, 0);
     return date;
 }
-
 function isSameDay(a, b) {
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
-
 function colorForDoctor(id) {
     if (!id) return '#9CA3AF';
     let hash = 0;
     for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
     return DOCTOR_COLORS[Math.abs(hash) % DOCTOR_COLORS.length];
 }
-
 // ── HELPER: nombre del paciente ──────────────────────────────────
-// La API ahora devuelve cada cita con cita.pacientes.nombre (join con
-// la tabla pacientes). Si por alguna razón no viniera, buscamos en
-// pacientesCache como respaldo, y si tampoco está, mostramos un guion.
 function nombrePaciente(cita) {
     if (cita.pacientes && cita.pacientes.nombre) return cita.pacientes.nombre;
     const p = pacientesCache.find(p => p.id === cita.paciente_id);
     if (p && p.nombre) return p.nombre;
-    return cita.paciente_id ? 'Paciente sin nombre' : '—';
+    return cita.paciente_id ? t('common.pacienteSinNombre') : '—';
 }
-
 function cambiarSemana(delta) {
     currentWeekStart.setDate(currentWeekStart.getDate() + delta * 7);
     renderCalendar();
 }
-
 function renderCalendarLeyenda() {
     const el = document.getElementById('calLeyenda');
     if (!el) return;
@@ -553,31 +569,30 @@ function renderCalendarLeyenda() {
         </span>
     `).join('');
 }
-
+const DIAS_SEMANA = {
+    es: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],
+    en: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    pt: ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']
+};
 function renderCalendar() {
     const gridEl = document.getElementById('calGrid');
     const rangoEl = document.getElementById('calRangoSemana');
     if (!gridEl || !rangoEl) return;
-
-    const dias = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    const dias = DIAS_SEMANA[currentLang] || DIAS_SEMANA.es;
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
         const d = new Date(currentWeekStart);
         d.setDate(d.getDate() + i);
         weekDates.push(d);
     }
-
-    rangoEl.textContent = `${weekDates[0].toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })} – ${weekDates[6].toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-
+    rangoEl.textContent = `${weekDates[0].toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })} – ${weekDates[6].toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}`;
     const totalMinutos = (CAL_END_HOUR - CAL_START_HOUR) * 60;
     const colHeight = totalMinutos * CAL_PX_PER_MIN;
-
     let html = `<div class="cal-head"></div>`;
     weekDates.forEach((d, i) => {
         const hoy = isSameDay(d, new Date());
         html += `<div class="cal-head" style="${hoy ? 'color:var(--primary)' : ''}">${dias[i]}<br>${d.getDate()}</div>`;
     });
-
     let timeColHtml = `<div class="cal-time-col" style="height:${colHeight}px">`;
     for (let h = CAL_START_HOUR; h <= CAL_END_HOUR; h++) {
         const top = (h - CAL_START_HOUR) * 60 * CAL_PX_PER_MIN;
@@ -585,14 +600,12 @@ function renderCalendar() {
     }
     timeColHtml += `</div>`;
     html += timeColHtml;
-
     weekDates.forEach(d => {
         let dayHtml = `<div class="cal-day-col" style="height:${colHeight}px">`;
         for (let h = CAL_START_HOUR; h <= CAL_END_HOUR; h++) {
             const top = (h - CAL_START_HOUR) * 60 * CAL_PX_PER_MIN;
             dayHtml += `<div style="position:absolute;top:${top}px;left:0;right:0;border-top:1px solid var(--gray-100)"></div>`;
         }
-
         const citasDelDia = citasCache.filter(c => c.fecha && isSameDay(new Date(c.fecha), d) && c.estado !== 'cancelada');
         citasDelDia.forEach(c => {
             const fechaCita = new Date(c.fecha);
@@ -602,20 +615,17 @@ function renderCalendar() {
             const top = minutosDesdeInicio * CAL_PX_PER_MIN;
             const height = Math.max(dur * CAL_PX_PER_MIN, 18);
             const color = colorForDoctor(c.doctor_id);
-            const horaStr = fechaCita.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            const horaStr = fechaCita.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
             const nombreFull = nombrePaciente(c);
             const nombreCorto = nombreFull.split(' ')[0];
             dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color}" title="${horaStr} — ${nombreFull}">${horaStr}<br>${nombreCorto}</div>`;
         });
-
         dayHtml += `</div>`;
         html += dayHtml;
     });
-
     gridEl.innerHTML = html;
     renderCalendarLeyenda();
 }
-
 async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, { headers: authH(), ...opts });
     if (res.status === 401) {
@@ -626,15 +636,13 @@ async function apiFetch(path, opts = {}) {
     if (!res.ok) throw new Error(data.error || 'Error');
     return data;
 }
-
 function sessionExpired() {
     localStorage.removeItem('autocita_token');
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('loginScreen').classList.add('visible');
     document.getElementById('loginAlert').innerHTML =
-        '<div class="alert alert-error">Tu sesión expiró. Ingresá de nuevo.</div>';
+        `<div class="alert alert-error">${t('login.sesionExpirada')}</div>`;
 }
-
 // ── AUTH ──────────────────────────────────────────────────────────
 function switchAuthTab(tab) {
     var isLogin = tab === 'login';
@@ -644,7 +652,6 @@ function switchAuthTab(tab) {
     document.getElementById('tabRegister').className = 'auth-tab ' + (isLogin ? 'inactive' : 'active');
     document.getElementById('loginAlert').innerHTML = '';
 }
-
 async function register() {
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPass').value;
@@ -652,15 +659,15 @@ async function register() {
     const nombre = document.getElementById('regNombre').value.trim();
     const alertEl = document.getElementById('loginAlert');
     if (!email || !pass || !nombre) {
-        alertEl.innerHTML = '<div class="alert alert-error">Completá todos los campos</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('login.errCampos')}</div>`;
         return;
     }
     if (pass !== pass2) {
-        alertEl.innerHTML = '<div class="alert alert-error">Las contraseñas no coinciden</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassMatch')}</div>`;
         return;
     }
     if (pass.length < 8) {
-        alertEl.innerHTML = '<div class="alert alert-error">La contraseña debe tener al menos 8 caracteres</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
     try {
@@ -670,16 +677,15 @@ async function register() {
             body: JSON.stringify({ email, password: pass, clinica_nombre: nombre })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Error al crear la cuenta');
+        if (!res.ok) throw new Error(data.error || t('login.errCrearCuenta'));
         const token = data.session?.access_token;
-        if (!token) throw new Error('No se recibió token');
+        if (!token) throw new Error(t('login.errSinToken'));
         setToken(token);
         showApp();
     } catch (e) {
         alertEl.innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
     }
 }
-
 async function login() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
@@ -691,32 +697,29 @@ async function login() {
             body: JSON.stringify({ email, password: pass })
         });
         const json = await data.json();
-        if (!data.ok) throw new Error(json.error || 'Credenciales inválidas');
+        if (!data.ok) throw new Error(json.error || t('login.errCredenciales'));
         const token = json.session?.access_token || json.session?.session?.access_token;
-        if (!token) throw new Error('No se recibió token');
+        if (!token) throw new Error(t('login.errSinToken'));
         setToken(token);
         showApp();
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 function logout() {
     localStorage.removeItem('autocita_token');
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('loginScreen').classList.add('visible');
 }
-
 function showApp() {
     document.getElementById('loginScreen').classList.remove('visible');
     document.getElementById('appContainer').style.display = 'flex';
+    applyPanelLang(currentLang, { skipReload: true });
     loadAll();
 }
-
 // ── LOAD ALL ──────────────────────────────────────────────────────
 let userRol = 'dueno'; // default hasta que cargue
 let userDoctorId = null;
-
 async function loadAll() {
     await loadRol(); // primero el rol, luego el resto según permisos
     await loadPacientes(); // primero pacientes, así el respaldo de nombre ya está listo
@@ -727,7 +730,6 @@ async function loadAll() {
     loadServicios();
     loadSettings();
 }
-
 async function loadRol() {
     try {
         const data = await apiFetch('/mi-rol');
@@ -738,27 +740,20 @@ async function loadRol() {
         userRol = 'dueno'; // fallback: si falla, asumir dueño
     }
 }
-
 function aplicarPermisos() {
-    // Secciones visibles por rol
     const permisos = {
         dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion','expedientes','settings'],
         recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion'],
         doctor:         ['citas','calendario','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
-
-    // Ocultar/mostrar nav links
     document.querySelectorAll('.nav-link[data-section]').forEach(btn => {
         const sec = btn.getAttribute('data-section');
-        btn.style.display = visibles.includes(sec) ? 'block' : 'none';
+        btn.style.display = visibles.includes(sec) ? 'flex' : 'none';
     });
-
-    // Mostrar panel de equipo solo al dueño
     const equipoSec = document.getElementById('equipoSection');
     if (equipoSec) equipoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
 }
-
 // ── DASHBOARD ─────────────────────────────────────────────────────
 async function loadDashboard() {
     try {
@@ -769,30 +764,25 @@ async function loadDashboard() {
         document.getElementById('kpiCitasTotal').textContent = dashboard.citas ?? '—';
         document.getElementById('kpiPacientes').textContent = dashboard.pacientes ?? '—';
         document.getElementById('kpiDoctores').textContent = doctores.length ?? '—';
-
-        // Citas de hoy
         const citas = await apiFetch('/citas');
         const hoy = new Date().toISOString().split('T')[0];
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
-
-        // Próximas citas (primeras 5)
         const proximas = citas.filter(c => c.estado !== 'cancelada').slice(0, 5);
         const tbody = document.getElementById('tablaCitasProximas');
         if (!proximas.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay citas próximas</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${t('dash.noCitas')}</td></tr>`;
         } else {
             tbody.innerHTML = proximas.map(c => {
                 const fecha = c.fecha ? new Date(c.fecha) : null;
-                const fechaStr = fecha ? fecha.toLocaleDateString('es-CR') : '—';
-                const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
+                const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
                 return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
             }).join('');
         }
     } catch (e) { console.error('Dashboard:', e); }
 }
-
 // ── PACIENTES ─────────────────────────────────────────────────────
 async function loadPacientes() {
     try {
@@ -800,21 +790,21 @@ async function loadPacientes() {
         pacientesCache = data || [];
         populatePacienteSelectBloque();
         populateRecurrenteSelects();
+        populateListaEsperaSelects();
         const tbody = document.getElementById('tablaPacientes');
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay pacientes aún</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${t('pac.noPacientes')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(p => `
                 <tr>
                     <td><strong>${p.nombre || '—'}</strong></td>
                     <td>${p.telefono || '—'}</td>
                     <td>${p.cedula || '—'}</td>
-                    <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('es-CR') : '—'}</td>
+                    <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
                 </tr>`).join('');
         }
     } catch (e) { console.error('Pacientes:', e); }
 }
-
 async function crearPaciente() {
     const alertEl = document.getElementById('alertPaciente');
     try {
@@ -828,11 +818,10 @@ async function crearPaciente() {
                 idioma: document.getElementById('pIdioma').value,
             })
         });
-
         let citasCreadas = 0;
         const fechaVisita = document.getElementById('pFechaVisita').value;
         if (doctoresSeleccionados.length && fechaVisita) {
-            let horaActual = 9 * 60; // arranca 9:00am
+            let horaActual = 9 * 60;
             for (const docId of doctoresSeleccionados) {
                 const doc = doctoresCache.find(d => d.id === docId);
                 if (!doc) continue;
@@ -852,8 +841,7 @@ async function crearPaciente() {
                 citasCreadas++;
             }
         }
-
-        alertEl.innerHTML = `<div class="alert alert-success">Paciente agregado ✓${citasCreadas ? ` con ${citasCreadas} cita(s)` : ''}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${t('pac.msgAgregado')}${citasCreadas ? t('pac.msgConCitas', { n: citasCreadas }) : ''}</div>`;
         ['pNombre','pTelefono','pEmail','pCedula'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('pIdioma').value = 'es';
         doctoresSeleccionados = [];
@@ -868,20 +856,18 @@ async function crearPaciente() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── BUBBLES DE DOCTORES (form Agregar Paciente) ─────────────────────
 function renderDoctorBubblesPaciente() {
     const el = document.getElementById('doctorBubblesPaciente');
     if (!el) return;
     if (!doctoresCache.length) {
-        el.innerHTML = '<span style="color:var(--gray-500);font-size:13px">No hay doctores disponibles todavía</span>';
+        el.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('pac.sinDoctores')}</span>`;
         return;
     }
     el.innerHTML = doctoresCache.map(d => `
         <button type="button" class="bubble ${doctoresSeleccionados.includes(d.id) ? 'selected' : ''}" onclick="toggleDoctorBubble('${d.id}')">${d.nombre}</button>
     `).join('');
 }
-
 function toggleDoctorBubble(id) {
     const idx = doctoresSeleccionados.indexOf(id);
     if (idx === -1) doctoresSeleccionados.push(id); else doctoresSeleccionados.splice(idx, 1);
@@ -889,7 +875,6 @@ function toggleDoctorBubble(id) {
     document.getElementById('fechaVisitaGroup').style.display = doctoresSeleccionados.length ? 'block' : 'none';
     actualizarResumenBloquePaciente();
 }
-
 function actualizarResumenBloquePaciente() {
     const fecha = document.getElementById('pFechaVisita').value;
     const resumenEl = document.getElementById('resumenBloquePaciente');
@@ -906,7 +891,6 @@ function actualizarResumenBloquePaciente() {
     });
     resumenEl.innerHTML = lineas.join('<br>');
 }
-
 // ── HELPERS DE TIEMPO ────────────────────────────────────────────────
 function minToHora(min) {
     const h = Math.floor(min / 60), m = min % 60;
@@ -914,12 +898,10 @@ function minToHora(min) {
     let h12 = h % 12; if (h12 === 0) h12 = 12;
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
 }
-
 function construirFechaISO(fechaBase, minutos) {
     const h = Math.floor(minutos / 60), m = minutos % 60;
     return `${fechaBase}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
 }
-
 // ── CITAS ─────────────────────────────────────────────────────────
 async function loadCitas() {
     try {
@@ -929,18 +911,18 @@ async function loadCitas() {
         populateFacturaCitaSelect();
         const tbody = document.getElementById('tablaCitas');
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">No hay citas aún</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('citas.noCitas')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(c => {
                 const fecha = c.fecha ? new Date(c.fecha) : null;
-                const fechaStr = fecha ? fecha.toLocaleDateString('es-CR') : '—';
-                const horaStr = fecha ? fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '—';
+                const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
+                const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
                 const btnCancelar = c.estado !== 'cancelada'
-                    ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px;margin-right:4px" onclick="cancelarCita('${c.id}')">Cancelar</button>`
+                    ? `<button class="btn btn-danger btn-sm" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
                     : '';
                 const btnRecordatorio = c.estado !== 'cancelada'
-                    ? `<button class="btn" style="padding:4px 8px;font-size:12px;background:var(--gray-200);color:var(--gray-700)" onclick="enviarRecordatorio('${c.id}')">🔔 Recordatorio</button>`
+                    ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
                     : '—';
                 return `<tr>
                     <td>${nombrePaciente(c)}</td>
@@ -954,16 +936,14 @@ async function loadCitas() {
         }
     } catch (e) { console.error('Citas:', e); }
 }
-
 async function enviarRecordatorio(citaId) {
     try {
         await apiFetch(`/cita/${citaId}/enviar-recordatorio`, { method: 'POST' });
-        alert('Recordatorio enviado ✓');
+        alert(t('citas.msgRecordatorioEnviado'));
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 async function cancelarCita(citaId) {
-    if (!confirm('¿Cancelar esta cita?')) return;
+    if (!confirm(t('citas.confirmCancelarCita'))) return;
     try {
         await apiFetch('/cita/cancelar', {
             method: 'POST',
@@ -973,10 +953,8 @@ async function cancelarCita(citaId) {
         loadDashboard();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 // ── SERVICIOS Y FACTURACIÓN ───────────────────────────────────────
 let serviciosCache = [];
-
 async function loadServicios() {
     try {
         const data = await apiFetch('/servicios');
@@ -984,31 +962,30 @@ async function loadServicios() {
         const tbody = document.getElementById('tablaServicios');
         if (tbody) {
             if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--gray-500)">Sin servicios en el catálogo</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--gray-500)">${t('fact.sinServicios')}</td></tr>`;
             } else {
                 tbody.innerHTML = data.map(s => `
                     <tr>
                         <td><strong>${s.nombre}</strong></td>
-                        <td>₡${Number(s.precio).toLocaleString('es-CR')}</td>
-                        <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarServicio('${s.id}')">Eliminar</button></td>
+                        <td>₡${Number(s.precio).toLocaleString(getLocale())}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="eliminarServicio('${s.id}')">${t('common.eliminar')}</button></td>
                     </tr>`).join('');
             }
         }
         populateFacturaCitaSelect();
     } catch (e) { console.error('Servicios:', e); }
 }
-
 async function crearServicio() {
     const alertEl = document.getElementById('alertServicios');
     const nombre = document.getElementById('servNombre').value;
     const precio = parseFloat(document.getElementById('servPrecio').value);
     if (!nombre || isNaN(precio)) {
-        alertEl.innerHTML = '<div class="alert alert-error">Completá nombre y precio</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('fact.errCompletar')}</div>`;
         return;
     }
     try {
         await apiFetch('/servicios', { method: 'POST', body: JSON.stringify({ nombre, precio }) });
-        alertEl.innerHTML = '<div class="alert alert-success">Agregado ✓</div>';
+        alertEl.innerHTML = `<div class="alert alert-success">${t('common.agregadoOk')}</div>`;
         document.getElementById('servNombre').value = '';
         document.getElementById('servPrecio').value = '';
         loadServicios();
@@ -1017,67 +994,63 @@ async function crearServicio() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 async function eliminarServicio(id) {
-    if (!confirm('¿Eliminar este servicio del catálogo?')) return;
+    if (!confirm(t('fact.confirmEliminarServicio'))) return;
     try {
         await apiFetch(`/servicios/${id}`, { method: 'DELETE' });
         loadServicios();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 function populateFacturaCitaSelect() {
     const sel = document.getElementById('facturaCita');
     if (!sel) return;
     const actual = sel.value;
-    sel.innerHTML = '<option value="">Elegir cita...</option>' +
+    sel.innerHTML = `<option value="">${t('fact.elegirCita')}</option>` +
         citasCache.filter(c => c.estado !== 'cancelada').map(c => {
             const nombrePac = nombrePaciente(c);
-            const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-CR') : '';
-            const hora = c.fecha ? new Date(c.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
+            const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString(getLocale()) : '';
+            const hora = c.fecha ? new Date(c.fecha).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '';
             return `<option value="${c.id}">${nombrePac} — ${fecha} ${hora}</option>`;
         }).join('');
     if (actual) sel.value = actual;
 }
-
 async function loadFactura() {
     const citaId = document.getElementById('facturaCita').value;
     const detalleEl = document.getElementById('facturaDetalle');
     if (!citaId) { detalleEl.innerHTML = ''; return; }
-    detalleEl.innerHTML = '<p class="loading">Cargando...</p>';
+    detalleEl.innerHTML = `<p class="loading">${t('common.loading')}</p>`;
     try {
         const data = await apiFetch(`/cita/${citaId}/factura`);
-        const opcionesServicio = serviciosCache.map(s => `<option value="${s.id}">${s.nombre} — ₡${Number(s.precio).toLocaleString('es-CR')}</option>`).join('');
+        const opcionesServicio = serviciosCache.map(s => `<option value="${s.id}">${s.nombre} — ₡${Number(s.precio).toLocaleString(getLocale())}</option>`).join('');
         detalleEl.innerHTML = `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200)">
-                <span>Consulta (${data.cita.doctores?.nombre || '—'})</span>
-                <strong>₡${Number(data.precio_consulta).toLocaleString('es-CR')}</strong>
+                <span>${t('fact.consulta')} (${data.cita.doctores?.nombre || '—'})</span>
+                <strong>₡${Number(data.precio_consulta).toLocaleString(getLocale())}</strong>
             </div>
             ${data.servicios.map(s => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-200)">
-                    <span>${s.servicios?.nombre || 'Servicio'}</span>
+                    <span>${s.servicios?.nombre || t('fact.servicio')}</span>
                     <span style="display:flex;align-items:center;gap:8px">
-                        ₡${Number(s.precio).toLocaleString('es-CR')}
-                        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px" onclick="quitarServicioCita('${citaId}','${s.id}')">✕</button>
+                        ₡${Number(s.precio).toLocaleString(getLocale())}
+                        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px;box-shadow:none" onclick="quitarServicioCita('${citaId}','${s.id}')">✕</button>
                     </span>
                 </div>
             `).join('')}
             <div style="display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:16px">
-                <span>Total</span><span>₡${Number(data.total).toLocaleString('es-CR')}</span>
+                <span>${t('fact.total')}</span><span>₡${Number(data.total).toLocaleString(getLocale())}</span>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
                 <select id="facturaServicioNuevo" style="flex:1">
-                    <option value="">Agregar servicio...</option>
+                    <option value="">${t('fact.agregarServicio')}</option>
                     ${opcionesServicio}
                 </select>
-                <button class="btn" onclick="agregarServicioCita('${citaId}')">Agregar</button>
+                <button class="btn" onclick="agregarServicioCita('${citaId}')">${t('common.agregar')}</button>
             </div>
         `;
     } catch (e) {
         detalleEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
     }
 }
-
 async function agregarServicioCita(citaId) {
     const servicio_id = document.getElementById('facturaServicioNuevo').value;
     if (!servicio_id) return;
@@ -1086,69 +1059,64 @@ async function agregarServicioCita(citaId) {
         loadFactura();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 async function quitarServicioCita(citaId, servicioAplicadoId) {
     try {
         await apiFetch(`/cita/${citaId}/servicios/${servicioAplicadoId}`, { method: 'DELETE' });
         loadFactura();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 // ── HERRAMIENTAS DE EMERGENCIA ───────────────────────────────────────
 function populateEmergDoctorSelect() {
     const sel = document.getElementById('emergDoctor');
     if (!sel) return;
     const actual = sel.value;
-    sel.innerHTML = '<option value="">Todos los doctores</option>' +
+    sel.innerHTML = `<option value="">${t('common.todosDoctores')}</option>` +
         doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     if (actual) sel.value = actual;
 }
-
 async function correrAgendaDia() {
     const alertEl = document.getElementById('alertEmergencia');
     const fecha = document.getElementById('emergDia').value;
     const doctor_id = document.getElementById('emergDoctor').value || null;
     const minutos = parseInt(document.getElementById('emergMinutos').value);
     if (!fecha || !minutos) {
-        alertEl.innerHTML = '<div class="alert alert-error">Elegí el día y cuántos minutos correr</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errFechaMinutos')}</div>`;
         return;
     }
-    if (!confirm(`¿Correr TODAS las citas del ${fecha}${doctor_id ? '' : ' (todos los doctores)'} por ${minutos} minutos? Esto no avisa a los pacientes.`)) return;
+    if (!confirm(t('citas.confirmCorrer', { fecha, minutos, todos: doctor_id ? '' : t('common.todosParen') }))) return;
     try {
         const data = await apiFetch('/citas/dia/correr', {
             method: 'POST',
             body: JSON.stringify({ fecha, doctor_id, minutos })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. Avisá a los pacientes manualmente.</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. ${t('citas.avisaManual')}</div>`;
         loadCitas();
         loadDashboard();
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 async function cancelarDiaCompleto() {
     const alertEl = document.getElementById('alertEmergencia');
     const fecha = document.getElementById('emergDia').value;
     const doctor_id = document.getElementById('emergDoctor').value || null;
     if (!fecha) {
-        alertEl.innerHTML = '<div class="alert alert-error">Elegí el día</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errFecha')}</div>`;
         return;
     }
-    if (!confirm(`¿CANCELAR TODAS las citas del ${fecha}${doctor_id ? '' : ' (todos los doctores)'}? No se avisa a los pacientes automáticamente.`)) return;
+    if (!confirm(t('citas.confirmCancelarDia', { fecha, todos: doctor_id ? '' : t('common.todosParen') }))) return;
     try {
         const data = await apiFetch('/citas/dia/cancelar', {
             method: 'POST',
             body: JSON.stringify({ fecha, doctor_id })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. Avisá a los pacientes manualmente.</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. ${t('citas.avisaManual')}</div>`;
         loadCitas();
         loadDashboard();
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── LISTA DE ESPERA ───────────────────────────────────────────────
 async function loadListaEspera() {
     try {
@@ -1157,44 +1125,42 @@ async function loadListaEspera() {
         const tbody = document.getElementById('tablaListaEspera');
         if (!tbody) return;
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">Nadie en espera por ahora</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">${t('le.nadie')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(le => {
-                const nombrePac = le.pacientes?.nombre || 'Paciente sin nombre';
-                const nombreDoc = le.doctores?.nombre || 'Cualquiera';
-                const fecha = le.fecha_deseada ? new Date(le.fecha_deseada + 'T00:00:00').toLocaleDateString('es-CR') : '—';
+                const nombrePac = le.pacientes?.nombre || t('common.pacienteSinNombre');
+                const nombreDoc = le.doctores?.nombre || t('common.cualquiera');
+                const fecha = le.fecha_deseada ? new Date(le.fecha_deseada + 'T00:00:00').toLocaleDateString(getLocale()) : '—';
                 return `<tr>
                     <td><strong>${nombrePac}</strong></td>
                     <td>${nombreDoc}</td>
                     <td>${fecha}</td>
                     <td>${le.notas || '—'}</td>
                     <td>
-                        <button class="btn btn-success" style="padding:4px 8px;font-size:12px;margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">Atendido</button>
-                        <button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarListaEspera('${le.id}')">Quitar</button>
+                        <button class="btn btn-success btn-sm" style="margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">${t('le.btnAtendido')}</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarListaEspera('${le.id}')">${t('le.btnQuitar')}</button>
                     </td>
                 </tr>`;
             }).join('');
         }
     } catch (e) { console.error('Lista de espera:', e); }
 }
-
 function populateListaEsperaSelects() {
     const selPac = document.getElementById('lePaciente');
     if (selPac) {
         const actual = selPac.value;
-        selPac.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+        selPac.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` +
             pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
         if (actual) selPac.value = actual;
     }
     const selDoc = document.getElementById('leDoctor');
     if (selDoc) {
         const actual = selDoc.value;
-        selDoc.innerHTML = '<option value="">Elegir doctor...</option>' +
+        selDoc.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
             doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
         if (actual) selDoc.value = actual;
     }
 }
-
 async function agregarListaEspera() {
     const alertEl = document.getElementById('alertListaEspera');
     const paciente_id = document.getElementById('lePaciente').value;
@@ -1202,7 +1168,7 @@ async function agregarListaEspera() {
     const fecha_deseada = document.getElementById('leFecha').value || null;
     const notas = document.getElementById('leNotas').value || null;
     if (!paciente_id || !doctor_id) {
-        alertEl.innerHTML = '<div class="alert alert-error">Elegí paciente y doctor</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('le.errElegir')}</div>`;
         return;
     }
     try {
@@ -1210,7 +1176,7 @@ async function agregarListaEspera() {
             method: 'POST',
             body: JSON.stringify({ paciente_id, doctor_id, fecha_deseada, notas })
         });
-        alertEl.innerHTML = '<div class="alert alert-success">Agregado a la lista de espera ✓</div>';
+        alertEl.innerHTML = `<div class="alert alert-success">${t('le.msgAgregado')}</div>`;
         document.getElementById('lePaciente').value = '';
         document.getElementById('leDoctor').value = '';
         document.getElementById('leFecha').value = '';
@@ -1221,7 +1187,6 @@ async function agregarListaEspera() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 async function marcarAtendidoListaEspera(id) {
     try {
         await apiFetch(`/lista-espera/${id}`, {
@@ -1231,15 +1196,13 @@ async function marcarAtendidoListaEspera(id) {
         loadListaEspera();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 async function eliminarListaEspera(id) {
-    if (!confirm('¿Quitar de la lista de espera?')) return;
+    if (!confirm(t('le.confirmQuitar'))) return;
     try {
         await apiFetch(`/lista-espera/${id}`, { method: 'DELETE' });
         loadListaEspera();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 // ── CITA EN BLOQUE ────────────────────────────────────────────────
 function populatePacienteSelectBloque() {
     const sel = document.getElementById('bloquePaciente');
@@ -1247,36 +1210,32 @@ function populatePacienteSelectBloque() {
     const opciones = pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
     if (sel) {
         const actual = sel.value;
-        sel.innerHTML = '<option value="">Seleccionar paciente...</option>' + opciones;
+        sel.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` + opciones;
         if (actual) sel.value = actual;
     }
     if (selExp) {
         const actual = selExp.value;
-        selExp.innerHTML = '<option value="">Elegir paciente...</option>' + opciones;
+        selExp.innerHTML = `<option value="">${t('exp.elegirPaciente')}</option>` + opciones;
         if (actual) selExp.value = actual;
     }
 }
-
 function agregarFilaBloque() {
     bloqueFilasDoctores.push('');
     renderFilasBloque();
 }
-
 function quitarFilaBloque(idx) {
     bloqueFilasDoctores.splice(idx, 1);
     renderFilasBloque();
 }
-
 function actualizarFilaBloque(idx, docId) {
     bloqueFilasDoctores[idx] = docId;
     renderFilasBloque();
 }
-
 function renderFilasBloque() {
     const el = document.getElementById('bloqueFilas');
     if (!el) return;
     if (!bloqueFilasDoctores.length) {
-        el.innerHTML = '<p style="color:var(--gray-500);font-size:13px;margin-bottom:8px">Agregá al menos un doctor</p>';
+        el.innerHTML = `<p style="color:var(--gray-500);font-size:13px;margin-bottom:8px">${t('citas.agregaAlMenosUno')}</p>`;
         return;
     }
     let horaActual = 9 * 60;
@@ -1289,25 +1248,22 @@ function renderFilasBloque() {
         return `
         <div class="bloque-fila">
             <select onchange="actualizarFilaBloque(${idx}, this.value)">
-                <option value="">Elegir doctor...</option>${opciones}
+                <option value="">${t('common.elegirDoctor')}</option>${opciones}
             </select>
             <span class="hora-preview">${doc ? minToHora(inicio) + ' – ' + minToHora(fin) : '—'}</span>
-            <button type="button" class="btn btn-danger" style="padding:6px 10px" onclick="quitarFilaBloque(${idx})">✕</button>
+            <button type="button" class="btn btn-danger" style="padding:6px 10px;box-shadow:none" onclick="quitarFilaBloque(${idx})">✕</button>
         </div>`;
     }).join('');
 }
-
 async function crearCitasBloque() {
     const alertEl = document.getElementById('alertBloque');
     const pacienteId = document.getElementById('bloquePaciente').value;
     const fecha = document.getElementById('bloqueFecha').value;
     const filas = bloqueFilasDoctores.filter(d => d);
-
     if (!pacienteId || !fecha || !filas.length) {
-        alertEl.innerHTML = '<div class="alert alert-error">Elegí paciente, fecha y al menos un doctor</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errBloque')}</div>`;
         return;
     }
-
     try {
         let horaActual = 9 * 60;
         for (const docId of filas) {
@@ -1326,7 +1282,7 @@ async function crearCitasBloque() {
             });
             horaActual += dur;
         }
-        alertEl.innerHTML = `<div class="alert alert-success">${filas.length} cita(s) creada(s) ✓</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${t('citas.msgCreadas', { n: filas.length })}</div>`;
         bloqueFilasDoctores = [];
         renderFilasBloque();
         document.getElementById('bloquePaciente').value = '';
@@ -1338,25 +1294,23 @@ async function crearCitasBloque() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── CITAS RECURRENTES (varias semanas) ───────────────────────────
 function populateRecurrenteSelects() {
     const selPac = document.getElementById('recurrentePaciente');
     if (selPac) {
         const actual = selPac.value;
-        selPac.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+        selPac.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` +
             pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
         if (actual) selPac.value = actual;
     }
     const selDoc = document.getElementById('recurrenteDoctor');
     if (selDoc) {
         const actual = selDoc.value;
-        selDoc.innerHTML = '<option value="">Elegir doctor...</option>' +
+        selDoc.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
             doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
         if (actual) selDoc.value = actual;
     }
 }
-
 function actualizarPreviewRecurrente() {
     const fechaInicio = document.getElementById('recurrenteFecha').value;
     const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
@@ -1367,11 +1321,10 @@ function actualizarPreviewRecurrente() {
     for (let i = 0; i < Math.min(cantidad, 52); i++) {
         const fecha = new Date(fechaInicio + 'T00:00:00');
         fecha.setDate(fecha.getDate() + i * cadaSemanas * 7);
-        fechas.push(fecha.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric', month: 'short' }));
+        fechas.push(fecha.toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }));
     }
-    previewEl.innerHTML = 'Se crearán citas: ' + fechas.join(', ');
+    previewEl.innerHTML = t('citas.seCrearanCitas') + ' ' + fechas.join(', ');
 }
-
 async function crearCitasRecurrentes() {
     const alertEl = document.getElementById('alertRecurrente');
     const paciente_id = document.getElementById('recurrentePaciente').value;
@@ -1380,17 +1333,14 @@ async function crearCitasRecurrentes() {
     const hora = document.getElementById('recurrenteHora').value;
     const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
     const cantidad = parseInt(document.getElementById('recurrenteCantidad').value) || 1;
-
     if (!paciente_id || !doctor_id || !fechaInicio || !hora) {
-        alertEl.innerHTML = '<div class="alert alert-error">Completá paciente, doctor, fecha y hora</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errRecurrente')}</div>`;
         return;
     }
-    if (!confirm(`¿Crear ${cantidad} cita(s), una cada ${cadaSemanas} semana(s), empezando el ${fechaInicio}?`)) return;
-
+    if (!confirm(t('citas.confirmRecurrente', { cantidad, cada: cadaSemanas, fecha: fechaInicio }))) return;
     const doc = doctoresCache.find(d => d.id === doctor_id);
     const duracion = doc ? (doc.duracion_cita || 30) : 30;
     const [horaH, horaM] = hora.split(':').map(Number);
-
     try {
         let creadas = 0;
         for (let i = 0; i < cantidad; i++) {
@@ -1410,7 +1360,7 @@ async function crearCitasRecurrentes() {
             });
             creadas++;
         }
-        alertEl.innerHTML = `<div class="alert alert-success">${creadas} cita(s) creada(s) ✓</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${t('citas.msgCreadas', { n: creadas })}</div>`;
         document.getElementById('recurrentePreview').innerHTML = '';
         loadCitas();
         loadDashboard();
@@ -1419,7 +1369,6 @@ async function crearCitasRecurrentes() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── DOCTORES ──────────────────────────────────────────────────────
 async function loadDoctores() {
     try {
@@ -1433,24 +1382,22 @@ async function loadDoctores() {
         populateRecurrenteSelects();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">No hay doctores</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(d => `
                 <tr>
                     <td><strong>${d.nombre}</strong></td>
                     <td>${d.especialidad}</td>
                     <td>${d.duracion_cita || 30} min</td>
-                    <td>₡${Number(d.precio || 0).toLocaleString('es-CR')}</td>
-                    <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? 'Activo' : 'Inactivo'}</span></td>
-                    <td><button class="btn" style="padding:4px 8px;font-size:12px;background:var(--gray-200);color:var(--gray-700)" onclick="editarDoctor('${d.id}')">Editar</button></td>
+                    <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
+                    <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? t('doc.activo') : t('doc.inactivo')}</span></td>
+                    <td><button class="btn btn-ghost btn-sm" onclick="editarDoctor('${d.id}')">${t('doc.btnEditar')}</button></td>
                 </tr>`).join('');
         }
     } catch (e) { console.error('Doctores:', e); }
 }
-
 // ── FORMULARIO DE DOCTOR (crear / editar) ────────────────────────
 let editandoDoctorId = null;
-
 function editarDoctor(id) {
     const doc = doctoresCache.find(d => d.id === id);
     if (!doc) return;
@@ -1460,19 +1407,17 @@ function editarDoctor(id) {
     document.getElementById('docDuracion').value = doc.duracion_cita || 30;
     document.getElementById('docPrecio').value = doc.precio || 0;
     document.getElementById('docInstrucciones').value = doc.instrucciones || '';
-    document.getElementById('doctorFormTitle').textContent = 'Editar Doctor';
-    document.getElementById('doctorSubmitBtn').textContent = 'Guardar cambios';
+    document.getElementById('doctorFormTitle').textContent = t('doc.editTitle');
+    document.getElementById('doctorSubmitBtn').textContent = t('doc.btnGuardarCambios');
     document.getElementById('doctorFormTitle').scrollIntoView({ behavior: 'smooth' });
 }
-
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
     ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('doctorFormTitle').textContent = 'Agregar Doctor';
-    document.getElementById('doctorSubmitBtn').textContent = 'Agregar Doctor';
+    document.getElementById('doctorFormTitle').textContent = t('doc.addTitle');
+    document.getElementById('doctorSubmitBtn').textContent = t('doc.addTitle');
     document.getElementById('alertDoctor').innerHTML = '';
 }
-
 async function guardarDoctor() {
     const alertEl = document.getElementById('alertDoctor');
     const nombre = document.getElementById('docNombre').value;
@@ -1481,7 +1426,7 @@ async function guardarDoctor() {
     const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
     const instrucciones = document.getElementById('docInstrucciones').value || null;
     if (!nombre) {
-        alertEl.innerHTML = '<div class="alert alert-error">El nombre es requerido</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('doc.errNombre')}</div>`;
         return;
     }
     try {
@@ -1490,13 +1435,13 @@ async function guardarDoctor() {
                 method: 'PATCH',
                 body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
             });
-            alertEl.innerHTML = '<div class="alert alert-success">Doctor actualizado ✓</div>';
+            alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgActualizado')}</div>`;
         } else {
             await apiFetch('/doctores', {
                 method: 'POST',
                 body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
             });
-            alertEl.innerHTML = '<div class="alert alert-success">Doctor agregado ✓</div>';
+            alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgAgregado')}</div>`;
         }
         cancelarEdicionDoctor();
         loadDoctores();
@@ -1505,24 +1450,23 @@ async function guardarDoctor() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── SETTINGS ──────────────────────────────────────────────────────
 async function loadSettings() {
     const infoEl = document.getElementById('settingsInfo');
     try {
         const clinica = await apiFetch('/clinica');
         if (!clinica) {
-            infoEl.innerHTML = '<p style="color:var(--gray-500)">No se encontró información de la clínica</p>';
+            infoEl.innerHTML = `<p style="color:var(--gray-500)">${t('set.noEncontrada')}</p>`;
             return;
         }
         document.getElementById('headerClinica').textContent = clinica.nombre || 'AutoCita';
         infoEl.innerHTML = `
-            <div class="form-group"><label>Nombre</label><input type="text" value="${clinica.nombre || ''}" disabled></div>
-            <div class="form-group"><label>Teléfono</label><input type="text" value="${clinica.telefono || '—'}" disabled></div>
-            <div class="form-group"><label>Dirección</label><input type="text" value="${clinica.direccion || '—'}" disabled></div>
-            <div class="form-group"><label>Horario</label><input type="text" value="${clinica.horario || '—'}" disabled></div>
-            <div class="form-group"><label>Plan</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
-            <div class="form-group"><label>Estado</label><input type="text" value="${clinica.status || '—'}" disabled></div>
+            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" value="${clinica.nombre || ''}" disabled></div>
+            <div class="form-group"><label>${t('pac.telefono')}</label><input type="text" value="${clinica.telefono || '—'}" disabled></div>
+            <div class="form-group"><label>${t('set.direccion')}</label><input type="text" value="${clinica.direccion || '—'}" disabled></div>
+            <div class="form-group"><label>${t('set.horario')}</label><input type="text" value="${clinica.horario || '—'}" disabled></div>
+            <div class="form-group"><label>${t('set.plan')}</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
+            <div class="form-group"><label>${t('common.colEstado')}</label><input type="text" value="${clinica.status || '—'}" disabled></div>
         `;
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
         document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
@@ -1530,7 +1474,6 @@ async function loadSettings() {
         infoEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
     }
 }
-
 async function guardarConfigRecordatorios() {
     const alertEl = document.getElementById('alertRecordatorios');
     const recordatorio_horas_1 = parseInt(document.getElementById('recHoras1').value) || 24;
@@ -1540,14 +1483,12 @@ async function guardarConfigRecordatorios() {
             method: 'PATCH',
             body: JSON.stringify({ recordatorio_horas_1, recordatorio_horas_2 })
         });
-        alertEl.innerHTML = '<div class="alert alert-success">Guardado ✓</div>';
+        alertEl.innerHTML = `<div class="alert alert-success">${t('common.guardadoOk')}</div>`;
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
-// ── HELPERS ───────────────────────────────────────────────────────
 // ── EXPEDIENTES ───────────────────────────────────────────────────
 async function loadExpediente() {
     const pacienteId = document.getElementById('expedientePaciente').value;
@@ -1561,18 +1502,18 @@ async function loadExpediente() {
     formCard.style.display = 'block';
     listaCard.style.display = 'block';
     const listaEl = document.getElementById('expedienteLista');
-    listaEl.innerHTML = '<p class="loading">Cargando...</p>';
+    listaEl.innerHTML = `<p class="loading">${t('common.loading')}</p>`;
     try {
         const notas = await apiFetch(`/expediente?paciente_id=${pacienteId}`);
         if (!notas.length) {
-            listaEl.innerHTML = '<p style="color:var(--gray-500)">Sin notas todavía</p>';
+            listaEl.innerHTML = `<p style="color:var(--gray-500)">${t('exp.sinNotas')}</p>`;
         } else {
             listaEl.innerHTML = notas.map(n => `
                 <div style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
-                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${new Date(n.created_at).toLocaleString('es-CR')}</div>
+                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${new Date(n.created_at).toLocaleString(getLocale())}</div>
                     <div>${n.contenido}</div>
                     ${n.medicamentos ? `<div style="font-size:13px;color:var(--primary);margin-top:4px">💊 ${n.medicamentos}</div>` : ''}
-                    ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 Dolor: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
+                    ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
                     ${n.plan_tratamiento ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📋 ${n.plan_tratamiento}</div>` : ''}
                 </div>
             `).join('');
@@ -1581,7 +1522,6 @@ async function loadExpediente() {
         listaEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
     }
 }
-
 async function agregarNotaExpediente() {
     const alertEl = document.getElementById('alertExpediente');
     const pacienteId = document.getElementById('expedientePaciente').value;
@@ -1591,7 +1531,7 @@ async function agregarNotaExpediente() {
     const dolor_actual = document.getElementById('expedienteDolorActual').value;
     const plan_tratamiento = document.getElementById('expedientePlanTratamiento').value;
     if (!contenido) {
-        alertEl.innerHTML = '<div class="alert alert-error">Escribí una nota</div>';
+        alertEl.innerHTML = `<div class="alert alert-error">${t('exp.errNota')}</div>`;
         return;
     }
     try {
@@ -1599,7 +1539,7 @@ async function agregarNotaExpediente() {
             method: 'POST',
             body: JSON.stringify({ paciente_id: pacienteId, contenido, medicamentos, dolor_inicial, dolor_actual, plan_tratamiento })
         });
-        alertEl.innerHTML = '<div class="alert alert-success">Nota guardada ✓</div>';
+        alertEl.innerHTML = `<div class="alert alert-success">${t('exp.msgGuardada')}</div>`;
         document.getElementById('expedienteContenido').value = '';
         document.getElementById('expedienteMedicamentos').value = '';
         document.getElementById('expedienteDolorInicial').value = '';
@@ -1611,7 +1551,6 @@ async function agregarNotaExpediente() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 // ── EQUIPO ────────────────────────────────────────────────────────
 async function loadEquipo() {
     try {
@@ -1619,44 +1558,42 @@ async function loadEquipo() {
         const tbody = document.getElementById('tablaEquipo');
         if (!tbody) return;
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">Sin miembros todavía</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${t('set.sinMiembros')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(m => `
                 <tr>
                     <td>${m.email}</td>
-                    <td><span class="badge badge-success">${m.rol === 'dueno' ? 'Administrador' : m.rol === 'recepcionista' ? 'Recepcionista' : 'Doctor'}</span></td>
+                    <td><span class="badge badge-success">${m.rol === 'dueno' ? t('set.rolAdmin') : m.rol === 'recepcionista' ? t('set.rolRecepcionista') : t('set.rolDoctor')}</span></td>
                     <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
-                    <td><button class="btn btn-danger" style="padding:4px 8px;font-size:12px" onclick="eliminarMiembro('${m.id}')">Eliminar</button></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="eliminarMiembro('${m.id}')">${t('common.eliminar')}</button></td>
                 </tr>
             `).join('');
         }
     } catch (e) { console.error('Equipo:', e); }
 }
-
 document.getElementById('equipoRol')?.addEventListener('change', function() {
     const doctorGroup = document.getElementById('equipoDoctorGroup');
     if (doctorGroup) doctorGroup.style.display = this.value === 'doctor' ? 'block' : 'none';
     if (this.value === 'doctor') {
         const sel = document.getElementById('equipoDoctor');
         if (sel) {
-            sel.innerHTML = '<option value="">Elegir doctor...</option>' +
+            sel.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
                 doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
         }
     }
 });
-
 async function invitarMiembro() {
     const alertEl = document.getElementById('alertEquipo');
     const email = document.getElementById('equipoEmail').value;
     const rol = document.getElementById('equipoRol').value;
     const doctor_id = document.getElementById('equipoDoctor')?.value || null;
-    if (!email) { alertEl.innerHTML = '<div class="alert alert-error">Ingresá un email</div>'; return; }
+    if (!email) { alertEl.innerHTML = `<div class="alert alert-error">${t('set.errEmail')}</div>`; return; }
     try {
         await apiFetch('/equipo/invitar', {
             method: 'POST',
             body: JSON.stringify({ email, rol, doctor_id: rol === 'doctor' ? doctor_id : null })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">Invitación enviada a ${email} ✓</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${t('set.msgInvitado', { email })}</div>`;
         document.getElementById('equipoEmail').value = '';
         loadEquipo();
         setTimeout(() => alertEl.innerHTML = '', 4000);
@@ -1664,20 +1601,18 @@ async function invitarMiembro() {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
-
 async function eliminarMiembro(id) {
-    if (!confirm('¿Eliminar este miembro del equipo?')) return;
+    if (!confirm(t('set.confirmEliminarMiembro'))) return;
     try {
         await apiFetch(`/equipo/${id}`, { method: 'DELETE' });
         loadEquipo();
     } catch (e) { alert('Error: ' + e.message); }
 }
-
 function estadoBadge(estado) {
     const map = { pendiente: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
-    return `<span class="badge ${map[estado] || 'badge-warning'}">${estado || 'pendiente'}</span>`;
+    const label = { pendiente: t('badge.pendiente'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada') };
+    return `<span class="badge ${map[estado] || 'badge-warning'}">${label[estado] || label.pendiente}</span>`;
 }
-
 function showSection(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -1686,19 +1621,16 @@ function showSection(id, btn) {
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
     closeMobileMenu();
 }
-
 function toggleMobileMenu() {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
 }
-
 function closeMobileMenu() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
 }
-
-// ── IDIOMA DEL PANEL (Fase 1: menú lateral + títulos de sección) ────
-const panelTranslations = {
+// ── IDIOMA DEL PANEL (traducción completa) ───────────────────────
+const translations = {
     es: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Citas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
@@ -1706,6 +1638,80 @@ const panelTranslations = {
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Citas',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
+        'login.tabLogin': 'Iniciar sesión', 'login.tabRegister': 'Crear cuenta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
+        'login.password': 'Contraseña', 'login.passwordPh': 'Mínimo 8 caracteres', 'login.confirmPassword': 'Confirmar contraseña',
+        'login.confirmPasswordPh': 'Repetí la contraseña', 'login.clinicName': 'Nombre de la clínica', 'login.clinicNamePh': 'Clínica San José',
+        'login.errCampos': 'Completá todos los campos', 'login.errPassMatch': 'Las contraseñas no coinciden',
+        'login.errPassLen': 'La contraseña debe tener al menos 8 caracteres', 'login.errCrearCuenta': 'Error al crear la cuenta',
+        'login.errSinToken': 'No se recibió token', 'login.errCredenciales': 'Credenciales inválidas',
+        'login.sesionExpirada': 'Tu sesión expiró. Ingresá de nuevo.',
+        'common.loading': 'Cargando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Fecha', 'common.colHora': 'Hora',
+        'common.colEstado': 'Estado', 'common.colNombre': 'Nombre', 'common.colAccion': 'Acción', 'common.paciente': 'Paciente',
+        'common.doctor': 'Doctor', 'common.fecha': 'Fecha', 'common.hora': 'Hora', 'common.cargandoPacientes': 'Cargando pacientes...',
+        'common.elegirDoctor': 'Elegir doctor...', 'common.seleccionarPaciente': 'Seleccionar paciente...', 'common.todosDoctores': 'Todos los doctores',
+        'common.todosParen': ' (todos los doctores)', 'common.cancelar': 'Cancelar', 'common.eliminar': 'Eliminar', 'common.agregar': 'Agregar',
+        'common.agregadoOk': 'Agregado ✓', 'common.guardadoOk': 'Guardado ✓', 'common.pacienteSinNombre': 'Paciente sin nombre',
+        'common.cualquiera': 'Cualquiera',
+        'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Total Citas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
+        'dash.proximasCitas': 'Próximas Citas', 'dash.noCitas': 'No hay citas próximas',
+        'pac.addTitle': 'Agregar Paciente', 'pac.nombre': 'Nombre', 'pac.nombrePh': 'Juan Pérez', 'pac.telefono': 'Teléfono',
+        'pac.email': 'Email', 'pac.emailPh': 'juan@email.com', 'pac.cedula': 'Cédula', 'pac.idioma': 'Idioma preferido',
+        'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
+        'pac.asociarDoctores': 'Asociar doctor(es) para esta visita (opcional)', 'pac.cargandoDoctores': 'Cargando doctores...',
+        'pac.fechaVisita': 'Fecha de la visita', 'pac.btnAgregar': 'Agregar Paciente', 'pac.listaTitle': 'Lista de Pacientes',
+        'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'No hay pacientes aún', 'pac.sinDoctores': 'No hay doctores disponibles todavía',
+        'pac.msgAgregado': 'Paciente agregado ✓', 'pac.msgConCitas': ' con {n} cita(s)',
+        'citas.bloqueTitle': 'Cita en bloque (un paciente, varios doctores el mismo día)', 'citas.btnAgregarDoctor': '+ Agregar doctor',
+        'citas.btnCrearBloque': 'Crear citas en bloque', 'citas.recurrenteTitle': 'Citas recurrentes (varias semanas)',
+        'citas.recurrenteDesc': 'Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.',
+        'citas.fechaPrimera': 'Fecha de la primera cita', 'citas.repetirCada': 'Repetir cada (semanas)', 'citas.cantidad': 'Cantidad de citas',
+        'citas.btnCrearRecurrente': 'Crear citas recurrentes', 'citas.todasTitle': 'Todas las Citas', 'citas.noCitas': 'No hay citas aún',
+        'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Recordatorio', 'citas.emergTitle': '⚠️ Herramientas de emergencia',
+        'citas.emergDesc': 'Estas acciones afectan muchas citas a la vez y no avisan a los pacientes automáticamente. Después de usarlas, contactalos por WhatsApp a mano.',
+        'citas.diaModificar': 'Día a modificar', 'citas.doctorOpcional': 'Doctor (opcional — vacío afecta a todos)',
+        'citas.minutosLabel': 'Correr agenda cuántos minutos (negativo para adelantar, ej: -15)', 'citas.btnCorrer': '🕐 Correr agenda del día',
+        'citas.btnCancelarDia': '⛔ Cancelar todo el día', 'citas.msgRecordatorioEnviado': 'Recordatorio enviado ✓',
+        'citas.confirmCancelarCita': '¿Cancelar esta cita?', 'citas.errFechaMinutos': 'Elegí el día y cuántos minutos correr',
+        'citas.confirmCorrer': '¿Correr TODAS las citas del {fecha}{todos} por {minutos} minutos? Esto no avisa a los pacientes.',
+        'citas.avisaManual': 'Avisá a los pacientes manualmente.', 'citas.errFecha': 'Elegí el día',
+        'citas.confirmCancelarDia': '¿CANCELAR TODAS las citas del {fecha}{todos}? No se avisa a los pacientes automáticamente.',
+        'citas.agregaAlMenosUno': 'Agregá al menos un doctor', 'citas.errBloque': 'Elegí paciente, fecha y al menos un doctor',
+        'citas.msgCreadas': '{n} cita(s) creada(s) ✓', 'citas.errRecurrente': 'Completá paciente, doctor, fecha y hora',
+        'citas.confirmRecurrente': '¿Crear {cantidad} cita(s), una cada {cada} semana(s), empezando el {fecha}?',
+        'citas.seCrearanCitas': 'Se crearán citas:',
+        'le.addTitle': 'Agregar a la lista de espera', 'le.fechaDeseada': 'Fecha deseada (opcional)', 'le.notas': 'Notas',
+        'le.notasPh': 'Ej: prefiere mañanas', 'le.btnAgregar': 'Agregar a la lista', 'le.enEsperaTitle': 'En espera',
+        'le.colFecha': 'Fecha deseada', 'le.nadie': 'Nadie en espera por ahora', 'le.btnAtendido': 'Atendido', 'le.btnQuitar': 'Quitar',
+        'le.errElegir': 'Elegí paciente y doctor', 'le.msgAgregado': 'Agregado a la lista de espera ✓', 'le.confirmQuitar': '¿Quitar de la lista de espera?',
+        'doc.addTitle': 'Agregar Doctor', 'doc.editTitle': 'Editar Doctor', 'doc.especialidad': 'Especialidad',
+        'doc.especialidadPh': 'Medicina General', 'doc.duracion': 'Duración de cita (minutos)', 'doc.precio': 'Precio de consulta (₡)',
+        'doc.instrucciones': 'Instrucciones para el paciente (opcional)', 'doc.instruccionesPh': 'Ej: Venga en ayunas de 8 horas. Use ropa cómoda.',
+        'doc.btnGuardarCambios': 'Guardar cambios', 'doc.listTitle': 'Doctores Disponibles', 'doc.colDuracion': 'Duración Cita',
+        'doc.noDoctores': 'No hay doctores', 'doc.activo': 'Activo', 'doc.inactivo': 'Inactivo', 'doc.btnEditar': 'Editar',
+        'doc.errNombre': 'El nombre es requerido', 'doc.msgActualizado': 'Doctor actualizado ✓', 'doc.msgAgregado': 'Doctor agregado ✓',
+        'fact.catalogoTitle': 'Catálogo de servicios y precios', 'fact.servNombre': 'Nombre del servicio', 'fact.servNombrePh': 'Ej: Radiografía',
+        'fact.btnAgregarCatalogo': 'Agregar al catálogo', 'fact.catalogoActualTitle': 'Catálogo actual', 'fact.colServicio': 'Servicio',
+        'fact.sinServicios': 'Sin servicios en el catálogo', 'fact.facturaTitle': 'Factura de una cita', 'fact.elegirCita': 'Elegir cita...',
+        'fact.consulta': 'Consulta', 'fact.servicio': 'Servicio', 'fact.total': 'Total', 'fact.agregarServicio': 'Agregar servicio...',
+        'fact.errCompletar': 'Completá nombre y precio', 'fact.confirmEliminarServicio': '¿Eliminar este servicio del catálogo?',
+        'exp.seleccionarPaciente': 'Seleccionar paciente', 'exp.elegirPaciente': 'Elegir paciente...', 'exp.agregarNotaTitle': 'Agregar nota',
+        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicaciones, observaciones...', 'exp.medicamentos': 'Medicamentos recetados (opcional)',
+        'exp.medicamentosPh': 'Ej: Acetaminofén 500mg cada 8h', 'exp.dolorInicial': 'Dolor inicial (0-10, opcional)',
+        'exp.dolorActual': 'Dolor actual (0-10, opcional)', 'exp.dolorLabel': 'Dolor', 'exp.planTratamiento': 'Plan de tratamiento (opcional)',
+        'exp.planTratamientoPh': 'Objetivos, técnicas, frecuencia sugerida...', 'exp.btnGuardar': 'Guardar nota',
+        'exp.notaVoz': '🎤 Nota de voz (próximamente)', 'exp.notaVozTitle': 'Próximamente — grabación + transcripción automática',
+        'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
+        'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
+        'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
+        'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
+        'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
+        'set.rec1': 'Primer recordatorio (horas antes de la cita)', 'set.rec2': 'Segundo recordatorio (horas antes de la cita)',
+        'set.btnGuardar': 'Guardar', 'set.equipoTitle': 'Equipo', 'set.emailNuevo': 'Email del nuevo miembro',
+        'set.emailNuevoPh': 'doctor@clinica.com', 'set.rol': 'Rol', 'set.rolRecepcionista': 'Recepcionista', 'set.rolDoctor': 'Doctor',
+        'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Doctor asociado (si el rol es Doctor)', 'set.btnInvitar': 'Enviar invitación',
+        'set.miembrosTitle': 'Miembros del equipo', 'set.colEmail': 'Email', 'set.sinMiembros': 'Sin miembros todavía',
+        'set.errEmail': 'Ingresá un email', 'set.msgInvitado': 'Invitación enviada a {email} ✓', 'set.confirmEliminarMiembro': '¿Eliminar este miembro del equipo?',
+        'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
     },
     en: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Appointments',
@@ -1714,6 +1720,80 @@ const panelTranslations = {
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Appointments',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
+        'login.tabLogin': 'Sign in', 'login.tabRegister': 'Create account', 'login.email': 'Email', 'login.emailPh': 'email@clinic.com',
+        'login.password': 'Password', 'login.passwordPh': 'At least 8 characters', 'login.confirmPassword': 'Confirm password',
+        'login.confirmPasswordPh': 'Repeat your password', 'login.clinicName': 'Clinic name', 'login.clinicNamePh': 'San José Clinic',
+        'login.errCampos': 'Fill in all fields', 'login.errPassMatch': 'Passwords do not match',
+        'login.errPassLen': 'Password must be at least 8 characters', 'login.errCrearCuenta': 'Error creating account',
+        'login.errSinToken': 'No token received', 'login.errCredenciales': 'Invalid credentials',
+        'login.sesionExpirada': 'Your session expired. Please log in again.',
+        'common.loading': 'Loading...', 'common.colPaciente': 'Patient', 'common.colFecha': 'Date', 'common.colHora': 'Time',
+        'common.colEstado': 'Status', 'common.colNombre': 'Name', 'common.colAccion': 'Action', 'common.paciente': 'Patient',
+        'common.doctor': 'Doctor', 'common.fecha': 'Date', 'common.hora': 'Time', 'common.cargandoPacientes': 'Loading patients...',
+        'common.elegirDoctor': 'Choose doctor...', 'common.seleccionarPaciente': 'Select patient...', 'common.todosDoctores': 'All doctors',
+        'common.todosParen': ' (all doctors)', 'common.cancelar': 'Cancel', 'common.eliminar': 'Delete', 'common.agregar': 'Add',
+        'common.agregadoOk': 'Added ✓', 'common.guardadoOk': 'Saved ✓', 'common.pacienteSinNombre': 'Unnamed patient',
+        'common.cualquiera': 'Anyone',
+        'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Total Appointments', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
+        'dash.proximasCitas': 'Upcoming Appointments', 'dash.noCitas': 'No upcoming appointments',
+        'pac.addTitle': 'Add Patient', 'pac.nombre': 'Name', 'pac.nombrePh': 'John Smith', 'pac.telefono': 'Phone',
+        'pac.email': 'Email', 'pac.emailPh': 'john@email.com', 'pac.cedula': 'ID number', 'pac.idioma': 'Preferred language',
+        'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
+        'pac.asociarDoctores': 'Assign doctor(s) for this visit (optional)', 'pac.cargandoDoctores': 'Loading doctors...',
+        'pac.fechaVisita': 'Visit date', 'pac.btnAgregar': 'Add Patient', 'pac.listaTitle': 'Patient List',
+        'pac.colRegistrado': 'Registered', 'pac.noPacientes': 'No patients yet', 'pac.sinDoctores': 'No doctors available yet',
+        'pac.msgAgregado': 'Patient added ✓', 'pac.msgConCitas': ' with {n} appointment(s)',
+        'citas.bloqueTitle': 'Block appointment (one patient, several doctors same day)', 'citas.btnAgregarDoctor': '+ Add doctor',
+        'citas.btnCrearBloque': 'Create block appointments', 'citas.recurrenteTitle': 'Recurring appointments (multiple weeks)',
+        'citas.recurrenteDesc': 'For ongoing treatments — e.g. physical therapy once a week for 6 weeks.',
+        'citas.fechaPrimera': 'First appointment date', 'citas.repetirCada': 'Repeat every (weeks)', 'citas.cantidad': 'Number of appointments',
+        'citas.btnCrearRecurrente': 'Create recurring appointments', 'citas.todasTitle': 'All Appointments', 'citas.noCitas': 'No appointments yet',
+        'citas.btnCancelar': 'Cancel', 'citas.recordatorio': 'Reminder', 'citas.emergTitle': '⚠️ Emergency tools',
+        'citas.emergDesc': 'These actions affect many appointments at once and do not automatically notify patients. Contact them by WhatsApp manually afterward.',
+        'citas.diaModificar': 'Day to modify', 'citas.doctorOpcional': 'Doctor (optional — empty affects everyone)',
+        'citas.minutosLabel': 'Shift schedule by how many minutes (negative to move earlier, e.g. -15)', 'citas.btnCorrer': '🕐 Shift the day\'s schedule',
+        'citas.btnCancelarDia': '⛔ Cancel the whole day', 'citas.msgRecordatorioEnviado': 'Reminder sent ✓',
+        'citas.confirmCancelarCita': 'Cancel this appointment?', 'citas.errFechaMinutos': 'Choose the day and how many minutes to shift',
+        'citas.confirmCorrer': 'Shift ALL appointments on {fecha}{todos} by {minutos} minutes? This does not notify patients.',
+        'citas.avisaManual': 'Notify patients manually.', 'citas.errFecha': 'Choose the day',
+        'citas.confirmCancelarDia': 'CANCEL ALL appointments on {fecha}{todos}? Patients are not notified automatically.',
+        'citas.agregaAlMenosUno': 'Add at least one doctor', 'citas.errBloque': 'Choose patient, date and at least one doctor',
+        'citas.msgCreadas': '{n} appointment(s) created ✓', 'citas.errRecurrente': 'Fill in patient, doctor, date and time',
+        'citas.confirmRecurrente': 'Create {cantidad} appointment(s), one every {cada} week(s), starting {fecha}?',
+        'citas.seCrearanCitas': 'Appointments to be created:',
+        'le.addTitle': 'Add to waiting list', 'le.fechaDeseada': 'Desired date (optional)', 'le.notas': 'Notes',
+        'le.notasPh': 'E.g.: prefers mornings', 'le.btnAgregar': 'Add to list', 'le.enEsperaTitle': 'Waiting',
+        'le.colFecha': 'Desired date', 'le.nadie': 'No one waiting right now', 'le.btnAtendido': 'Seen', 'le.btnQuitar': 'Remove',
+        'le.errElegir': 'Choose patient and doctor', 'le.msgAgregado': 'Added to waiting list ✓', 'le.confirmQuitar': 'Remove from waiting list?',
+        'doc.addTitle': 'Add Doctor', 'doc.editTitle': 'Edit Doctor', 'doc.especialidad': 'Specialty',
+        'doc.especialidadPh': 'General Medicine', 'doc.duracion': 'Appointment length (minutes)', 'doc.precio': 'Consultation fee (₡)',
+        'doc.instrucciones': 'Instructions for the patient (optional)', 'doc.instruccionesPh': 'E.g.: Come fasting for 8 hours. Wear comfortable clothes.',
+        'doc.btnGuardarCambios': 'Save changes', 'doc.listTitle': 'Available Doctors', 'doc.colDuracion': 'Appointment Length',
+        'doc.noDoctores': 'No doctors', 'doc.activo': 'Active', 'doc.inactivo': 'Inactive', 'doc.btnEditar': 'Edit',
+        'doc.errNombre': 'Name is required', 'doc.msgActualizado': 'Doctor updated ✓', 'doc.msgAgregado': 'Doctor added ✓',
+        'fact.catalogoTitle': 'Services and pricing catalog', 'fact.servNombre': 'Service name', 'fact.servNombrePh': 'E.g.: X-ray',
+        'fact.btnAgregarCatalogo': 'Add to catalog', 'fact.catalogoActualTitle': 'Current catalog', 'fact.colServicio': 'Service',
+        'fact.sinServicios': 'No services in the catalog', 'fact.facturaTitle': 'Appointment invoice', 'fact.elegirCita': 'Choose appointment...',
+        'fact.consulta': 'Consultation', 'fact.servicio': 'Service', 'fact.total': 'Total', 'fact.agregarServicio': 'Add service...',
+        'fact.errCompletar': 'Fill in name and price', 'fact.confirmEliminarServicio': 'Delete this service from the catalog?',
+        'exp.seleccionarPaciente': 'Select patient', 'exp.elegirPaciente': 'Choose patient...', 'exp.agregarNotaTitle': 'Add note',
+        'exp.nota': 'Note', 'exp.notaPh': 'Diagnosis, instructions, observations...', 'exp.medicamentos': 'Prescribed medications (optional)',
+        'exp.medicamentosPh': 'E.g.: Acetaminophen 500mg every 8h', 'exp.dolorInicial': 'Initial pain (0-10, optional)',
+        'exp.dolorActual': 'Current pain (0-10, optional)', 'exp.dolorLabel': 'Pain', 'exp.planTratamiento': 'Treatment plan (optional)',
+        'exp.planTratamientoPh': 'Goals, techniques, suggested frequency...', 'exp.btnGuardar': 'Save note',
+        'exp.notaVoz': '🎤 Voice note (coming soon)', 'exp.notaVozTitle': 'Coming soon — automatic recording + transcription',
+        'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
+        'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
+        'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
+        'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
+        'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
+        'set.rec1': 'First reminder (hours before appointment)', 'set.rec2': 'Second reminder (hours before appointment)',
+        'set.btnGuardar': 'Save', 'set.equipoTitle': 'Team', 'set.emailNuevo': 'New member email',
+        'set.emailNuevoPh': 'doctor@clinic.com', 'set.rol': 'Role', 'set.rolRecepcionista': 'Receptionist', 'set.rolDoctor': 'Doctor',
+        'set.rolAdmin': 'Administrator', 'set.doctorAsociado': 'Associated doctor (if role is Doctor)', 'set.btnInvitar': 'Send invitation',
+        'set.miembrosTitle': 'Team members', 'set.colEmail': 'Email', 'set.sinMiembros': 'No members yet',
+        'set.errEmail': 'Enter an email', 'set.msgInvitado': 'Invitation sent to {email} ✓', 'set.confirmEliminarMiembro': 'Remove this team member?',
+        'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled',
     },
     pt: {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Consultas',
@@ -1722,28 +1802,134 @@ const panelTranslations = {
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Consultas',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
+        'login.tabLogin': 'Entrar', 'login.tabRegister': 'Criar conta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
+        'login.password': 'Senha', 'login.passwordPh': 'Mínimo 8 caracteres', 'login.confirmPassword': 'Confirmar senha',
+        'login.confirmPasswordPh': 'Repita a senha', 'login.clinicName': 'Nome da clínica', 'login.clinicNamePh': 'Clínica São José',
+        'login.errCampos': 'Preencha todos os campos', 'login.errPassMatch': 'As senhas não coincidem',
+        'login.errPassLen': 'A senha deve ter pelo menos 8 caracteres', 'login.errCrearCuenta': 'Erro ao criar a conta',
+        'login.errSinToken': 'Nenhum token recebido', 'login.errCredenciales': 'Credenciais inválidas',
+        'login.sesionExpirada': 'Sua sessão expirou. Entre novamente.',
+        'common.loading': 'Carregando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Data', 'common.colHora': 'Hora',
+        'common.colEstado': 'Status', 'common.colNombre': 'Nome', 'common.colAccion': 'Ação', 'common.paciente': 'Paciente',
+        'common.doctor': 'Médico', 'common.fecha': 'Data', 'common.hora': 'Hora', 'common.cargandoPacientes': 'Carregando pacientes...',
+        'common.elegirDoctor': 'Escolher médico...', 'common.seleccionarPaciente': 'Selecionar paciente...', 'common.todosDoctores': 'Todos os médicos',
+        'common.todosParen': ' (todos os médicos)', 'common.cancelar': 'Cancelar', 'common.eliminar': 'Excluir', 'common.agregar': 'Adicionar',
+        'common.agregadoOk': 'Adicionado ✓', 'common.guardadoOk': 'Salvo ✓', 'common.pacienteSinNombre': 'Paciente sem nome',
+        'common.cualquiera': 'Qualquer um',
+        'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Total de Consultas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
+        'dash.proximasCitas': 'Próximas Consultas', 'dash.noCitas': 'Nenhuma consulta próxima',
+        'pac.addTitle': 'Adicionar Paciente', 'pac.nombre': 'Nome', 'pac.nombrePh': 'João Silva', 'pac.telefono': 'Telefone',
+        'pac.email': 'Email', 'pac.emailPh': 'joao@email.com', 'pac.cedula': 'Documento', 'pac.idioma': 'Idioma preferido',
+        'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
+        'pac.asociarDoctores': 'Associar médico(s) a esta visita (opcional)', 'pac.cargandoDoctores': 'Carregando médicos...',
+        'pac.fechaVisita': 'Data da visita', 'pac.btnAgregar': 'Adicionar Paciente', 'pac.listaTitle': 'Lista de Pacientes',
+        'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'Nenhum paciente ainda', 'pac.sinDoctores': 'Nenhum médico disponível ainda',
+        'pac.msgAgregado': 'Paciente adicionado ✓', 'pac.msgConCitas': ' com {n} consulta(s)',
+        'citas.bloqueTitle': 'Consulta em bloco (um paciente, vários médicos no mesmo dia)', 'citas.btnAgregarDoctor': '+ Adicionar médico',
+        'citas.btnCrearBloque': 'Criar consultas em bloco', 'citas.recurrenteTitle': 'Consultas recorrentes (várias semanas)',
+        'citas.recurrenteDesc': 'Para tratamentos com acompanhamento — ex. fisioterapia uma vez por semana durante 6 semanas.',
+        'citas.fechaPrimera': 'Data da primeira consulta', 'citas.repetirCada': 'Repetir a cada (semanas)', 'citas.cantidad': 'Quantidade de consultas',
+        'citas.btnCrearRecurrente': 'Criar consultas recorrentes', 'citas.todasTitle': 'Todas as Consultas', 'citas.noCitas': 'Nenhuma consulta ainda',
+        'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Lembrete', 'citas.emergTitle': '⚠️ Ferramentas de emergência',
+        'citas.emergDesc': 'Essas ações afetam muitas consultas de uma vez e não avisam os pacientes automaticamente. Depois de usá-las, contate-os pelo WhatsApp manualmente.',
+        'citas.diaModificar': 'Dia a modificar', 'citas.doctorOpcional': 'Médico (opcional — vazio afeta todos)',
+        'citas.minutosLabel': 'Mover agenda quantos minutos (negativo para adiantar, ex: -15)', 'citas.btnCorrer': '🕐 Mover a agenda do dia',
+        'citas.btnCancelarDia': '⛔ Cancelar o dia todo', 'citas.msgRecordatorioEnviado': 'Lembrete enviado ✓',
+        'citas.confirmCancelarCita': 'Cancelar esta consulta?', 'citas.errFechaMinutos': 'Escolha o dia e quantos minutos mover',
+        'citas.confirmCorrer': 'Mover TODAS as consultas de {fecha}{todos} em {minutos} minutos? Isso não avisa os pacientes.',
+        'citas.avisaManual': 'Avise os pacientes manualmente.', 'citas.errFecha': 'Escolha o dia',
+        'citas.confirmCancelarDia': 'CANCELAR TODAS as consultas de {fecha}{todos}? Os pacientes não são avisados automaticamente.',
+        'citas.agregaAlMenosUno': 'Adicione pelo menos um médico', 'citas.errBloque': 'Escolha paciente, data e pelo menos um médico',
+        'citas.msgCreadas': '{n} consulta(s) criada(s) ✓', 'citas.errRecurrente': 'Preencha paciente, médico, data e hora',
+        'citas.confirmRecurrente': 'Criar {cantidad} consulta(s), uma a cada {cada} semana(s), começando em {fecha}?',
+        'citas.seCrearanCitas': 'Consultas a serem criadas:',
+        'le.addTitle': 'Adicionar à lista de espera', 'le.fechaDeseada': 'Data desejada (opcional)', 'le.notas': 'Notas',
+        'le.notasPh': 'Ex: prefere manhãs', 'le.btnAgregar': 'Adicionar à lista', 'le.enEsperaTitle': 'Em espera',
+        'le.colFecha': 'Data desejada', 'le.nadie': 'Ninguém em espera no momento', 'le.btnAtendido': 'Atendido', 'le.btnQuitar': 'Remover',
+        'le.errElegir': 'Escolha paciente e médico', 'le.msgAgregado': 'Adicionado à lista de espera ✓', 'le.confirmQuitar': 'Remover da lista de espera?',
+        'doc.addTitle': 'Adicionar Médico', 'doc.editTitle': 'Editar Médico', 'doc.especialidad': 'Especialidade',
+        'doc.especialidadPh': 'Clínica Geral', 'doc.duracion': 'Duração da consulta (minutos)', 'doc.precio': 'Preço da consulta (₡)',
+        'doc.instrucciones': 'Instruções para o paciente (opcional)', 'doc.instruccionesPh': 'Ex: Venha em jejum de 8 horas. Use roupas confortáveis.',
+        'doc.btnGuardarCambios': 'Salvar alterações', 'doc.listTitle': 'Médicos Disponíveis', 'doc.colDuracion': 'Duração da Consulta',
+        'doc.noDoctores': 'Nenhum médico', 'doc.activo': 'Ativo', 'doc.inactivo': 'Inativo', 'doc.btnEditar': 'Editar',
+        'doc.errNombre': 'O nome é obrigatório', 'doc.msgActualizado': 'Médico atualizado ✓', 'doc.msgAgregado': 'Médico adicionado ✓',
+        'fact.catalogoTitle': 'Catálogo de serviços e preços', 'fact.servNombre': 'Nome do serviço', 'fact.servNombrePh': 'Ex: Raio-X',
+        'fact.btnAgregarCatalogo': 'Adicionar ao catálogo', 'fact.catalogoActualTitle': 'Catálogo atual', 'fact.colServicio': 'Serviço',
+        'fact.sinServicios': 'Nenhum serviço no catálogo', 'fact.facturaTitle': 'Fatura de uma consulta', 'fact.elegirCita': 'Escolher consulta...',
+        'fact.consulta': 'Consulta', 'fact.servicio': 'Serviço', 'fact.total': 'Total', 'fact.agregarServicio': 'Adicionar serviço...',
+        'fact.errCompletar': 'Preencha nome e preço', 'fact.confirmEliminarServicio': 'Excluir este serviço do catálogo?',
+        'exp.seleccionarPaciente': 'Selecionar paciente', 'exp.elegirPaciente': 'Escolher paciente...', 'exp.agregarNotaTitle': 'Adicionar nota',
+        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicações, observações...', 'exp.medicamentos': 'Medicamentos prescritos (opcional)',
+        'exp.medicamentosPh': 'Ex: Paracetamol 500mg a cada 8h', 'exp.dolorInicial': 'Dor inicial (0-10, opcional)',
+        'exp.dolorActual': 'Dor atual (0-10, opcional)', 'exp.dolorLabel': 'Dor', 'exp.planTratamiento': 'Plano de tratamento (opcional)',
+        'exp.planTratamientoPh': 'Objetivos, técnicas, frequência sugerida...', 'exp.btnGuardar': 'Salvar nota',
+        'exp.notaVoz': '🎤 Nota de voz (em breve)', 'exp.notaVozTitle': 'Em breve — gravação + transcrição automática',
+        'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
+        'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
+        'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
+        'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
+        'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
+        'set.rec1': 'Primeiro lembrete (horas antes da consulta)', 'set.rec2': 'Segundo lembrete (horas antes da consulta)',
+        'set.btnGuardar': 'Salvar', 'set.equipoTitle': 'Equipe', 'set.emailNuevo': 'Email do novo membro',
+        'set.emailNuevoPh': 'medico@clinica.com', 'set.rol': 'Função', 'set.rolRecepcionista': 'Recepcionista', 'set.rolDoctor': 'Médico',
+        'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Médico associado (se a função for Médico)', 'set.btnInvitar': 'Enviar convite',
+        'set.miembrosTitle': 'Membros da equipe', 'set.colEmail': 'Email', 'set.sinMiembros': 'Nenhum membro ainda',
+        'set.errEmail': 'Digite um email', 'set.msgInvitado': 'Convite enviado para {email} ✓', 'set.confirmEliminarMiembro': 'Remover este membro da equipe?',
+        'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
     }
 };
-
-function applyPanelLang(lang) {
-    const t = panelTranslations[lang] || panelTranslations.es;
+const LOCALE_MAP = { es: 'es-CR', en: 'en-US', pt: 'pt-BR' };
+function getLocale() { return LOCALE_MAP[currentLang] || 'es-CR'; }
+function t(key, vars) {
+    const dict = translations[currentLang] || translations.es;
+    let str = dict[key] !== undefined ? dict[key] : (translations.es[key] !== undefined ? translations.es[key] : key);
+    if (vars) {
+        Object.keys(vars).forEach(k => { str = str.split('{' + k + '}').join(vars[k]); });
+    }
+    return str;
+}
+let currentLang = localStorage.getItem('autocita_lang') || 'es';
+function applyPanelLang(lang, opts) {
+    opts = opts || {};
+    currentLang = lang;
+    localStorage.setItem('autocita_lang', lang);
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (t[key]) el.textContent = t[key];
+        el.textContent = t(key);
     });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        el.placeholder = t(key);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        el.title = t(key);
+    });
+    if (!opts.skipReload && document.getElementById('appContainer').style.display !== 'none') {
+        renderCalendar();
+        loadDashboard();
+        loadPacientes();
+        loadCitas();
+        loadDoctores();
+        loadListaEspera();
+        loadServicios();
+        loadSettings();
+        if (userRol === 'dueno') loadEquipo();
+    }
 }
-
 function changeLang(lang, btn) {
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     applyPanelLang(lang);
 }
-
 // ── INIT ──────────────────────────────────────────────────────────
+document.querySelectorAll('.lang-btn').forEach(b => {
+    if (b.textContent.trim().toLowerCase() === currentLang) b.classList.add('active');
+    else b.classList.remove('active');
+});
+applyPanelLang(currentLang, { skipReload: true });
 if (getToken()) {
     showApp();
-    // Auto-refresh: vuelve a cargar los datos cada 45s, sin que el usuario
-    // tenga que recargar la página. Solo corre si hay sesión activa.
     setInterval(() => { if (getToken()) loadAll(); }, 45000);
 }
 </script>
