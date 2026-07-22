@@ -1609,8 +1609,8 @@ async function eliminarMiembro(id) {
     } catch (e) { alert('Error: ' + e.message); }
 }
 function estadoBadge(estado) {
-    const map = { pendiente: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
-    const label = { pendiente: t('badge.pendiente'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada') };
+    const map = { pendiente: 'badge-warning', recordatorio_enviado: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
+    const label = { pendiente: t('badge.pendiente'), recordatorio_enviado: t('badge.recordatorio_enviado'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada') };
     return `<span class="badge ${map[estado] || 'badge-warning'}">${label[estado] || label.pendiente}</span>`;
 }
 function showSection(id, btn) {
@@ -1712,6 +1712,7 @@ const translations = {
         'set.miembrosTitle': 'Miembros del equipo', 'set.colEmail': 'Email', 'set.sinMiembros': 'Sin miembros todavía',
         'set.errEmail': 'Ingresá un email', 'set.msgInvitado': 'Invitación enviada a {email} ✓', 'set.confirmEliminarMiembro': '¿Eliminar este miembro del equipo?',
         'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
+        'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
     en: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Appointments',
@@ -1794,6 +1795,7 @@ const translations = {
         'set.miembrosTitle': 'Team members', 'set.colEmail': 'Email', 'set.sinMiembros': 'No members yet',
         'set.errEmail': 'Enter an email', 'set.msgInvitado': 'Invitation sent to {email} ✓', 'set.confirmEliminarMiembro': 'Remove this team member?',
         'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled',
+        'badge.recordatorio_enviado': 'Reminder sent',
     },
     pt: {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Consultas',
@@ -1876,6 +1878,7 @@ const translations = {
         'set.miembrosTitle': 'Membros da equipe', 'set.colEmail': 'Email', 'set.sinMiembros': 'Nenhum membro ainda',
         'set.errEmail': 'Digite um email', 'set.msgInvitado': 'Convite enviado para {email} ✓', 'set.confirmEliminarMiembro': 'Remover este membro da equipe?',
         'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
+        'badge.recordatorio_enviado': 'Lembrete enviado',
     }
 };
 const LOCALE_MAP = { es: 'es-CR', en: 'en-US', pt: 'pt-BR' };
