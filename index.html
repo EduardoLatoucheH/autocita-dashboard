@@ -13,6 +13,9 @@
             --primary: #2D6A4F;
             --primary-dark: #1B4332;
             --primary-soft: #EAF4EE;
+            --terracotta: #C1663B;
+            --terracotta-dark: #8F4A29;
+            --terracotta-soft: #F7E9E1;
             --gray-50: #FAFBFA;
             --gray-100: #F2F5F3;
             --gray-200: #E5EAE6;
@@ -60,6 +63,7 @@
         .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 28px; }
         .kpi { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
         .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
+        .kpi:nth-child(2n)::before { background: var(--terracotta); }
         .kpi-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
         .kpi-value { font-size: 30px; font-weight: 800; color: var(--gray-900); letter-spacing: -0.02em; }
 
@@ -75,8 +79,8 @@
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: #C2373C; }
         .btn-success { background: var(--success); }
-        .btn-ghost { background: var(--gray-100); color: var(--gray-700); box-shadow: none; }
-        .btn-ghost:hover { background: var(--gray-200); color: var(--gray-900); box-shadow: none; }
+        .btn-ghost { background: var(--terracotta-soft); color: var(--terracotta-dark); box-shadow: none; }
+        .btn-ghost:hover { background: #EFD9C9; color: var(--terracotta-dark); box-shadow: none; }
         .btn-block { width: 100%; margin-top: 16px; }
         .btn-sm { padding: 5px 10px; font-size: 12px; box-shadow: none; }
 
@@ -329,7 +333,7 @@
                         <label data-i18n="citas.minutosLabel">Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
                         <input type="number" id="emergMinutos" placeholder="30">
                     </div>
-                    <button class="btn btn-block" style="background:var(--warning)" onclick="correrAgendaDia()" data-i18n="citas.btnCorrer">🕐 Correr agenda del día</button>
+                    <button class="btn btn-block" style="background:var(--terracotta)" onclick="correrAgendaDia()" data-i18n="citas.btnCorrer">🕐 Correr agenda del día</button>
                     <button class="btn btn-block btn-danger" style="margin-top:10px" onclick="cancelarDiaCompleto()" data-i18n="citas.btnCancelarDia">⛔ Cancelar todo el día</button>
                 </div>
             </section>
@@ -478,6 +482,17 @@
                     <div class="form-group"><label data-i18n="set.rec1">Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
                     <div class="form-group"><label data-i18n="set.rec2">Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2"></div>
                     <button class="btn btn-block" onclick="guardarConfigRecordatorios()" data-i18n="set.btnGuardar">Guardar</button>
+                </div>
+                <!-- Solo visible para el dueño -->
+                <div id="vinculoDoctorSection" class="card" style="display:none">
+                    <div class="card-title" data-i18n="set.soyDoctorTitle">¿Sos también uno de los doctores?</div>
+                    <p class="card-subtitle" data-i18n="set.soyDoctorDesc">Si además de dueño atendés pacientes, vinculá tu cuenta a tu registro de doctor para ver tu propio expediente clínico igual que los demás doctores.</p>
+                    <div id="alertVinculoDoctor"></div>
+                    <div class="form-group">
+                        <select id="vinculoDoctorSelect" onchange="guardarVinculoDoctor(this.value)">
+                            <option value="" data-i18n="set.noSoyDoctor">No soy doctor</option>
+                        </select>
+                    </div>
                 </div>
                 <!-- Solo visible para el dueño -->
                 <div id="equipoSection" style="display:none">
@@ -742,17 +757,53 @@ async function loadRol() {
 }
 function aplicarPermisos() {
     const permisos = {
-        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion','expedientes','settings'],
+        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion','settings'],
         recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion'],
         doctor:         ['citas','calendario','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
+    // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
+    // registro de doctor (userDoctorId). Recepción nunca lo ve.
+    if (userDoctorId && !visibles.includes('expedientes')) visibles.push('expedientes');
     document.querySelectorAll('.nav-link[data-section]').forEach(btn => {
         const sec = btn.getAttribute('data-section');
         btn.style.display = visibles.includes(sec) ? 'flex' : 'none';
     });
     const equipoSec = document.getElementById('equipoSection');
     if (equipoSec) equipoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
+    const vinculoSec = document.getElementById('vinculoDoctorSection');
+    if (vinculoSec) vinculoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
+}
+function poblarVinculoDoctor() {
+    const sel = document.getElementById('vinculoDoctorSelect');
+    if (!sel) return;
+    sel.innerHTML = `<option value="">${t('set.noSoyDoctor')}</option>` +
+        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    sel.value = userDoctorId || '';
+}
+async function guardarVinculoDoctor(id) {
+    const alertEl = document.getElementById('alertVinculoDoctor');
+    try {
+        await apiFetch('/clinica/setup', {
+            method: 'PATCH',
+            body: JSON.stringify({ doctor_id: id || null })
+        });
+        userDoctorId = id || null;
+        aplicarPermisos();
+        alertEl.innerHTML = `<div class="alert alert-success">${id ? t('set.vinculoOk') : t('set.vinculoQuitado')}</div>`;
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+// Un doctor (o el dueño vinculado a un doctor, si así lo quisiéramos en el
+// futuro) solo debería ver sus propias citas en las listas. Por ahora la
+// regla activa es: rol doctor puro ve solo lo suyo; dueño y recepción ven todo.
+function filtrarCitasPorRol(lista) {
+    if (userRol === 'doctor' && userDoctorId) {
+        return (lista || []).filter(c => c.doctor_id === userDoctorId);
+    }
+    return lista || [];
 }
 // ── DASHBOARD ─────────────────────────────────────────────────────
 async function loadDashboard() {
@@ -761,10 +812,11 @@ async function loadDashboard() {
             apiFetch('/dashboard'),
             apiFetch('/doctores')
         ]);
-        document.getElementById('kpiCitasTotal').textContent = dashboard.citas ?? '—';
+        const citasTodas = await apiFetch('/citas');
+        const citas = filtrarCitasPorRol(citasTodas);
+        document.getElementById('kpiCitasTotal').textContent = citas.length ?? '—';
         document.getElementById('kpiPacientes').textContent = dashboard.pacientes ?? '—';
         document.getElementById('kpiDoctores').textContent = doctores.length ?? '—';
-        const citas = await apiFetch('/citas');
         const hoy = new Date().toISOString().split('T')[0];
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
@@ -906,14 +958,14 @@ function construirFechaISO(fechaBase, minutos) {
 async function loadCitas() {
     try {
         const data = await apiFetch('/citas');
-        citasCache = data || [];
+        citasCache = filtrarCitasPorRol(data || []);
         renderCalendar();
         populateFacturaCitaSelect();
         const tbody = document.getElementById('tablaCitas');
-        if (!data.length) {
+        if (!citasCache.length) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('citas.noCitas')}</td></tr>`;
         } else {
-            tbody.innerHTML = data.map(c => {
+            tbody.innerHTML = citasCache.map(c => {
                 const fecha = c.fecha ? new Date(c.fecha) : null;
                 const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
                 const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
@@ -1380,6 +1432,7 @@ async function loadDoctores() {
         populateListaEsperaSelects();
         populateEmergDoctorSelect();
         populateRecurrenteSelects();
+        poblarVinculoDoctor();
         const tbody = document.getElementById('tablaDoctores');
         if (!data.length) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
@@ -1711,6 +1764,9 @@ const translations = {
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Doctor asociado (si el rol es Doctor)', 'set.btnInvitar': 'Enviar invitación',
         'set.miembrosTitle': 'Miembros del equipo', 'set.colEmail': 'Email', 'set.sinMiembros': 'Sin miembros todavía',
         'set.errEmail': 'Ingresá un email', 'set.msgInvitado': 'Invitación enviada a {email} ✓', 'set.confirmEliminarMiembro': '¿Eliminar este miembro del equipo?',
+        'set.soyDoctorTitle': '¿Sos también uno de los doctores?',
+        'set.soyDoctorDesc': 'Si además de dueño atendés pacientes, vinculá tu cuenta a tu registro de doctor para ver tu propio expediente clínico igual que los demás doctores.',
+        'set.noSoyDoctor': 'No soy doctor', 'set.vinculoOk': 'Cuenta vinculada a ese doctor', 'set.vinculoQuitado': 'Vínculo quitado',
         'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
         'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
@@ -1794,6 +1850,9 @@ const translations = {
         'set.rolAdmin': 'Administrator', 'set.doctorAsociado': 'Associated doctor (if role is Doctor)', 'set.btnInvitar': 'Send invitation',
         'set.miembrosTitle': 'Team members', 'set.colEmail': 'Email', 'set.sinMiembros': 'No members yet',
         'set.errEmail': 'Enter an email', 'set.msgInvitado': 'Invitation sent to {email} ✓', 'set.confirmEliminarMiembro': 'Remove this team member?',
+        'set.soyDoctorTitle': 'Are you also one of the doctors?',
+        'set.soyDoctorDesc': 'If besides being the owner you also see patients, link your account to your doctor record to see your own clinical record like other doctors.',
+        'set.noSoyDoctor': "I'm not a doctor", 'set.vinculoOk': 'Account linked to that doctor', 'set.vinculoQuitado': 'Link removed',
         'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled',
         'badge.recordatorio_enviado': 'Reminder sent',
     },
@@ -1877,6 +1936,9 @@ const translations = {
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Médico associado (se a função for Médico)', 'set.btnInvitar': 'Enviar convite',
         'set.miembrosTitle': 'Membros da equipe', 'set.colEmail': 'Email', 'set.sinMiembros': 'Nenhum membro ainda',
         'set.errEmail': 'Digite um email', 'set.msgInvitado': 'Convite enviado para {email} ✓', 'set.confirmEliminarMiembro': 'Remover este membro da equipe?',
+        'set.soyDoctorTitle': 'Você também é um dos médicos?',
+        'set.soyDoctorDesc': 'Se além de dono você também atende pacientes, vincule sua conta ao seu registro de médico para ver seu próprio prontuário como os demais médicos.',
+        'set.noSoyDoctor': 'Não sou médico', 'set.vinculoOk': 'Conta vinculada a esse médico', 'set.vinculoQuitado': 'Vínculo removido',
         'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
         'badge.recordatorio_enviado': 'Lembrete enviado',
     }
