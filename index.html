@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -89,6 +90,25 @@
         td { padding: 12px; border-bottom: 1px solid var(--gray-100); }
         tbody tr:hover { background: var(--gray-50); }
         tbody tr:last-child td { border-bottom: none; }
+        th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+        th.sortable:hover { color: var(--primary-dark); }
+        th.sortable .arrow { display: inline-block; margin-left: 4px; opacity: .35; font-size: 10px; }
+        th.sortable.sort-asc .arrow, th.sortable.sort-desc .arrow { opacity: 1; color: var(--primary); }
+
+        .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .toolbar .search-input { flex: 1; min-width: 180px; margin-bottom: 0; }
+        .toolbar select { width: auto; min-width: 140px; margin-bottom: 0; }
+        .toolbar input[type="date"] { width: auto; margin-bottom: 0; }
+
+        .actividad-lista { display: flex; flex-direction: column; gap: 0; }
+        .actividad-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+        .actividad-item:last-child { border-bottom: none; }
+        .actividad-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--terracotta); margin-top: 6px; flex-shrink: 0; }
+        .actividad-texto { font-size: 13px; color: var(--gray-900); line-height: 1.4; }
+        .actividad-meta { font-size: 11.5px; color: var(--gray-500); margin-top: 2px; }
+        .actividad-meta strong { color: var(--gray-700); }
+
+        .chart-wrap { position: relative; height: 220px; }
 
         .section { display: none; }
         .section.active { display: block; animation: fadein .15s ease; }
@@ -211,6 +231,19 @@
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.totalCitas">Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.pacientes">Pacientes</div><div class="kpi-value" id="kpiPacientes">—</div></div>
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.doctores">Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
+                    <div class="kpi"><div class="kpi-label" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</div><div class="kpi-value" id="kpiTasaConfirmacion">—</div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start;">
+                    <div class="card">
+                        <div class="card-title" data-i18n="dash.citasPorDia">Citas por día (últimos 7 días)</div>
+                        <div class="chart-wrap"><canvas id="chartCitasPorDia"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title" data-i18n="dash.actividadReciente">Actividad reciente</div>
+                        <div class="actividad-lista" id="actividadLista">
+                            <div class="actividad-item"><div class="actividad-texto loading" data-i18n="common.loading">Cargando...</div></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="card-title" data-i18n="dash.proximasCitas">Próximas Citas</div>
@@ -251,8 +284,18 @@
                 </div>
                 <div class="card">
                     <div class="card-title" data-i18n="pac.listaTitle">Lista de Pacientes</div>
+                    <div class="toolbar">
+                        <input type="text" class="search-input" id="pacientesBuscar" placeholder="Buscar por nombre, teléfono o cédula..." oninput="renderTablaPacientes()">
+                        <button class="btn btn-ghost btn-sm" onclick="limpiarFiltroPacientes()" data-i18n="common.limpiar">Limpiar</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportarPacientesCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
+                    </div>
                     <table>
-                        <thead><tr><th data-i18n="common.colNombre">Nombre</th><th data-i18n="pac.telefono">Teléfono</th><th data-i18n="pac.cedula">Cédula</th><th data-i18n="pac.colRegistrado">Registrado</th></tr></thead>
+                        <thead><tr>
+                            <th class="sortable" data-sort="nombre" onclick="ordenarTablaPacientes('nombre')" data-i18n="common.colNombre">Nombre<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="telefono" onclick="ordenarTablaPacientes('telefono')" data-i18n="pac.telefono">Teléfono<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="cedula" onclick="ordenarTablaPacientes('cedula')" data-i18n="pac.cedula">Cédula<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="created_at" onclick="ordenarTablaPacientes('created_at')" data-i18n="pac.colRegistrado">Registrado<span class="arrow">▲</span></th>
+                        </tr></thead>
                         <tbody id="tablaPacientes"><tr><td colspan="4" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
@@ -310,8 +353,29 @@
                 </div>
                 <div class="card">
                     <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
+                    <div class="toolbar">
+                        <input type="text" class="search-input" id="citasBuscar" placeholder="Buscar por paciente o teléfono..." oninput="renderTablaCitas()">
+                        <select id="citasFiltroDoctor" onchange="renderTablaCitas()"><option value="" data-i18n="citas.todosDoctores">Todos los doctores</option></select>
+                        <select id="citasFiltroEstado" onchange="renderTablaCitas()">
+                            <option value="" data-i18n="citas.todosEstados">Todos los estados</option>
+                            <option value="pendiente" data-i18n="badge.pendiente">Pendiente</option>
+                            <option value="confirmada" data-i18n="badge.confirmada">Confirmada</option>
+                            <option value="cancelada" data-i18n="badge.cancelada">Cancelada</option>
+                        </select>
+                        <input type="date" id="citasFiltroDesde" onchange="renderTablaCitas()">
+                        <input type="date" id="citasFiltroHasta" onchange="renderTablaCitas()">
+                        <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosCitas()" data-i18n="common.limpiar">Limpiar</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportarCitasCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
+                    </div>
                     <table>
-                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.doctor">Doctor</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <thead><tr>
+                            <th class="sortable" data-sort="paciente" onclick="ordenarTablaCitas('paciente')" data-i18n="common.colPaciente">Paciente<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="fecha" onclick="ordenarTablaCitas('fecha')" data-i18n="common.colFecha">Fecha<span class="arrow">▲</span></th>
+                            <th data-i18n="common.colHora">Hora</th>
+                            <th class="sortable" data-sort="doctor" onclick="ordenarTablaCitas('doctor')" data-i18n="common.doctor">Doctor<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="estado" onclick="ordenarTablaCitas('estado')" data-i18n="common.colEstado">Estado<span class="arrow">▲</span></th>
+                            <th data-i18n="common.colAccion">Acción</th>
+                        </tr></thead>
                         <tbody id="tablaCitas"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
@@ -402,7 +466,14 @@
                 <div class="card">
                     <div class="card-title" data-i18n="doc.listTitle">Doctores Disponibles</div>
                     <table>
-                        <thead><tr><th data-i18n="common.colNombre">Nombre</th><th data-i18n="doc.especialidad">Especialidad</th><th data-i18n="doc.colDuracion">Duración Cita</th><th data-i18n="doc.precio">Precio</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <thead><tr>
+                            <th class="sortable" data-sort="nombre" onclick="ordenarTablaDoctores('nombre')" data-i18n="common.colNombre">Nombre<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="especialidad" onclick="ordenarTablaDoctores('especialidad')" data-i18n="doc.especialidad">Especialidad<span class="arrow">▲</span></th>
+                            <th data-i18n="doc.colDuracion">Duración Cita</th>
+                            <th class="sortable" data-sort="precio" onclick="ordenarTablaDoctores('precio')" data-i18n="doc.precio">Precio<span class="arrow">▲</span></th>
+                            <th data-i18n="common.colEstado">Estado</th>
+                            <th data-i18n="common.colAccion">Acción</th>
+                        </tr></thead>
                         <tbody id="tablaDoctores"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
@@ -833,7 +904,84 @@ async function loadDashboard() {
                 return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
             }).join('');
         }
+        const noCanceladas = citas.filter(c => c.estado !== 'cancelada');
+        const confirmadas = citas.filter(c => c.estado === 'confirmada');
+        const tasaConfirmacion = noCanceladas.length
+            ? Math.round((confirmadas.length / noCanceladas.length) * 100)
+            : 0;
+        document.getElementById('kpiTasaConfirmacion').textContent = noCanceladas.length ? `${tasaConfirmacion}%` : '—';
+        renderCitasChart(citas);
+        loadActividad();
     } catch (e) { console.error('Dashboard:', e); }
+}
+
+let chartCitasPorDia = null;
+function renderCitasChart(citas) {
+    const canvas = document.getElementById('chartCitasPorDia');
+    if (!canvas || typeof Chart === 'undefined') return;
+    const dias = [];
+    const conteos = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        dias.push(d.toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric' }));
+        conteos.push(citas.filter(c => c.fecha && c.fecha.startsWith(key) && c.estado !== 'cancelada').length);
+    }
+    if (chartCitasPorDia) chartCitasPorDia.destroy();
+    chartCitasPorDia = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: dias,
+            datasets: [{
+                data: conteos,
+                backgroundColor: '#2D6A4F',
+                borderRadius: 6,
+                maxBarThickness: 36
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f0f0f0' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+function tiempoRelativo(fechaIso) {
+    if (!fechaIso) return '';
+    const diffMs = Date.now() - new Date(fechaIso).getTime();
+    const min = Math.floor(diffMs / 60000);
+    if (min < 1) return t('dash.ahora') || 'ahora';
+    if (min < 60) return `${min} min`;
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return `${hrs} h`;
+    const dias = Math.floor(hrs / 24);
+    return `${dias} d`;
+}
+
+async function loadActividad() {
+    const cont = document.getElementById('actividadLista');
+    if (!cont) return;
+    try {
+        const items = await apiFetch('/actividad?limite=15');
+        if (!items || !items.length) {
+            cont.innerHTML = `<div class="actividad-item"><div class="actividad-texto" style="color:var(--gray-500)">${t('dash.sinActividad') || 'Sin actividad reciente'}</div></div>`;
+            return;
+        }
+        cont.innerHTML = items.map(item => {
+            const texto = item.detalle || item.accion;
+            const meta = `${item.usuario_email ? `<strong>${item.usuario_email}</strong> · ` : ''}${tiempoRelativo(item.created_at)}`;
+            return `<div class="actividad-item"><div class="actividad-dot"></div><div><div class="actividad-texto">${texto}</div><div class="actividad-meta">${meta}</div></div></div>`;
+        }).join('');
+    } catch (e) {
+        console.error('Actividad:', e);
+        cont.innerHTML = `<div class="actividad-item"><div class="actividad-texto" style="color:var(--gray-500)">${t('dash.sinActividad') || 'Sin actividad reciente'}</div></div>`;
+    }
 }
 // ── PACIENTES ─────────────────────────────────────────────────────
 async function loadPacientes() {
@@ -843,19 +991,71 @@ async function loadPacientes() {
         populatePacienteSelectBloque();
         populateRecurrenteSelects();
         populateListaEsperaSelects();
-        const tbody = document.getElementById('tablaPacientes');
-        if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${t('pac.noPacientes')}</td></tr>`;
-        } else {
-            tbody.innerHTML = data.map(p => `
-                <tr>
-                    <td><strong>${p.nombre || '—'}</strong></td>
-                    <td>${p.telefono || '—'}</td>
-                    <td>${p.cedula || '—'}</td>
-                    <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
-                </tr>`).join('');
-        }
+        renderTablaPacientes();
     } catch (e) { console.error('Pacientes:', e); }
+}
+let pacientesSortCol = 'nombre';
+let pacientesSortDir = 'asc';
+function ordenarTablaPacientes(col) {
+    if (pacientesSortCol === col) {
+        pacientesSortDir = pacientesSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        pacientesSortCol = col;
+        pacientesSortDir = 'asc';
+    }
+    renderTablaPacientes();
+}
+function limpiarFiltroPacientes() {
+    document.getElementById('pacientesBuscar').value = '';
+    renderTablaPacientes();
+}
+function renderTablaPacientes() {
+    const tbody = document.getElementById('tablaPacientes');
+    if (!tbody) return;
+    const buscar = (document.getElementById('pacientesBuscar')?.value || '').toLowerCase().trim();
+    let lista = pacientesCache.slice();
+    if (buscar) {
+        lista = lista.filter(p => {
+            const nombre = (p.nombre || '').toLowerCase();
+            const tel = (p.telefono || '').toLowerCase();
+            const ced = (p.cedula || '').toLowerCase();
+            return nombre.includes(buscar) || tel.includes(buscar) || ced.includes(buscar);
+        });
+    }
+    const dir = pacientesSortDir === 'asc' ? 1 : -1;
+    lista.sort((a, b) => {
+        const va = (a[pacientesSortCol] || '');
+        const vb = (b[pacientesSortCol] || '');
+        return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+    });
+    document.querySelectorAll('#pacientes th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === pacientesSortCol) th.classList.add(pacientesSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+    if (!lista.length) {
+        const msg = pacientesCache.length ? t('citas.sinResultados') : t('pac.noPacientes');
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${msg}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = lista.map(p => `
+        <tr>
+            <td><strong>${p.nombre || '—'}</strong></td>
+            <td>${p.telefono || '—'}</td>
+            <td>${p.cedula || '—'}</td>
+            <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
+        </tr>`).join('');
+}
+function exportarPacientesCSV() {
+    const filas = [['Nombre', 'Teléfono', 'Cédula', 'Registrado']];
+    pacientesCache.forEach(p => {
+        filas.push([
+            p.nombre || '',
+            p.telefono || '',
+            p.cedula || '',
+            p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : ''
+        ]);
+    });
+    descargarCSV(`pacientes_${new Date().toISOString().split('T')[0]}.csv`, filas);
 }
 async function crearPaciente() {
     const alertEl = document.getElementById('alertPaciente');
@@ -961,32 +1161,134 @@ async function loadCitas() {
         citasCache = filtrarCitasPorRol(data || []);
         renderCalendar();
         populateFacturaCitaSelect();
-        const tbody = document.getElementById('tablaCitas');
-        if (!citasCache.length) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('citas.noCitas')}</td></tr>`;
-        } else {
-            tbody.innerHTML = citasCache.map(c => {
-                const fecha = c.fecha ? new Date(c.fecha) : null;
-                const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
-                const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
-                const badge = estadoBadge(c.estado);
-                const btnCancelar = c.estado !== 'cancelada'
-                    ? `<button class="btn btn-danger btn-sm" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
-                    : '';
-                const btnRecordatorio = c.estado !== 'cancelada'
-                    ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
-                    : '—';
-                return `<tr>
-                    <td>${nombrePaciente(c)}</td>
-                    <td>${fechaStr}</td>
-                    <td>${horaStr}</td>
-                    <td>${c.calendar_id || '—'}</td>
-                    <td>${badge}</td>
-                    <td>${btnCancelar}${btnRecordatorio}</td>
-                </tr>`;
-            }).join('');
-        }
+        poblarFiltroDoctorCitas();
+        renderTablaCitas();
     } catch (e) { console.error('Citas:', e); }
+}
+function poblarFiltroDoctorCitas() {
+    const sel = document.getElementById('citasFiltroDoctor');
+    if (!sel) return;
+    const actual = sel.value;
+    sel.innerHTML = `<option value="">${t('citas.todosDoctores')}</option>` +
+        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    sel.value = actual;
+}
+function nombreDoctor(c) {
+    const doc = doctoresCache.find(d => d.id === c.doctor_id);
+    return doc ? doc.nombre : (c.calendar_id || '—');
+}
+let citasSortCol = 'fecha';
+let citasSortDir = 'asc';
+function ordenarTablaCitas(col) {
+    if (citasSortCol === col) {
+        citasSortDir = citasSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        citasSortCol = col;
+        citasSortDir = 'asc';
+    }
+    renderTablaCitas();
+}
+function limpiarFiltrosCitas() {
+    document.getElementById('citasBuscar').value = '';
+    document.getElementById('citasFiltroDoctor').value = '';
+    document.getElementById('citasFiltroEstado').value = '';
+    document.getElementById('citasFiltroDesde').value = '';
+    document.getElementById('citasFiltroHasta').value = '';
+    renderTablaCitas();
+}
+function renderTablaCitas() {
+    const tbody = document.getElementById('tablaCitas');
+    if (!tbody) return;
+    const buscar = (document.getElementById('citasBuscar')?.value || '').toLowerCase().trim();
+    const filtroDoctor = document.getElementById('citasFiltroDoctor')?.value || '';
+    const filtroEstado = document.getElementById('citasFiltroEstado')?.value || '';
+    const desde = document.getElementById('citasFiltroDesde')?.value || '';
+    const hasta = document.getElementById('citasFiltroHasta')?.value || '';
+
+    let lista = citasCache.slice();
+    if (buscar) {
+        lista = lista.filter(c => {
+            const nombre = (nombrePaciente(c) || '').toLowerCase();
+            const tel = (c.paciente_telefono || c.telefono || '').toLowerCase();
+            return nombre.includes(buscar) || tel.includes(buscar);
+        });
+    }
+    if (filtroDoctor) lista = lista.filter(c => c.doctor_id === filtroDoctor);
+    if (filtroEstado) lista = lista.filter(c => c.estado === filtroEstado);
+    if (desde) lista = lista.filter(c => c.fecha && c.fecha.split('T')[0] >= desde);
+    if (hasta) lista = lista.filter(c => c.fecha && c.fecha.split('T')[0] <= hasta);
+
+    const dir = citasSortDir === 'asc' ? 1 : -1;
+    lista.sort((a, b) => {
+        let va, vb;
+        if (citasSortCol === 'paciente') { va = nombrePaciente(a) || ''; vb = nombrePaciente(b) || ''; }
+        else if (citasSortCol === 'doctor') { va = nombreDoctor(a) || ''; vb = nombreDoctor(b) || ''; }
+        else if (citasSortCol === 'estado') { va = a.estado || ''; vb = b.estado || ''; }
+        else { va = a.fecha || ''; vb = b.fecha || ''; }
+        return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+    });
+
+    document.querySelectorAll('#citas th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === citasSortCol) th.classList.add(citasSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+
+    if (!lista.length) {
+        const msg = citasCache.length ? t('citas.sinResultados') : t('citas.noCitas');
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${msg}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = lista.map(c => {
+        const fecha = c.fecha ? new Date(c.fecha) : null;
+        const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
+        const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
+        const badge = estadoBadge(c.estado);
+        const btnCancelar = c.estado !== 'cancelada'
+            ? `<button class="btn btn-danger btn-sm" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
+            : '';
+        const btnRecordatorio = c.estado !== 'cancelada'
+            ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
+            : '—';
+        return `<tr>
+            <td>${nombrePaciente(c)}</td>
+            <td>${fechaStr}</td>
+            <td>${horaStr}</td>
+            <td>${nombreDoctor(c)}</td>
+            <td>${badge}</td>
+            <td>${btnCancelar}${btnRecordatorio}</td>
+        </tr>`;
+    }).join('');
+}
+function csvEscape(val) {
+    const s = (val === null || val === undefined) ? '' : String(val);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+}
+function descargarCSV(filename, filas) {
+    const csv = filas.map(fila => fila.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function exportarCitasCSV() {
+    const filas = [['Paciente', 'Fecha', 'Hora', 'Doctor', 'Estado']];
+    citasCache.forEach(c => {
+        const fecha = c.fecha ? new Date(c.fecha) : null;
+        filas.push([
+            nombrePaciente(c),
+            fecha ? fecha.toLocaleDateString(getLocale()) : '',
+            fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '',
+            nombreDoctor(c),
+            c.estado || ''
+        ]);
+    });
+    descargarCSV(`citas_${new Date().toISOString().split('T')[0]}.csv`, filas);
 }
 async function enviarRecordatorio(citaId) {
     try {
@@ -1433,21 +1735,47 @@ async function loadDoctores() {
         populateEmergDoctorSelect();
         populateRecurrenteSelects();
         poblarVinculoDoctor();
-        const tbody = document.getElementById('tablaDoctores');
-        if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
-        } else {
-            tbody.innerHTML = data.map(d => `
-                <tr>
-                    <td><strong>${d.nombre}</strong></td>
-                    <td>${d.especialidad}</td>
-                    <td>${d.duracion_cita || 30} min</td>
-                    <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
-                    <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? t('doc.activo') : t('doc.inactivo')}</span></td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="editarDoctor('${d.id}')">${t('doc.btnEditar')}</button></td>
-                </tr>`).join('');
-        }
+        renderTablaDoctores();
     } catch (e) { console.error('Doctores:', e); }
+}
+let doctoresSortCol = 'nombre';
+let doctoresSortDir = 'asc';
+function ordenarTablaDoctores(col) {
+    if (doctoresSortCol === col) {
+        doctoresSortDir = doctoresSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        doctoresSortCol = col;
+        doctoresSortDir = 'asc';
+    }
+    renderTablaDoctores();
+}
+function renderTablaDoctores() {
+    const tbody = document.getElementById('tablaDoctores');
+    if (!tbody) return;
+    const data = doctoresCache.slice();
+    const dir = doctoresSortDir === 'asc' ? 1 : -1;
+    data.sort((a, b) => {
+        const va = a[doctoresSortCol] ?? '';
+        const vb = b[doctoresSortCol] ?? '';
+        return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+    });
+    document.querySelectorAll('#doctores th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === doctoresSortCol) th.classList.add(doctoresSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+    if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = data.map(d => `
+        <tr>
+            <td><strong>${d.nombre}</strong></td>
+            <td>${d.especialidad}</td>
+            <td>${d.duracion_cita || 30} min</td>
+            <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
+            <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? t('doc.activo') : t('doc.inactivo')}</span></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="editarDoctor('${d.id}')">${t('doc.btnEditar')}</button></td>
+        </tr>`).join('');
 }
 // ── FORMULARIO DE DOCTOR (crear / editar) ────────────────────────
 let editandoDoctorId = null;
@@ -1707,6 +2035,8 @@ const translations = {
         'common.cualquiera': 'Cualquiera',
         'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Total Citas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
         'dash.proximasCitas': 'Próximas Citas', 'dash.noCitas': 'No hay citas próximas',
+        'dash.tasaConfirmacion': 'Tasa de confirmación', 'dash.citasPorDia': 'Citas por día (últimos 7 días)',
+        'dash.actividadReciente': 'Actividad reciente', 'dash.sinActividad': 'Sin actividad reciente', 'dash.ahora': 'ahora',
         'pac.addTitle': 'Agregar Paciente', 'pac.nombre': 'Nombre', 'pac.nombrePh': 'Juan Pérez', 'pac.telefono': 'Teléfono',
         'pac.email': 'Email', 'pac.emailPh': 'juan@email.com', 'pac.cedula': 'Cédula', 'pac.idioma': 'Idioma preferido',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
@@ -1719,6 +2049,8 @@ const translations = {
         'citas.recurrenteDesc': 'Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.',
         'citas.fechaPrimera': 'Fecha de la primera cita', 'citas.repetirCada': 'Repetir cada (semanas)', 'citas.cantidad': 'Cantidad de citas',
         'citas.btnCrearRecurrente': 'Crear citas recurrentes', 'citas.todasTitle': 'Todas las Citas', 'citas.noCitas': 'No hay citas aún',
+        'citas.todosDoctores': 'Todos los doctores', 'citas.todosEstados': 'Todos los estados', 'citas.sinResultados': 'Sin resultados para ese filtro',
+        'common.limpiar': 'Limpiar', 'common.exportarCsv': '⬇ Exportar CSV',
         'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Recordatorio', 'citas.emergTitle': '⚠️ Herramientas de emergencia',
         'citas.emergDesc': 'Estas acciones afectan muchas citas a la vez y no avisan a los pacientes automáticamente. Después de usarlas, contactalos por WhatsApp a mano.',
         'citas.diaModificar': 'Día a modificar', 'citas.doctorOpcional': 'Doctor (opcional — vacío afecta a todos)',
@@ -1793,6 +2125,8 @@ const translations = {
         'common.cualquiera': 'Anyone',
         'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Total Appointments', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
         'dash.proximasCitas': 'Upcoming Appointments', 'dash.noCitas': 'No upcoming appointments',
+        'dash.tasaConfirmacion': 'Confirmation rate', 'dash.citasPorDia': 'Appointments by day (last 7 days)',
+        'dash.actividadReciente': 'Recent activity', 'dash.sinActividad': 'No recent activity', 'dash.ahora': 'just now',
         'pac.addTitle': 'Add Patient', 'pac.nombre': 'Name', 'pac.nombrePh': 'John Smith', 'pac.telefono': 'Phone',
         'pac.email': 'Email', 'pac.emailPh': 'john@email.com', 'pac.cedula': 'ID number', 'pac.idioma': 'Preferred language',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
@@ -1805,6 +2139,8 @@ const translations = {
         'citas.recurrenteDesc': 'For ongoing treatments — e.g. physical therapy once a week for 6 weeks.',
         'citas.fechaPrimera': 'First appointment date', 'citas.repetirCada': 'Repeat every (weeks)', 'citas.cantidad': 'Number of appointments',
         'citas.btnCrearRecurrente': 'Create recurring appointments', 'citas.todasTitle': 'All Appointments', 'citas.noCitas': 'No appointments yet',
+        'citas.todosDoctores': 'All doctors', 'citas.todosEstados': 'All statuses', 'citas.sinResultados': 'No results for that filter',
+        'common.limpiar': 'Clear', 'common.exportarCsv': '⬇ Export CSV',
         'citas.btnCancelar': 'Cancel', 'citas.recordatorio': 'Reminder', 'citas.emergTitle': '⚠️ Emergency tools',
         'citas.emergDesc': 'These actions affect many appointments at once and do not automatically notify patients. Contact them by WhatsApp manually afterward.',
         'citas.diaModificar': 'Day to modify', 'citas.doctorOpcional': 'Doctor (optional — empty affects everyone)',
@@ -1879,6 +2215,8 @@ const translations = {
         'common.cualquiera': 'Qualquer um',
         'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Total de Consultas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
         'dash.proximasCitas': 'Próximas Consultas', 'dash.noCitas': 'Nenhuma consulta próxima',
+        'dash.tasaConfirmacion': 'Taxa de confirmação', 'dash.citasPorDia': 'Consultas por dia (últimos 7 dias)',
+        'dash.actividadReciente': 'Atividade recente', 'dash.sinActividad': 'Sem atividade recente', 'dash.ahora': 'agora',
         'pac.addTitle': 'Adicionar Paciente', 'pac.nombre': 'Nome', 'pac.nombrePh': 'João Silva', 'pac.telefono': 'Telefone',
         'pac.email': 'Email', 'pac.emailPh': 'joao@email.com', 'pac.cedula': 'Documento', 'pac.idioma': 'Idioma preferido',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
@@ -1891,6 +2229,8 @@ const translations = {
         'citas.recurrenteDesc': 'Para tratamentos com acompanhamento — ex. fisioterapia uma vez por semana durante 6 semanas.',
         'citas.fechaPrimera': 'Data da primeira consulta', 'citas.repetirCada': 'Repetir a cada (semanas)', 'citas.cantidad': 'Quantidade de consultas',
         'citas.btnCrearRecurrente': 'Criar consultas recorrentes', 'citas.todasTitle': 'Todas as Consultas', 'citas.noCitas': 'Nenhuma consulta ainda',
+        'citas.todosDoctores': 'Todos os médicos', 'citas.todosEstados': 'Todos os status', 'citas.sinResultados': 'Sem resultados para esse filtro',
+        'common.limpiar': 'Limpar', 'common.exportarCsv': '⬇ Exportar CSV',
         'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Lembrete', 'citas.emergTitle': '⚠️ Ferramentas de emergência',
         'citas.emergDesc': 'Essas ações afetam muitas consultas de uma vez e não avisam os pacientes automaticamente. Depois de usá-las, contate-os pelo WhatsApp manualmente.',
         'citas.diaModificar': 'Dia a modificar', 'citas.doctorOpcional': 'Médico (opcional — vazio afeta todos)',
