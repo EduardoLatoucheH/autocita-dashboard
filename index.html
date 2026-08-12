@@ -205,7 +205,7 @@
         <div class="nav-group">
             <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
-            <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Citas</button>
+            <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
             <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
             <button class="nav-link" data-section="calendario" data-i18n="nav.calendario" onclick="showSection('calendario', this)">Calendario</button>
             <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
@@ -248,8 +248,8 @@
                 <div class="card">
                     <div class="card-title" data-i18n="dash.proximasCitas">Próximas Citas</div>
                     <table>
-                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th></tr></thead>
-                        <tbody id="tablaCitasProximas"><tr><td colspan="4" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaCitasProximas"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </section>
@@ -302,7 +302,7 @@
             </section>
             <!-- Citas -->
             <section class="section" id="citas">
-                <h2 style="margin-bottom: 24px;" data-i18n="title.citas">Citas</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.citas">Crear Cita</h2>
                 <div class="card">
                     <div class="card-title" data-i18n="citas.bloqueTitle">Cita en bloque (un paciente, varios doctores el mismo día)</div>
                     <div id="alertBloque"></div>
@@ -885,23 +885,40 @@ async function loadDashboard() {
         ]);
         const citasTodas = await apiFetch('/citas');
         const citas = filtrarCitasPorRol(citasTodas);
-        document.getElementById('kpiCitasTotal').textContent = citas.length ?? '—';
+        // Semana actual (lunes a domingo), no el total histórico de citas.
+        const ahora = new Date();
+        const diaSemana = (ahora.getDay() + 6) % 7; // lunes = 0 ... domingo = 6
+        const inicioSemana = new Date(ahora); inicioSemana.setHours(0, 0, 0, 0); inicioSemana.setDate(ahora.getDate() - diaSemana);
+        const finSemana = new Date(inicioSemana); finSemana.setDate(inicioSemana.getDate() + 7);
+        const citasSemana = citas.filter(c => {
+            if (!c.fecha || c.estado === 'cancelada') return false;
+            const f = new Date(c.fecha);
+            return f >= inicioSemana && f < finSemana;
+        });
+        document.getElementById('kpiCitasTotal').textContent = citasSemana.length ?? '—';
         document.getElementById('kpiPacientes').textContent = dashboard.pacientes ?? '—';
         document.getElementById('kpiDoctores').textContent = doctores.length ?? '—';
         const hoy = new Date().toISOString().split('T')[0];
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
-        const proximas = citas.filter(c => c.estado !== 'cancelada').slice(0, 5);
+        // Próximas citas: solo futuras (no las que ya pasaron), ordenadas por fecha ascendente.
+        const proximas = citas
+            .filter(c => c.estado !== 'cancelada' && c.fecha && new Date(c.fecha) >= ahora)
+            .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+            .slice(0, 5);
         const tbody = document.getElementById('tablaCitasProximas');
         if (!proximas.length) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${t('dash.noCitas')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">${t('dash.noCitas')}</td></tr>`;
         } else {
             tbody.innerHTML = proximas.map(c => {
                 const fecha = c.fecha ? new Date(c.fecha) : null;
                 const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
                 const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
-                return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td></tr>`;
+                const btnRecordatorio = c.estado !== 'cancelada'
+                    ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
+                    : '—';
+                return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td><td>${btnRecordatorio}</td></tr>`;
             }).join('');
         }
         const noCanceladas = citas.filter(c => c.estado !== 'cancelada');
@@ -1244,10 +1261,7 @@ function renderTablaCitas() {
         const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
         const badge = estadoBadge(c.estado);
         const btnCancelar = c.estado !== 'cancelada'
-            ? `<button class="btn btn-danger btn-sm" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
-            : '';
-        const btnRecordatorio = c.estado !== 'cancelada'
-            ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
+            ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
             : '—';
         return `<tr>
             <td>${nombrePaciente(c)}</td>
@@ -1255,7 +1269,7 @@ function renderTablaCitas() {
             <td>${horaStr}</td>
             <td>${nombreDoctor(c)}</td>
             <td>${badge}</td>
-            <td>${btnCancelar}${btnRecordatorio}</td>
+            <td>${btnCancelar}</td>
         </tr>`;
     }).join('');
 }
@@ -2013,10 +2027,10 @@ function closeMobileMenu() {
 // ── IDIOMA DEL PANEL (traducción completa) ───────────────────────
 const translations = {
     es: {
-        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Citas',
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
-        'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Citas',
+        'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
         'login.tabLogin': 'Iniciar sesión', 'login.tabRegister': 'Crear cuenta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
@@ -2033,7 +2047,7 @@ const translations = {
         'common.todosParen': ' (todos los doctores)', 'common.cancelar': 'Cancelar', 'common.eliminar': 'Eliminar', 'common.agregar': 'Agregar',
         'common.agregadoOk': 'Agregado ✓', 'common.guardadoOk': 'Guardado ✓', 'common.pacienteSinNombre': 'Paciente sin nombre',
         'common.cualquiera': 'Cualquiera',
-        'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Total Citas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
+        'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Citas esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
         'dash.proximasCitas': 'Próximas Citas', 'dash.noCitas': 'No hay citas próximas',
         'dash.tasaConfirmacion': 'Tasa de confirmación', 'dash.citasPorDia': 'Citas por día (últimos 7 días)',
         'dash.actividadReciente': 'Actividad reciente', 'dash.sinActividad': 'Sin actividad reciente', 'dash.ahora': 'ahora',
@@ -2103,10 +2117,10 @@ const translations = {
         'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
     en: {
-        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Appointments',
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment',
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
-        'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Appointments',
+        'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
         'login.tabLogin': 'Sign in', 'login.tabRegister': 'Create account', 'login.email': 'Email', 'login.emailPh': 'email@clinic.com',
@@ -2123,7 +2137,7 @@ const translations = {
         'common.todosParen': ' (all doctors)', 'common.cancelar': 'Cancel', 'common.eliminar': 'Delete', 'common.agregar': 'Add',
         'common.agregadoOk': 'Added ✓', 'common.guardadoOk': 'Saved ✓', 'common.pacienteSinNombre': 'Unnamed patient',
         'common.cualquiera': 'Anyone',
-        'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Total Appointments', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
+        'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Appointments This Week', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
         'dash.proximasCitas': 'Upcoming Appointments', 'dash.noCitas': 'No upcoming appointments',
         'dash.tasaConfirmacion': 'Confirmation rate', 'dash.citasPorDia': 'Appointments by day (last 7 days)',
         'dash.actividadReciente': 'Recent activity', 'dash.sinActividad': 'No recent activity', 'dash.ahora': 'just now',
@@ -2193,10 +2207,10 @@ const translations = {
         'badge.recordatorio_enviado': 'Reminder sent',
     },
     pt: {
-        'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Consultas',
+        'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
-        'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Consultas',
+        'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
         'login.tabLogin': 'Entrar', 'login.tabRegister': 'Criar conta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
@@ -2213,7 +2227,7 @@ const translations = {
         'common.todosParen': ' (todos os médicos)', 'common.cancelar': 'Cancelar', 'common.eliminar': 'Excluir', 'common.agregar': 'Adicionar',
         'common.agregadoOk': 'Adicionado ✓', 'common.guardadoOk': 'Salvo ✓', 'common.pacienteSinNombre': 'Paciente sem nome',
         'common.cualquiera': 'Qualquer um',
-        'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Total de Consultas', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
+        'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Consultas Esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
         'dash.proximasCitas': 'Próximas Consultas', 'dash.noCitas': 'Nenhuma consulta próxima',
         'dash.tasaConfirmacion': 'Taxa de confirmação', 'dash.citasPorDia': 'Consultas por dia (últimos 7 dias)',
         'dash.actividadReciente': 'Atividade recente', 'dash.sinActividad': 'Sem atividade recente', 'dash.ahora': 'agora',
