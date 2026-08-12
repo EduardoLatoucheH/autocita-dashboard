@@ -160,6 +160,18 @@
         .lang-btn:last-child { border-right: none; }
         .lang-btn.active { background: var(--primary); color: var(--white); }
 
+        .dashboard-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,25,20,0.55); z-index: 2000; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--white); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 380px; box-shadow: var(--shadow-md, 0 12px 32px rgba(0,0,0,0.2)); }
+        .modal-box h3 { margin: 0 0 14px; font-size: 18px; }
+        .modal-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--gray-100); font-size: 14px; }
+        .modal-row span:first-child { color: var(--gray-500); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .modal-actions .btn { flex: 1; }
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
         @media (max-width: 768px) {
             .sidebar { left: -280px; z-index: 1000; transition: left 0.25s ease; box-shadow: 2px 0 16px rgba(0,0,0,0.15); }
             .sidebar.open { left: 0; }
@@ -168,6 +180,12 @@
             .content { padding: 20px 16px 48px; }
             .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
             .sidebar-overlay.open { display: block; }
+            .kpi-value { font-size: 24px; }
+            .cal-grid { min-width: 680px; }
+        }
+        @media (max-width: 480px) {
+            .modal-box { padding: 18px; }
+            .modal-actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -200,6 +218,9 @@
 <!-- App -->
 <div class="container" id="appContainer" style="display:none">
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
+    <div class="modal-overlay" id="citaModalOverlay" onclick="if(event.target===this) cerrarModalCita()">
+        <div class="modal-box" id="citaModalBox"></div>
+    </div>
     <aside class="sidebar" id="sidebar">
         <div class="logo"><h1>AutoCita</h1><span>Booking AI</span></div>
         <div class="nav-group">
@@ -207,7 +228,6 @@
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
             <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
             <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
-            <button class="nav-link" data-section="calendario" data-i18n="nav.calendario" onclick="showSection('calendario', this)">Calendario</button>
             <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
             <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
             <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
@@ -233,7 +253,7 @@
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.doctores">Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</div><div class="kpi-value" id="kpiTasaConfirmacion">—</div></div>
                 </div>
-                <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start;">
+                <div class="dashboard-grid">
                     <div class="card">
                         <div class="card-title" data-i18n="dash.citasPorDia">Citas por día (últimos 7 días)</div>
                         <div class="chart-wrap"><canvas id="chartCitasPorDia"></canvas></div>
@@ -251,6 +271,18 @@
                         <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
                         <tbody id="tablaCitasProximas"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
+                </div>
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+                        <div class="card-title" style="margin:0" data-i18n="title.calendario">Calendario</div>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
+                            <strong id="calRangoSemana">—</strong>
+                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(1)">→</button>
+                        </div>
+                        <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
+                    </div>
+                    <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
                 </div>
             </section>
             <!-- Pacientes -->
@@ -431,20 +463,6 @@
                         <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.doctor">Doctor</th><th data-i18n="le.colFecha">Fecha deseada</th><th data-i18n="le.notas">Notas</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
                         <tbody id="tablaListaEspera"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table>
-                </div>
-            </section>
-            <section class="section" id="calendario">
-                <h2 style="margin-bottom: 24px;" data-i18n="title.calendario">Calendario</h2>
-                <div class="card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-                        <div style="display:flex;align-items:center;gap:12px">
-                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
-                            <strong id="calRangoSemana">—</strong>
-                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(1)">→</button>
-                        </div>
-                        <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
-                    </div>
-                    <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
                 </div>
             </section>
             <!-- Doctores -->
@@ -704,13 +722,38 @@ function renderCalendar() {
             const horaStr = fechaCita.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
             const nombreFull = nombrePaciente(c);
             const nombreCorto = nombreFull.split(' ')[0];
-            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color}" title="${horaStr} — ${nombreFull}">${horaStr}<br>${nombreCorto}</div>`;
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull}" onclick="mostrarDetalleCita('${c.id}')">${horaStr}<br>${nombreCorto}</div>`;
         });
         dayHtml += `</div>`;
         html += dayHtml;
     });
     gridEl.innerHTML = html;
     renderCalendarLeyenda();
+}
+function mostrarDetalleCita(citaId) {
+    const c = citasCache.find(x => x.id === citaId);
+    if (!c) return;
+    const fecha = c.fecha ? new Date(c.fecha) : null;
+    const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
+    const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
+    const box = document.getElementById('citaModalBox');
+    if (!box) return;
+    box.innerHTML = `
+        <h3>${nombrePaciente(c)}</h3>
+        <div class="modal-row"><span>${t('common.doctor')}</span><span>${nombreDoctor(c)}</span></div>
+        <div class="modal-row"><span>${t('common.colFecha')}</span><span>${fechaStr}</span></div>
+        <div class="modal-row"><span>${t('common.colHora')}</span><span>${horaStr}</span></div>
+        <div class="modal-row"><span>${t('common.colEstado')}</span><span>${estadoBadge(c.estado)}</span></div>
+        <div class="modal-actions">
+            ${c.estado !== 'cancelada' ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>` : ''}
+            ${c.estado !== 'cancelada' ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelar')}</button>` : ''}
+        </div>
+    `;
+    document.getElementById('citaModalOverlay').classList.add('open');
+}
+function cerrarModalCita() {
+    const el = document.getElementById('citaModalOverlay');
+    if (el) el.classList.remove('open');
 }
 async function apiFetch(path, opts = {}) {
     const res = await fetch(API + path, { headers: authH(), ...opts });
@@ -828,9 +871,9 @@ async function loadRol() {
 }
 function aplicarPermisos() {
     const permisos = {
-        dueno:          ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion','settings'],
-        recepcionista:  ['dashboard','pacientes','citas','listaEspera','calendario','doctores','facturacion'],
-        doctor:         ['citas','calendario','expedientes'],
+        dueno:          ['dashboard','pacientes','citas','listaEspera','doctores','facturacion','settings'],
+        recepcionista:  ['dashboard','pacientes','citas','listaEspera','doctores','facturacion'],
+        doctor:         ['dashboard','citas','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
