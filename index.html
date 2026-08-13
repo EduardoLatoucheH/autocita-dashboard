@@ -1304,7 +1304,10 @@ function renderTablaCitas() {
         const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
         const badge = estadoBadge(c.estado);
         const btnCancelar = c.estado !== 'cancelada'
-            ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
+            ? `<button class="btn btn-danger btn-sm" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
+            : '';
+        const btnRecordatorio = c.estado !== 'cancelada'
+            ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
             : '—';
         return `<tr>
             <td>${nombrePaciente(c)}</td>
@@ -1312,7 +1315,7 @@ function renderTablaCitas() {
             <td>${horaStr}</td>
             <td>${nombreDoctor(c)}</td>
             <td>${badge}</td>
-            <td>${btnCancelar}</td>
+            <td>${btnCancelar}${btnRecordatorio}</td>
         </tr>`;
     }).join('');
 }
