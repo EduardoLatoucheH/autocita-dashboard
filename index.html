@@ -479,6 +479,7 @@
                     <div class="form-group"><label data-i18n="doc.especialidad">Especialidad</label><input type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
                     <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
                     <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div class="form-group"><label data-i18n="doc.horario">Horario de atención (opcional — vacío usa el horario general de la clínica)</label><input type="text" id="docHorario" data-i18n-placeholder="doc.horarioPh" placeholder="Ej: Lunes a Viernes 8am-12pm"></div>
                     <div class="form-group"><label data-i18n="doc.instrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
                         <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()" data-i18n="doc.addTitle">Agregar Doctor</button>
@@ -493,10 +494,11 @@
                             <th class="sortable" data-sort="especialidad" onclick="ordenarTablaDoctores('especialidad')" data-i18n="doc.especialidad">Especialidad<span class="arrow">▲</span></th>
                             <th data-i18n="doc.colDuracion">Duración Cita</th>
                             <th class="sortable" data-sort="precio" onclick="ordenarTablaDoctores('precio')" data-i18n="doc.precio">Precio<span class="arrow">▲</span></th>
+                            <th data-i18n="doc.colHorario">Horario</th>
                             <th data-i18n="common.colEstado">Estado</th>
                             <th data-i18n="common.colAccion">Acción</th>
                         </tr></thead>
-                        <tbody id="tablaDoctores"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                        <tbody id="tablaDoctores"><tr><td colspan="7" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                     </table></div>
                 </div>
             </section>
@@ -1828,7 +1830,7 @@ function renderTablaDoctores() {
         if (th.dataset.sort === doctoresSortCol) th.classList.add(doctoresSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
     });
     if (!data.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500)">${t('doc.noDoctores')}</td></tr>`;
         return;
     }
     tbody.innerHTML = data.map(d => `
@@ -1837,6 +1839,7 @@ function renderTablaDoctores() {
             <td>${d.especialidad}</td>
             <td>${d.duracion_cita || 30} min</td>
             <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
+            <td>${d.horario || t('doc.horarioGeneral')}</td>
             <td><span class="badge ${d.disponible ? 'badge-success' : 'badge-danger'}">${d.disponible ? t('doc.activo') : t('doc.inactivo')}</span></td>
             <td><button class="btn btn-ghost btn-sm" onclick="editarDoctor('${d.id}')">${t('doc.btnEditar')}</button></td>
         </tr>`).join('');
@@ -1851,6 +1854,7 @@ function editarDoctor(id) {
     document.getElementById('docEspecialidad').value = doc.especialidad || '';
     document.getElementById('docDuracion').value = doc.duracion_cita || 30;
     document.getElementById('docPrecio').value = doc.precio || 0;
+    document.getElementById('docHorario').value = doc.horario || '';
     document.getElementById('docInstrucciones').value = doc.instrucciones || '';
     document.getElementById('doctorFormTitle').textContent = t('doc.editTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.btnGuardarCambios');
@@ -1858,7 +1862,7 @@ function editarDoctor(id) {
 }
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
-    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
+    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docHorario', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('doctorFormTitle').textContent = t('doc.addTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.addTitle');
     document.getElementById('alertDoctor').innerHTML = '';
@@ -1869,6 +1873,7 @@ async function guardarDoctor() {
     const especialidad = document.getElementById('docEspecialidad').value;
     const duracion_cita = parseInt(document.getElementById('docDuracion').value) || 30;
     const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
+    const horario = document.getElementById('docHorario').value || null;
     const instrucciones = document.getElementById('docInstrucciones').value || null;
     if (!nombre) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('doc.errNombre')}</div>`;
@@ -1878,13 +1883,13 @@ async function guardarDoctor() {
         if (editandoDoctorId) {
             await apiFetch(`/doctores/${editandoDoctorId}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, horario, instrucciones })
             });
             alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgActualizado')}</div>`;
         } else {
             await apiFetch('/doctores', {
                 method: 'POST',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, instrucciones })
+                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, horario, instrucciones })
             });
             alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgAgregado')}</div>`;
         }
@@ -2134,6 +2139,7 @@ const translations = {
         'le.errElegir': 'Elegí paciente y doctor', 'le.msgAgregado': 'Agregado a la lista de espera ✓', 'le.confirmQuitar': '¿Quitar de la lista de espera?',
         'doc.addTitle': 'Agregar Doctor', 'doc.editTitle': 'Editar Doctor', 'doc.especialidad': 'Especialidad',
         'doc.especialidadPh': 'Medicina General', 'doc.duracion': 'Duración de cita (minutos)', 'doc.precio': 'Precio de consulta (₡)',
+        'doc.horario': 'Horario de atención (opcional — vacío usa el horario general de la clínica)', 'doc.horarioPh': 'Ej: Lunes a Viernes 8am-12pm', 'doc.horarioGeneral': 'Horario general', 'doc.colHorario': 'Horario',
         'doc.instrucciones': 'Instrucciones para el paciente (opcional)', 'doc.instruccionesPh': 'Ej: Venga en ayunas de 8 horas. Use ropa cómoda.',
         'doc.btnGuardarCambios': 'Guardar cambios', 'doc.listTitle': 'Doctores Disponibles', 'doc.colDuracion': 'Duración Cita',
         'doc.noDoctores': 'No hay doctores', 'doc.activo': 'Activo', 'doc.inactivo': 'Inactivo', 'doc.btnEditar': 'Editar',
@@ -2224,6 +2230,7 @@ const translations = {
         'le.errElegir': 'Choose patient and doctor', 'le.msgAgregado': 'Added to waiting list ✓', 'le.confirmQuitar': 'Remove from waiting list?',
         'doc.addTitle': 'Add Doctor', 'doc.editTitle': 'Edit Doctor', 'doc.especialidad': 'Specialty',
         'doc.especialidadPh': 'General Medicine', 'doc.duracion': 'Appointment length (minutes)', 'doc.precio': 'Consultation fee (₡)',
+        'doc.horario': 'Working hours (optional — leave empty to use the clinic\'s general hours)', 'doc.horarioPh': 'Ex: Monday to Friday 8am-12pm', 'doc.horarioGeneral': 'General hours', 'doc.colHorario': 'Hours',
         'doc.instrucciones': 'Instructions for the patient (optional)', 'doc.instruccionesPh': 'E.g.: Come fasting for 8 hours. Wear comfortable clothes.',
         'doc.btnGuardarCambios': 'Save changes', 'doc.listTitle': 'Available Doctors', 'doc.colDuracion': 'Appointment Length',
         'doc.noDoctores': 'No doctors', 'doc.activo': 'Active', 'doc.inactivo': 'Inactive', 'doc.btnEditar': 'Edit',
@@ -2314,6 +2321,7 @@ const translations = {
         'le.errElegir': 'Escolha paciente e médico', 'le.msgAgregado': 'Adicionado à lista de espera ✓', 'le.confirmQuitar': 'Remover da lista de espera?',
         'doc.addTitle': 'Adicionar Médico', 'doc.editTitle': 'Editar Médico', 'doc.especialidad': 'Especialidade',
         'doc.especialidadPh': 'Clínica Geral', 'doc.duracion': 'Duração da consulta (minutos)', 'doc.precio': 'Preço da consulta (₡)',
+        'doc.horario': 'Horário de atendimento (opcional — vazio usa o horário geral da clínica)', 'doc.horarioPh': 'Ex: Segunda a Sexta 8h-12h', 'doc.horarioGeneral': 'Horário geral', 'doc.colHorario': 'Horário',
         'doc.instrucciones': 'Instruções para o paciente (opcional)', 'doc.instruccionesPh': 'Ex: Venha em jejum de 8 horas. Use roupas confortáveis.',
         'doc.btnGuardarCambios': 'Salvar alterações', 'doc.listTitle': 'Médicos Disponíveis', 'doc.colDuracion': 'Duração da Consulta',
         'doc.noDoctores': 'Nenhum médico', 'doc.activo': 'Ativo', 'doc.inactivo': 'Inativo', 'doc.btnEditar': 'Editar',
