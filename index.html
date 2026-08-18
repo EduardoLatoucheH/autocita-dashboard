@@ -728,7 +728,8 @@ function renderCalendar() {
             const horaStr = fechaCita.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
             const nombreFull = nombrePaciente(c);
             const nombreCorto = nombreFull.split(' ')[0];
-            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull}" onclick="mostrarDetalleCita('${c.id}')">${horaStr}<br>${nombreCorto}</div>`;
+            const icono = { pendiente: '⏳', recordatorio_enviado: '🔔', confirmada: '✓' }[c.estado] || '';
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull} (${t('badge.' + (c.estado || 'pendiente'))})" onclick="mostrarDetalleCita('${c.id}')">${icono} ${horaStr}<br>${nombreCorto}</div>`;
         });
         dayHtml += `</div>`;
         html += dayHtml;
@@ -745,14 +746,17 @@ function mostrarDetalleCita(citaId) {
     const box = document.getElementById('citaModalBox');
     if (!box) return;
     box.innerHTML = `
-        <h3>${nombrePaciente(c)}</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+            <h3 style="margin:0">${nombrePaciente(c)}</h3>
+            <button onclick="cerrarModalCita()" aria-label="${t('common.cerrar')}" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--gray-500);padding:0 0 0 12px">×</button>
+        </div>
         <div class="modal-row"><span>${t('common.doctor')}</span><span>${nombreDoctor(c)}</span></div>
         <div class="modal-row"><span>${t('common.colFecha')}</span><span>${fechaStr}</span></div>
         <div class="modal-row"><span>${t('common.colHora')}</span><span>${horaStr}</span></div>
         <div class="modal-row"><span>${t('common.colEstado')}</span><span>${estadoBadge(c.estado)}</span></div>
         <div class="modal-actions">
             ${c.estado !== 'cancelada' ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>` : ''}
-            ${c.estado !== 'cancelada' ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelar')}</button>` : ''}
+            ${c.estado !== 'cancelada' ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelarModal')}</button>` : ''}
         </div>
     `;
     document.getElementById('citaModalOverlay').classList.add('open');
@@ -2120,7 +2124,7 @@ const translations = {
         'citas.btnCrearRecurrente': 'Crear citas recurrentes', 'citas.todasTitle': 'Todas las Citas', 'citas.noCitas': 'No hay citas aún',
         'citas.todosDoctores': 'Todos los doctores', 'citas.todosEstados': 'Todos los estados', 'citas.sinResultados': 'Sin resultados para ese filtro',
         'common.limpiar': 'Limpiar', 'common.exportarCsv': '⬇ Exportar CSV',
-        'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Recordatorio', 'citas.emergTitle': '⚠️ Herramientas de emergencia',
+        'citas.btnCancelar': 'Cancelar', 'citas.btnCancelarModal': 'Cancelar cita', 'citas.recordatorio': 'Recordatorio', 'citas.emergTitle': '⚠️ Herramientas de emergencia', 'common.cerrar': 'Cerrar',
         'citas.emergDesc': 'Estas acciones afectan muchas citas a la vez. Cada paciente recibe un WhatsApp automático y puede confirmar o pedir que lo reagenden.',
         'citas.diaModificar': 'Día a modificar', 'citas.doctorOpcional': 'Doctor (opcional — vacío afecta a todos)',
         'citas.minutosLabel': 'Correr agenda cuántos minutos (negativo para adelantar, ej: -15)', 'citas.btnCorrer': '🕐 Correr agenda del día',
@@ -2211,7 +2215,7 @@ const translations = {
         'citas.btnCrearRecurrente': 'Create recurring appointments', 'citas.todasTitle': 'All Appointments', 'citas.noCitas': 'No appointments yet',
         'citas.todosDoctores': 'All doctors', 'citas.todosEstados': 'All statuses', 'citas.sinResultados': 'No results for that filter',
         'common.limpiar': 'Clear', 'common.exportarCsv': '⬇ Export CSV',
-        'citas.btnCancelar': 'Cancel', 'citas.recordatorio': 'Reminder', 'citas.emergTitle': '⚠️ Emergency tools',
+        'citas.btnCancelar': 'Cancel', 'citas.btnCancelarModal': 'Cancel appointment', 'citas.recordatorio': 'Reminder', 'citas.emergTitle': '⚠️ Emergency tools', 'common.cerrar': 'Close',
         'citas.emergDesc': 'These actions affect many appointments at once. Each patient gets an automatic WhatsApp message and can confirm or ask to be rescheduled.',
         'citas.diaModificar': 'Day to modify', 'citas.doctorOpcional': 'Doctor (optional — empty affects everyone)',
         'citas.minutosLabel': 'Shift schedule by how many minutes (negative to move earlier, e.g. -15)', 'citas.btnCorrer': '🕐 Shift the day\'s schedule',
@@ -2302,7 +2306,7 @@ const translations = {
         'citas.btnCrearRecurrente': 'Criar consultas recorrentes', 'citas.todasTitle': 'Todas as Consultas', 'citas.noCitas': 'Nenhuma consulta ainda',
         'citas.todosDoctores': 'Todos os médicos', 'citas.todosEstados': 'Todos os status', 'citas.sinResultados': 'Sem resultados para esse filtro',
         'common.limpiar': 'Limpar', 'common.exportarCsv': '⬇ Exportar CSV',
-        'citas.btnCancelar': 'Cancelar', 'citas.recordatorio': 'Lembrete', 'citas.emergTitle': '⚠️ Ferramentas de emergência',
+        'citas.btnCancelar': 'Cancelar', 'citas.btnCancelarModal': 'Cancelar consulta', 'citas.recordatorio': 'Lembrete', 'citas.emergTitle': '⚠️ Ferramentas de emergência', 'common.cerrar': 'Fechar',
         'citas.emergDesc': 'Essas ações afetam muitas consultas de uma vez. Cada paciente recebe uma mensagem automática de WhatsApp e pode confirmar ou pedir para remarcar.',
         'citas.diaModificar': 'Dia a modificar', 'citas.doctorOpcional': 'Médico (opcional — vazio afeta todos)',
         'citas.minutosLabel': 'Mover agenda quantos minutos (negativo para adiantar, ex: -15)', 'citas.btnCorrer': '🕐 Mover a agenda do dia',
