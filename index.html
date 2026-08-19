@@ -482,13 +482,13 @@
                     <div class="form-group"><label data-i18n="doc.telefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
                     <div class="form-group"><label data-i18n="doc.horario">Horario de atención (texto para Sara — opcional, vacío usa el horario general de la clínica)</label><input type="text" id="docHorario" data-i18n-placeholder="doc.horarioPh" placeholder="Ej: Lunes a Viernes 8am-12pm"></div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">Hora inicio</label><input type="time" id="docHoraInicio"></div>
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">Hora fin</label><input type="time" id="docHoraFin"></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">Hora inicio</label><select id="docHoraInicio"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">Hora fin</label><select id="docHoraFin"></select></div>
                     </div>
                     <p class="card-subtitle" data-i18n="doc.horarioEstructuradoDesc" style="margin-top:-10px;margin-bottom:14px">Esto es lo que usa Sara para calcular las horas disponibles reales. Si lo dejás vacío, usa el horario general de la clínica.</p>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">Almuerzo desde (opcional)</label><input type="time" id="docAlmuerzoInicio"></div>
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">Almuerzo hasta (opcional)</label><input type="time" id="docAlmuerzoFin"></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">Almuerzo desde (opcional)</label><select id="docAlmuerzoInicio"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">Almuerzo hasta (opcional)</label><select id="docAlmuerzoFin"></select></div>
                     </div>
                     <div class="form-group"><label data-i18n="doc.instrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
@@ -638,6 +638,20 @@
     </div>
 </div>
 <script>
+// Genera <option> de horas cada 15 min (00:00 a 23:45) — así calza con
+// cualquier duración de cita (15, 30 o 45 min). Se usa en vez de
+// <input type="time"> nativo porque el control de tiempo de Safari es poco
+// confiable para escribir a mano (se reseteaba a valores random tipo 12:30).
+function opcionesHora(valorActual) {
+    let html = `<option value="">—</option>`;
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 15) {
+            const v = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            html += `<option value="${v}"${v === valorActual ? ' selected' : ''}>${v}</option>`;
+        }
+    }
+    return html;
+}
 const API = 'https://autocita-production.up.railway.app';
 const getToken = () => localStorage.getItem('autocita_token');
 const setToken = (t) => localStorage.setItem('autocita_token', t);
@@ -1943,13 +1957,13 @@ async function loadSettings() {
             <div class="form-group"><label data-i18n="set.whatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" value="${clinica.meta_phone_id || ''}" placeholder="${t('set.whatsappPhoneIdPh')}"></div>
             <div class="form-group"><label>${t('set.horario')} (${t('set.horarioTextoDesc')})</label><input type="text" id="clHorario" value="${clinica.horario || ''}"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">${t('doc.horaInicio')}</label><input type="time" id="clHoraInicio" value="${clinica.hora_inicio || ''}"></div>
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">${t('doc.horaFin')}</label><input type="time" id="clHoraFin" value="${clinica.hora_fin || ''}"></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">${t('doc.horaInicio')}</label><select id="clHoraInicio">${opcionesHora(clinica.hora_inicio)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">${t('doc.horaFin')}</label><select id="clHoraFin">${opcionesHora(clinica.hora_fin)}</select></div>
             </div>
             <p class="card-subtitle" style="margin-top:-10px;margin-bottom:14px">${t('set.horarioGeneralDesc')}</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">${t('doc.almuerzoInicio')}</label><input type="time" id="clAlmuerzoInicio" value="${clinica.almuerzo_inicio || ''}"></div>
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">${t('doc.almuerzoFin')}</label><input type="time" id="clAlmuerzoFin" value="${clinica.almuerzo_fin || ''}"></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">${t('doc.almuerzoInicio')}</label><select id="clAlmuerzoInicio">${opcionesHora(clinica.almuerzo_inicio)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">${t('doc.almuerzoFin')}</label><select id="clAlmuerzoFin">${opcionesHora(clinica.almuerzo_fin)}</select></div>
             </div>
             <div class="form-group"><label>${t('set.plan')}</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
             <div class="form-group"><label>${t('common.colEstado')}</label><input type="text" value="${clinica.status || '—'}" disabled></div>
@@ -2474,6 +2488,9 @@ function changeLang(lang, btn) {
     applyPanelLang(lang);
 }
 // ── INIT ──────────────────────────────────────────────────────────
+['docHoraInicio', 'docHoraFin', 'docAlmuerzoInicio', 'docAlmuerzoFin'].forEach(id => {
+    document.getElementById(id).innerHTML = opcionesHora('');
+});
 document.querySelectorAll('.lang-btn').forEach(b => {
     if (b.textContent.trim().toLowerCase() === currentLang) b.classList.add('active');
     else b.classList.remove('active');
