@@ -480,7 +480,16 @@
                     <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
                     <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
                     <div class="form-group"><label data-i18n="doc.telefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
-                    <div class="form-group"><label data-i18n="doc.horario">Horario de atención (opcional — vacío usa el horario general de la clínica)</label><input type="text" id="docHorario" data-i18n-placeholder="doc.horarioPh" placeholder="Ej: Lunes a Viernes 8am-12pm"></div>
+                    <div class="form-group"><label data-i18n="doc.horario">Horario de atención (texto para Sara — opcional, vacío usa el horario general de la clínica)</label><input type="text" id="docHorario" data-i18n-placeholder="doc.horarioPh" placeholder="Ej: Lunes a Viernes 8am-12pm"></div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">Hora inicio</label><input type="time" id="docHoraInicio"></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">Hora fin</label><input type="time" id="docHoraFin"></div>
+                    </div>
+                    <p class="card-subtitle" data-i18n="doc.horarioEstructuradoDesc" style="margin-top:-10px;margin-bottom:14px">Esto es lo que usa Sara para calcular las horas disponibles reales. Si lo dejás vacío, usa el horario general de la clínica.</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">Almuerzo desde (opcional)</label><input type="time" id="docAlmuerzoInicio"></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">Almuerzo hasta (opcional)</label><input type="time" id="docAlmuerzoFin"></div>
+                    </div>
                     <div class="form-group"><label data-i18n="doc.instrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
                         <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()" data-i18n="doc.addTitle">Agregar Doctor</button>
@@ -569,6 +578,7 @@
                 </div>
                 <div class="card">
                     <div class="card-title" data-i18n="set.clinicaTitle">Tu Clínica</div>
+                    <div id="alertClinica"></div>
                     <div id="settingsInfo" class="loading" data-i18n="common.loading">Cargando...</div>
                 </div>
                 <div class="card">
@@ -1861,6 +1871,10 @@ function editarDoctor(id) {
     document.getElementById('docPrecio').value = doc.precio || 0;
     document.getElementById('docTelefono').value = doc.telefono || '';
     document.getElementById('docHorario').value = doc.horario || '';
+    document.getElementById('docHoraInicio').value = doc.hora_inicio || '';
+    document.getElementById('docHoraFin').value = doc.hora_fin || '';
+    document.getElementById('docAlmuerzoInicio').value = doc.almuerzo_inicio || '';
+    document.getElementById('docAlmuerzoFin').value = doc.almuerzo_fin || '';
     document.getElementById('docInstrucciones').value = doc.instrucciones || '';
     document.getElementById('doctorFormTitle').textContent = t('doc.editTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.btnGuardarCambios');
@@ -1868,7 +1882,7 @@ function editarDoctor(id) {
 }
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
-    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docTelefono', 'docHorario', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
+    ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docTelefono', 'docHorario', 'docHoraInicio', 'docHoraFin', 'docAlmuerzoInicio', 'docAlmuerzoFin', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('doctorFormTitle').textContent = t('doc.addTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.addTitle');
     document.getElementById('alertDoctor').innerHTML = '';
@@ -1881,22 +1895,27 @@ async function guardarDoctor() {
     const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
     const telefono = document.getElementById('docTelefono').value || null;
     const horario = document.getElementById('docHorario').value || null;
+    const hora_inicio = document.getElementById('docHoraInicio').value || null;
+    const hora_fin = document.getElementById('docHoraFin').value || null;
+    const almuerzo_inicio = document.getElementById('docAlmuerzoInicio').value || null;
+    const almuerzo_fin = document.getElementById('docAlmuerzoFin').value || null;
     const instrucciones = document.getElementById('docInstrucciones').value || null;
     if (!nombre) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('doc.errNombre')}</div>`;
         return;
     }
+    const body = { nombre, especialidad, duracion_cita, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones };
     try {
         if (editandoDoctorId) {
             await apiFetch(`/doctores/${editandoDoctorId}`, {
                 method: 'PATCH',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, telefono, horario, instrucciones })
+                body: JSON.stringify(body)
             });
             alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgActualizado')}</div>`;
         } else {
             await apiFetch('/doctores', {
                 method: 'POST',
-                body: JSON.stringify({ nombre, especialidad, duracion_cita, precio, telefono, horario, instrucciones })
+                body: JSON.stringify(body)
             });
             alertEl.innerHTML = `<div class="alert alert-success">${t('doc.msgAgregado')}</div>`;
         }
@@ -1918,17 +1937,50 @@ async function loadSettings() {
         }
         document.getElementById('headerClinica').textContent = clinica.nombre || 'AutoCita';
         infoEl.innerHTML = `
-            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" value="${clinica.nombre || ''}" disabled></div>
-            <div class="form-group"><label>${t('pac.telefono')}</label><input type="text" value="${clinica.telefono || '—'}" disabled></div>
-            <div class="form-group"><label>${t('set.direccion')}</label><input type="text" value="${clinica.direccion || '—'}" disabled></div>
-            <div class="form-group"><label>${t('set.horario')}</label><input type="text" value="${clinica.horario || '—'}" disabled></div>
+            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" id="clNombre" value="${clinica.nombre || ''}"></div>
+            <div class="form-group"><label>${t('pac.telefono')}</label><input type="text" id="clTelefono" value="${clinica.telefono || ''}"></div>
+            <div class="form-group"><label>${t('set.direccion')}</label><input type="text" id="clDireccion" value="${clinica.direccion || ''}"></div>
+            <div class="form-group"><label data-i18n="set.whatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" value="${clinica.meta_phone_id || ''}" placeholder="${t('set.whatsappPhoneIdPh')}"></div>
+            <div class="form-group"><label>${t('set.horario')} (${t('set.horarioTextoDesc')})</label><input type="text" id="clHorario" value="${clinica.horario || ''}"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">${t('doc.horaInicio')}</label><input type="time" id="clHoraInicio" value="${clinica.hora_inicio || ''}"></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">${t('doc.horaFin')}</label><input type="time" id="clHoraFin" value="${clinica.hora_fin || ''}"></div>
+            </div>
+            <p class="card-subtitle" style="margin-top:-10px;margin-bottom:14px">${t('set.horarioGeneralDesc')}</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">${t('doc.almuerzoInicio')}</label><input type="time" id="clAlmuerzoInicio" value="${clinica.almuerzo_inicio || ''}"></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">${t('doc.almuerzoFin')}</label><input type="time" id="clAlmuerzoFin" value="${clinica.almuerzo_fin || ''}"></div>
+            </div>
             <div class="form-group"><label>${t('set.plan')}</label><input type="text" value="${clinica.plan || '—'}" disabled></div>
             <div class="form-group"><label>${t('common.colEstado')}</label><input type="text" value="${clinica.status || '—'}" disabled></div>
+            <button class="btn btn-block" onclick="guardarConfigClinica()" data-i18n="set.btnGuardar">${t('set.btnGuardar')}</button>
         `;
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
         document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
     } catch (e) {
         infoEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+}
+async function guardarConfigClinica() {
+    const alertEl = document.getElementById('alertClinica');
+    const body = {
+        nombre: document.getElementById('clNombre').value,
+        telefono: document.getElementById('clTelefono').value || null,
+        direccion: document.getElementById('clDireccion').value || null,
+        meta_phone_id: document.getElementById('clWhatsappPhoneId').value || null,
+        horario: document.getElementById('clHorario').value || null,
+        hora_inicio: document.getElementById('clHoraInicio').value || null,
+        hora_fin: document.getElementById('clHoraFin').value || null,
+        almuerzo_inicio: document.getElementById('clAlmuerzoInicio').value || null,
+        almuerzo_fin: document.getElementById('clAlmuerzoFin').value || null,
+    };
+    try {
+        await apiFetch('/clinica/setup', { method: 'PATCH', body: JSON.stringify(body) });
+        alertEl.innerHTML = `<div class="alert alert-success">${t('common.guardadoOk')}</div>`;
+        document.getElementById('headerClinica').textContent = body.nombre || 'AutoCita';
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
     }
 }
 async function guardarConfigRecordatorios() {
@@ -2148,6 +2200,8 @@ const translations = {
         'doc.especialidadPh': 'Medicina General', 'doc.duracion': 'Duración de cita (minutos)', 'doc.precio': 'Precio de consulta (₡)',
         'doc.telefono': 'WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)', 'doc.telefonoPh': 'Ej: 50688887777',
         'doc.horario': 'Horario de atención (opcional — vacío usa el horario general de la clínica)', 'doc.horarioPh': 'Ej: Lunes a Viernes 8am-12pm', 'doc.horarioGeneral': 'Horario general', 'doc.colHorario': 'Horario',
+        'doc.horaInicio': 'Hora inicio', 'doc.horaFin': 'Hora fin', 'doc.almuerzoInicio': 'Almuerzo desde (opcional)', 'doc.almuerzoFin': 'Almuerzo hasta (opcional)',
+        'doc.horarioEstructuradoDesc': 'Esto es lo que usa Sara para calcular las horas disponibles reales. Si lo dejás vacío, usa el horario general de la clínica.',
         'doc.instrucciones': 'Instrucciones para el paciente (opcional)', 'doc.instruccionesPh': 'Ej: Venga en ayunas de 8 horas. Use ropa cómoda.',
         'doc.btnGuardarCambios': 'Guardar cambios', 'doc.listTitle': 'Doctores Disponibles', 'doc.colDuracion': 'Duración Cita',
         'doc.noDoctores': 'No hay doctores', 'doc.activo': 'Activo', 'doc.inactivo': 'Inactivo', 'doc.btnEditar': 'Editar',
@@ -2166,6 +2220,8 @@ const translations = {
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'El Phone Number ID de tu WhatsApp Business (Meta for Developers)',
+        'set.horarioTextoDesc': 'texto que Sara le muestra al paciente', 'set.horarioGeneralDesc': 'Se usa para calcular las horas disponibles de los doctores que no tienen su propio horario configurado.',
         'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
         'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
         'set.rec1': 'Primer recordatorio (horas antes de la cita)', 'set.rec2': 'Segundo recordatorio (horas antes de la cita)',
@@ -2240,6 +2296,8 @@ const translations = {
         'doc.especialidadPh': 'General Medicine', 'doc.duracion': 'Appointment length (minutes)', 'doc.precio': 'Consultation fee (₡)',
         'doc.telefono': 'Doctor\'s WhatsApp (optional — gets notified when a new appointment is booked)', 'doc.telefonoPh': 'E.g: 50688887777',
         'doc.horario': 'Working hours (optional — leave empty to use the clinic\'s general hours)', 'doc.horarioPh': 'Ex: Monday to Friday 8am-12pm', 'doc.horarioGeneral': 'General hours', 'doc.colHorario': 'Hours',
+        'doc.horaInicio': 'Start time', 'doc.horaFin': 'End time', 'doc.almuerzoInicio': 'Lunch from (optional)', 'doc.almuerzoFin': 'Lunch until (optional)',
+        'doc.horarioEstructuradoDesc': 'This is what Sara uses to calculate real available times. If left empty, it uses the clinic\'s general hours.',
         'doc.instrucciones': 'Instructions for the patient (optional)', 'doc.instruccionesPh': 'E.g.: Come fasting for 8 hours. Wear comfortable clothes.',
         'doc.btnGuardarCambios': 'Save changes', 'doc.listTitle': 'Available Doctors', 'doc.colDuracion': 'Appointment Length',
         'doc.noDoctores': 'No doctors', 'doc.activo': 'Active', 'doc.inactivo': 'Inactive', 'doc.btnEditar': 'Edit',
@@ -2258,6 +2316,8 @@ const translations = {
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Your WhatsApp Business Phone Number ID (Meta for Developers)',
+        'set.horarioTextoDesc': 'text shown to patients', 'set.horarioGeneralDesc': 'Used to calculate available times for doctors who don\'t have their own hours configured.',
         'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
         'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
         'set.rec1': 'First reminder (hours before appointment)', 'set.rec2': 'Second reminder (hours before appointment)',
@@ -2332,6 +2392,8 @@ const translations = {
         'doc.especialidadPh': 'Clínica Geral', 'doc.duracion': 'Duração da consulta (minutos)', 'doc.precio': 'Preço da consulta (₡)',
         'doc.telefono': 'WhatsApp do médico (opcional — recebe aviso quando uma consulta nova é marcada)', 'doc.telefonoPh': 'Ex: 50688887777',
         'doc.horario': 'Horário de atendimento (opcional — vazio usa o horário geral da clínica)', 'doc.horarioPh': 'Ex: Segunda a Sexta 8h-12h', 'doc.horarioGeneral': 'Horário geral', 'doc.colHorario': 'Horário',
+        'doc.horaInicio': 'Hora de início', 'doc.horaFin': 'Hora de término', 'doc.almuerzoInicio': 'Almoço desde (opcional)', 'doc.almuerzoFin': 'Almoço até (opcional)',
+        'doc.horarioEstructuradoDesc': 'É isso que Sara usa para calcular os horários realmente disponíveis. Se deixar vazio, usa o horário geral da clínica.',
         'doc.instrucciones': 'Instruções para o paciente (opcional)', 'doc.instruccionesPh': 'Ex: Venha em jejum de 8 horas. Use roupas confortáveis.',
         'doc.btnGuardarCambios': 'Salvar alterações', 'doc.listTitle': 'Médicos Disponíveis', 'doc.colDuracion': 'Duração da Consulta',
         'doc.noDoctores': 'Nenhum médico', 'doc.activo': 'Ativo', 'doc.inactivo': 'Inativo', 'doc.btnEditar': 'Editar',
@@ -2350,6 +2412,8 @@ const translations = {
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'O Phone Number ID do seu WhatsApp Business (Meta for Developers)',
+        'set.horarioTextoDesc': 'texto mostrado ao paciente', 'set.horarioGeneralDesc': 'Usado para calcular os horários disponíveis dos doutores que não têm horário próprio configurado.',
         'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
         'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
         'set.rec1': 'Primeiro lembrete (horas antes da consulta)', 'set.rec2': 'Segundo lembrete (horas antes da consulta)',
