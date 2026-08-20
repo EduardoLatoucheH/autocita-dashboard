@@ -234,6 +234,13 @@
             </div>
             <button class="btn btn-block" onclick="register()" data-i18n="login.tabRegister">Crear cuenta</button>
         </div>
+        <!-- Aceptar invitación (llegó por el link del correo de invitación) -->
+        <div id="paneAceptarInvitacion" class="auth-pane">
+            <p class="card-subtitle" data-i18n="invite.intro" style="margin-bottom:16px">Te invitaron a unirte al equipo. Elegí tu contraseña para activar tu cuenta.</p>
+            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="invitePass" data-i18n-placeholder="login.passwordPh" placeholder="Mínimo 8 caracteres"></div>
+            <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="invitePass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
+            <button class="btn btn-block" onclick="aceptarInvitacion()" data-i18n="invite.btnActivar">Activar mi cuenta</button>
+        </div>
     </div>
 </div>
 <!-- App -->
@@ -884,6 +891,54 @@ async function login() {
         const token = json.session?.access_token || json.session?.session?.access_token;
         if (!token) throw new Error(t('login.errSinToken'));
         setToken(token);
+        showApp();
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+// ── ACEPTAR INVITACIÓN ────────────────────────────────────────────
+// El link del correo de invitación (Supabase) redirige acá con un access_token
+// en el hash de la URL (#access_token=...&type=invite). Se detecta al cargar
+// la página y se muestra el pane de "elegí tu contraseña" en vez del login
+// normal. El panel nunca habla directo con Supabase (todo pasa por el
+// backend) — este flujo sigue esa misma regla.
+let inviteAccessToken = null;
+function detectarInvitacion() {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return;
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const token = params.get('access_token');
+    const type = params.get('type');
+    if (!token || (type !== 'invite' && type !== 'signup')) return;
+    inviteAccessToken = token;
+    document.querySelectorAll('.auth-tab').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.auth-pane').forEach(el => el.classList.remove('active'));
+    document.getElementById('paneAceptarInvitacion').classList.add('active');
+    // Se limpia el hash para que un refresh no vuelva a disparar esto (y para
+    // no dejar el access_token visible en la barra de direcciones).
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+async function aceptarInvitacion() {
+    const alertEl = document.getElementById('loginAlert');
+    const pass = document.getElementById('invitePass').value;
+    const pass2 = document.getElementById('invitePass2').value;
+    if (!pass || pass.length < 8) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
+        return;
+    }
+    if (pass !== pass2) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassMatch')}</div>`;
+        return;
+    }
+    try {
+        const res = await fetch(API + '/equipo/aceptar-invitacion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: inviteAccessToken, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || t('invite.errActivar'));
+        setToken(inviteAccessToken);
         showApp();
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
@@ -2232,6 +2287,8 @@ const translations = {
         'tipoNegocio.barberia_salon': 'Barbería / Salón de Belleza', 'tipoNegocio.veterinaria': 'Veterinaria',
         'tipoNegocio.legal_consultoria': 'Despacho Legal / Consultoría', 'tipoNegocio.academia_clases': 'Academia / Clases Particulares',
         'tipoNegocio.taller_tecnico': 'Taller Técnico / Mecánico', 'tipoNegocio.otro': 'Otro',
+        'invite.intro': 'Te invitaron a unirte al equipo. Elegí tu contraseña para activar tu cuenta.',
+        'invite.btnActivar': 'Activar mi cuenta', 'invite.errActivar': 'No se pudo activar la cuenta. Pedile al dueño que te reenvíe la invitación.',
         'login.errCampos': 'Completá todos los campos', 'login.errPassMatch': 'Las contraseñas no coinciden',
         'login.errPassLen': 'La contraseña debe tener al menos 8 caracteres', 'login.errCrearCuenta': 'Error al crear la cuenta',
         'login.errSinToken': 'No se recibió token', 'login.errCredenciales': 'Credenciales inválidas',
@@ -2336,6 +2393,8 @@ const translations = {
         'tipoNegocio.barberia_salon': 'Barbershop / Beauty Salon', 'tipoNegocio.veterinaria': 'Veterinary',
         'tipoNegocio.legal_consultoria': 'Law Firm / Consulting', 'tipoNegocio.academia_clases': 'Academy / Private Lessons',
         'tipoNegocio.taller_tecnico': 'Repair Shop / Technical Service', 'tipoNegocio.otro': 'Other',
+        'invite.intro': 'You were invited to join the team. Choose your password to activate your account.',
+        'invite.btnActivar': 'Activate my account', 'invite.errActivar': 'Could not activate the account. Ask the owner to resend the invitation.',
         'login.errCampos': 'Fill in all fields', 'login.errPassMatch': 'Passwords do not match',
         'login.errPassLen': 'Password must be at least 8 characters', 'login.errCrearCuenta': 'Error creating account',
         'login.errSinToken': 'No token received', 'login.errCredenciales': 'Invalid credentials',
@@ -2440,6 +2499,8 @@ const translations = {
         'tipoNegocio.barberia_salon': 'Barbearia / Salão de Beleza', 'tipoNegocio.veterinaria': 'Veterinária',
         'tipoNegocio.legal_consultoria': 'Escritório de Advocacia / Consultoria', 'tipoNegocio.academia_clases': 'Academia / Aulas Particulares',
         'tipoNegocio.taller_tecnico': 'Oficina Técnica / Mecânica', 'tipoNegocio.otro': 'Outro',
+        'invite.intro': 'Você foi convidado a se juntar à equipe. Escolha sua senha para ativar sua conta.',
+        'invite.btnActivar': 'Ativar minha conta', 'invite.errActivar': 'Não foi possível ativar a conta. Peça ao dono para reenviar o convite.',
         'login.errCampos': 'Preencha todos os campos', 'login.errPassMatch': 'As senhas não coincidem',
         'login.errPassLen': 'A senha deve ter pelo menos 8 caracteres', 'login.errCrearCuenta': 'Erro ao criar a conta',
         'login.errSinToken': 'Nenhum token recebido', 'login.errCredenciales': 'Credenciais inválidas',
@@ -2581,7 +2642,8 @@ document.querySelectorAll('.lang-btn').forEach(b => {
     else b.classList.remove('active');
 });
 applyPanelLang(currentLang, { skipReload: true });
-if (getToken()) {
+detectarInvitacion();
+if (!inviteAccessToken && getToken()) {
     showApp();
     setInterval(() => { if (getToken()) loadAll(); }, 45000);
 }
