@@ -1951,7 +1951,8 @@ function actualizarPreviewSlotsDoctor() {
                 box.innerHTML = `<strong>${t('doc.previewVacio')}</strong>`;
                 return;
             }
-            box.innerHTML = `<strong>${t('doc.previewTotal', { n: data.total })}</strong><br>${data.slots.join(' · ')}`;
+            box.innerHTML = `<strong>${t('doc.previewTotal', { n: data.total })}</strong>` +
+                `<div class="bubble-group" style="margin-top:8px">${data.slots.map(h => `<span class="bubble" style="cursor:default">${h}</span>`).join('')}</div>`;
         } catch (e) {
             box.style.display = 'none';
         }
