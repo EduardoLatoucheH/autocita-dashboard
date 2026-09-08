@@ -104,7 +104,10 @@
         .toolbar select { width: auto; min-width: 140px; margin-bottom: 0; }
         .toolbar input[type="date"] { width: auto; margin-bottom: 0; }
 
-        .actividad-lista { display: flex; flex-direction: column; gap: 0; }
+        .actividad-lista { display: flex; flex-direction: column; gap: 0; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+        .actividad-lista::-webkit-scrollbar { width: 6px; }
+        .actividad-lista::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+        .actividad-lista::-webkit-scrollbar-track { background: transparent; }
         .actividad-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
         .actividad-item:last-child { border-bottom: none; }
         .actividad-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--terracotta); margin-top: 6px; flex-shrink: 0; }
