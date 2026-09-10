@@ -1194,6 +1194,18 @@ function limpiarFiltroPacientes() {
     document.getElementById('pacientesBuscar').value = '';
     renderTablaPacientes();
 }
+// Devuelve todos los números de un paciente, con el principal de primero.
+// El backend manda paciente_telefonos anidado (1 paciente → N teléfonos);
+// si por lo que sea no viene, cae al telefono de siempre para no romper nada.
+function telefonosDe(p) {
+    const vinculados = (p.paciente_telefonos || [])
+        .slice()
+        .sort((a, b) => (b.es_principal === true) - (a.es_principal === true))
+        .map(t => t.wa_id)
+        .filter(Boolean);
+    if (p.telefono && !vinculados.includes(p.telefono)) vinculados.unshift(p.telefono);
+    return vinculados;
+}
 function renderTablaPacientes() {
     const tbody = document.getElementById('tablaPacientes');
     if (!tbody) return;
@@ -1202,7 +1214,10 @@ function renderTablaPacientes() {
     if (buscar) {
         lista = lista.filter(p => {
             const nombre = (p.nombre || '').toLowerCase();
-            const tel = (p.telefono || '').toLowerCase();
+            // Busca en TODOS los números del paciente, no solo el principal —
+            // si alguien escribió desde un segundo número, buscarlo por ese
+            // número tiene que encontrarlo igual.
+            const tel = telefonosDe(p).join(' ').toLowerCase();
             const ced = (p.cedula || '').toLowerCase();
             return nombre.includes(buscar) || tel.includes(buscar) || ced.includes(buscar);
         });
@@ -1222,20 +1237,31 @@ function renderTablaPacientes() {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-500)">${msg}</td></tr>`;
         return;
     }
-    tbody.innerHTML = lista.map(p => `
+    tbody.innerHTML = lista.map(p => {
+        const tels = telefonosDe(p);
+        // Se muestra el principal y, si tiene más, un "+N" discreto con el
+        // resto en el tooltip — así se ve de un vistazo quién escribe desde
+        // varios números sin ensuchar la tabla.
+        const extra = tels.length > 1
+            ? ` <span style="color:var(--gray-500);font-size:12px;cursor:help" title="${tels.slice(1).join('\n')}">+${tels.length - 1}</span>`
+            : '';
+        return `
         <tr>
             <td><strong>${p.nombre || '—'}</strong></td>
-            <td>${p.telefono || '—'}</td>
+            <td>${tels[0] || '—'}${extra}</td>
             <td>${p.cedula || '—'}</td>
             <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 }
 function exportarPacientesCSV() {
-    const filas = [['Nombre', 'Teléfono', 'Cédula', 'Registrado']];
+    const filas = [['Nombre', 'Teléfono', 'Otros teléfonos', 'Cédula', 'Registrado']];
     pacientesCache.forEach(p => {
+        const tels = telefonosDe(p);
         filas.push([
             p.nombre || '',
-            p.telefono || '',
+            tels[0] || '',
+            tels.slice(1).join(' / '),
             p.cedula || '',
             p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : ''
         ]);
@@ -1278,7 +1304,14 @@ async function crearPaciente() {
                 citasCreadas++;
             }
         }
-        alertEl.innerHTML = `<div class="alert alert-success">${t('pac.msgAgregado')}${citasCreadas ? t('pac.msgConCitas', { n: citasCreadas }) : ''}</div>`;
+        // Si el backend detectó que ese número ya pertenecía a OTRA cédula, no
+        // lo reasignó solo (mezclaría historiales de dos personas). Se avisa
+        // para que la recepción lo resuelva a mano.
+        if (paciente?.conflicto_telefono) {
+            alertEl.innerHTML = `<div class="alert alert-error">${t('pac.msgConflictoTel')}</div>`;
+        } else {
+            alertEl.innerHTML = `<div class="alert alert-success">${t('pac.msgAgregado')}${citasCreadas ? t('pac.msgConCitas', { n: citasCreadas }) : ''}</div>`;
+        }
         ['pNombre','pTelefono','pEmail','pCedula'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('pIdioma').value = 'es';
         doctoresSeleccionados = [];
@@ -2423,6 +2456,7 @@ const translations = {
         'pac.fechaVisita': 'Fecha de la visita', 'pac.btnAgregar': 'Agregar Paciente', 'pac.listaTitle': 'Lista de Pacientes',
         'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'No hay pacientes aún', 'pac.sinDoctores': 'No hay doctores disponibles todavía',
         'pac.msgAgregado': 'Paciente agregado ✓', 'pac.msgConCitas': ' con {n} cita(s)',
+        'pac.msgConflictoTel': 'Guardado, pero ese teléfono ya estaba registrado con otra cédula — revisá cuál de los dos pacientes lo usa realmente.',
         'citas.bloqueTitle': 'Cita en bloque (un paciente, varios doctores el mismo día)', 'citas.btnAgregarDoctor': '+ Agregar doctor',
         'citas.btnCrearBloque': 'Crear citas en bloque', 'citas.recurrenteTitle': 'Citas recurrentes (varias semanas)',
         'citas.recurrenteDesc': 'Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.',
@@ -2529,6 +2563,7 @@ const translations = {
         'pac.fechaVisita': 'Visit date', 'pac.btnAgregar': 'Add Patient', 'pac.listaTitle': 'Patient List',
         'pac.colRegistrado': 'Registered', 'pac.noPacientes': 'No patients yet', 'pac.sinDoctores': 'No doctors available yet',
         'pac.msgAgregado': 'Patient added ✓', 'pac.msgConCitas': ' with {n} appointment(s)',
+        'pac.msgConflictoTel': 'Saved, but that phone number was already registered under a different ID — check which of the two patients actually uses it.',
         'citas.bloqueTitle': 'Block appointment (one patient, several doctors same day)', 'citas.btnAgregarDoctor': '+ Add doctor',
         'citas.btnCrearBloque': 'Create block appointments', 'citas.recurrenteTitle': 'Recurring appointments (multiple weeks)',
         'citas.recurrenteDesc': 'For ongoing treatments — e.g. physical therapy once a week for 6 weeks.',
@@ -2635,6 +2670,7 @@ const translations = {
         'pac.fechaVisita': 'Data da visita', 'pac.btnAgregar': 'Adicionar Paciente', 'pac.listaTitle': 'Lista de Pacientes',
         'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'Nenhum paciente ainda', 'pac.sinDoctores': 'Nenhum médico disponível ainda',
         'pac.msgAgregado': 'Paciente adicionado ✓', 'pac.msgConCitas': ' com {n} consulta(s)',
+        'pac.msgConflictoTel': 'Salvo, mas esse telefone já estava registrado com outro documento — verifique qual dos dois pacientes realmente o usa.',
         'citas.bloqueTitle': 'Consulta em bloco (um paciente, vários médicos no mesmo dia)', 'citas.btnAgregarDoctor': '+ Adicionar médico',
         'citas.btnCrearBloque': 'Criar consultas em bloco', 'citas.recurrenteTitle': 'Consultas recorrentes (várias semanas)',
         'citas.recurrenteDesc': 'Para tratamentos com acompanhamento — ex. fisioterapia uma vez por semana durante 6 semanas.',
