@@ -588,9 +588,10 @@
                         <div class="form-group" style="flex:1"><label data-i18n="exp.dolorActual">Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
                     </div>
                     <div class="form-group"><label data-i18n="exp.planTratamiento">Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" data-i18n-placeholder="exp.planTratamientoPh" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
+                    <div id="expedienteVozEstado" style="display:none;font-size:13px;color:var(--gray-500);margin-bottom:8px"></div>
                     <div style="display:flex;gap:10px;align-items:center">
                         <button class="btn" style="flex:1" onclick="agregarNotaExpediente()" data-i18n="exp.btnGuardar">Guardar nota</button>
-                        <button class="btn btn-ghost" style="flex:1;cursor:not-allowed" disabled data-i18n="exp.notaVoz" data-i18n-title="exp.notaVozTitle" title="Próximamente — grabación + transcripción automática">🎤 Nota de voz (próximamente)</button>
+                        <button class="btn btn-ghost" id="btnGrabarVoz" style="flex:1" onclick="toggleGrabacionVoz()" data-i18n="exp.notaVoz">🎤 Nota de voz</button>
                     </div>
                 </div>
                 <div class="card" id="expedienteListaCard" style="display:none">
@@ -2210,7 +2211,13 @@ async function loadExpediente() {
         } else {
             listaEl.innerHTML = notas.map(n => `
                 <div style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
-                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px">${new Date(n.created_at).toLocaleString(getLocale())}</div>
+                    <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+                        <span>${new Date(n.created_at).toLocaleString(getLocale())}${n.tipo === 'voz' ? ' 🎤' : ''}</span>
+                        <span style="display:flex;gap:10px">
+                            ${n.audio_url ? `<a href="#" onclick="reproducirAudioNota('${n.id}');return false" data-i18n="exp.escuchar">${t('exp.escuchar')}</a>` : ''}
+                            ${userDoctorId && n.doctor_id === userDoctorId ? `<a href="#" style="color:var(--danger)" onclick="borrarNotaExpediente('${n.id}');return false" data-i18n="exp.borrarNota">${t('exp.borrarNota')}</a>` : ''}
+                        </span>
+                    </div>
                     <div>${n.contenido}</div>
                     ${n.medicamentos ? `<div style="font-size:13px;color:var(--primary);margin-top:4px">💊 ${n.medicamentos}</div>` : ''}
                     ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
@@ -2222,6 +2229,7 @@ async function loadExpediente() {
         listaEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
     }
 }
+let notaAudioUrlPendiente = null; // seteado por toggleGrabacionVoz() al transcribir; se manda en el próximo guardado
 async function agregarNotaExpediente() {
     const alertEl = document.getElementById('alertExpediente');
     const pacienteId = document.getElementById('expedientePaciente').value;
@@ -2237,7 +2245,10 @@ async function agregarNotaExpediente() {
     try {
         await apiFetch('/expediente', {
             method: 'POST',
-            body: JSON.stringify({ paciente_id: pacienteId, contenido, medicamentos, dolor_inicial, dolor_actual, plan_tratamiento })
+            body: JSON.stringify({
+                paciente_id: pacienteId, contenido, medicamentos, dolor_inicial, dolor_actual, plan_tratamiento,
+                audio_url: notaAudioUrlPendiente, tipo: notaAudioUrlPendiente ? 'voz' : 'texto',
+            })
         });
         alertEl.innerHTML = `<div class="alert alert-success">${t('exp.msgGuardada')}</div>`;
         document.getElementById('expedienteContenido').value = '';
@@ -2245,10 +2256,86 @@ async function agregarNotaExpediente() {
         document.getElementById('expedienteDolorInicial').value = '';
         document.getElementById('expedienteDolorActual').value = '';
         document.getElementById('expedientePlanTratamiento').value = '';
+        notaAudioUrlPendiente = null;
         loadExpediente();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
         alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+// ── NOTA DE VOZ (grabación + transcripción con Whisper) ──────────────────
+let mediaRecorderNota = null;
+let audioChunksNota = [];
+let grabandoNota = false;
+async function toggleGrabacionVoz() {
+    const btn = document.getElementById('btnGrabarVoz');
+    const estadoEl = document.getElementById('expedienteVozEstado');
+    if (grabandoNota) {
+        mediaRecorderNota.stop(); // el resto sigue en el handler onstop
+        return;
+    }
+    const pacienteId = document.getElementById('expedientePaciente').value;
+    if (!pacienteId) return;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunksNota = [];
+        mediaRecorderNota = new MediaRecorder(stream);
+        mediaRecorderNota.ondataavailable = (e) => { if (e.data.size > 0) audioChunksNota.push(e.data); };
+        mediaRecorderNota.onstop = async () => {
+            stream.getTracks().forEach((tr) => tr.stop());
+            grabandoNota = false;
+            btn.textContent = '🎤 ' + t('exp.notaVoz').replace('🎤 ', '');
+            btn.disabled = true;
+            estadoEl.style.display = 'block';
+            estadoEl.textContent = t('exp.transcribiendo');
+            const blob = new Blob(audioChunksNota, { type: mediaRecorderNota.mimeType || 'audio/webm' });
+            try {
+                const res = await fetch(`${API}/expediente/transcribir?paciente_id=${pacienteId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': blob.type, 'Authorization': `Bearer ${getToken()}` },
+                    body: blob,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Error');
+                notaAudioUrlPendiente = data.audio_url || null;
+                if (data.texto) {
+                    const contEl = document.getElementById('expedienteContenido');
+                    contEl.value = contEl.value ? `${contEl.value}\n${data.texto}` : data.texto;
+                }
+                estadoEl.textContent = data.aviso || t('exp.msgTranscrita');
+            } catch (e) {
+                estadoEl.textContent = `${t('exp.errTranscribir')}: ${e.message}`;
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => { estadoEl.style.display = 'none'; }, 4000);
+            }
+        };
+        mediaRecorderNota.start();
+        grabandoNota = true;
+        btn.textContent = '⏹ ' + t('exp.detener');
+        estadoEl.style.display = 'block';
+        estadoEl.textContent = t('exp.grabando');
+    } catch (e) {
+        alert(t('exp.errMic'));
+    }
+}
+async function reproducirAudioNota(notaId) {
+    try {
+        const res = await fetch(`${API}/expediente/audio/${notaId}`, { headers: authH() });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        new Audio(URL.createObjectURL(blob)).play();
+    } catch (e) {
+        alert(t('exp.errAudio'));
+    }
+}
+async function borrarNotaExpediente(notaId) {
+    if (!confirm(t('exp.confirmBorrar'))) return;
+    try {
+        await apiFetch(`/expediente/${notaId}`, { method: 'DELETE' });
+        loadExpediente();
+    } catch (e) {
+        alert(e.message);
     }
 }
 // ── ODONTOGRAMA (solo se muestra si clinicaCache.tipo_negocio === 'dental') ──
@@ -2502,7 +2589,11 @@ const translations = {
         'exp.medicamentosPh': 'Ej: Acetaminofén 500mg cada 8h', 'exp.dolorInicial': 'Dolor inicial (0-10, opcional)',
         'exp.dolorActual': 'Dolor actual (0-10, opcional)', 'exp.dolorLabel': 'Dolor', 'exp.planTratamiento': 'Plan de tratamiento (opcional)',
         'exp.planTratamientoPh': 'Objetivos, técnicas, frecuencia sugerida...', 'exp.btnGuardar': 'Guardar nota',
-        'exp.notaVoz': '🎤 Nota de voz (próximamente)', 'exp.notaVozTitle': 'Próximamente — grabación + transcripción automática',
+        'exp.notaVoz': '🎤 Nota de voz', 'exp.detener': 'Detener', 'exp.grabando': 'Grabando… hablá y presioná Detener cuando termines.',
+        'exp.transcribiendo': 'Transcribiendo…', 'exp.msgTranscrita': 'Transcrito ✓ — revisá el texto antes de guardar.',
+        'exp.errTranscribir': 'No se pudo transcribir', 'exp.errMic': 'No se pudo acceder al micrófono — revisá los permisos del navegador.',
+        'exp.escuchar': '🔊 Escuchar', 'exp.errAudio': 'No se pudo reproducir el audio',
+        'exp.borrarNota': 'Borrar', 'exp.confirmBorrar': '¿Borrar esta nota? No se puede deshacer.',
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
@@ -2609,7 +2700,11 @@ const translations = {
         'exp.medicamentosPh': 'E.g.: Acetaminophen 500mg every 8h', 'exp.dolorInicial': 'Initial pain (0-10, optional)',
         'exp.dolorActual': 'Current pain (0-10, optional)', 'exp.dolorLabel': 'Pain', 'exp.planTratamiento': 'Treatment plan (optional)',
         'exp.planTratamientoPh': 'Goals, techniques, suggested frequency...', 'exp.btnGuardar': 'Save note',
-        'exp.notaVoz': '🎤 Voice note (coming soon)', 'exp.notaVozTitle': 'Coming soon — automatic recording + transcription',
+        'exp.notaVoz': '🎤 Voice note', 'exp.detener': 'Stop', 'exp.grabando': 'Recording… speak, then press Stop when done.',
+        'exp.transcribiendo': 'Transcribing…', 'exp.msgTranscrita': 'Transcribed ✓ — review the text before saving.',
+        'exp.errTranscribir': 'Could not transcribe', 'exp.errMic': 'Could not access the microphone — check browser permissions.',
+        'exp.escuchar': '🔊 Listen', 'exp.errAudio': 'Could not play the audio',
+        'exp.borrarNota': 'Delete', 'exp.confirmBorrar': 'Delete this note? This cannot be undone.',
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
@@ -2716,7 +2811,11 @@ const translations = {
         'exp.medicamentosPh': 'Ex: Paracetamol 500mg a cada 8h', 'exp.dolorInicial': 'Dor inicial (0-10, opcional)',
         'exp.dolorActual': 'Dor atual (0-10, opcional)', 'exp.dolorLabel': 'Dor', 'exp.planTratamiento': 'Plano de tratamento (opcional)',
         'exp.planTratamientoPh': 'Objetivos, técnicas, frequência sugerida...', 'exp.btnGuardar': 'Salvar nota',
-        'exp.notaVoz': '🎤 Nota de voz (em breve)', 'exp.notaVozTitle': 'Em breve — gravação + transcrição automática',
+        'exp.notaVoz': '🎤 Nota de voz', 'exp.detener': 'Parar', 'exp.grabando': 'Gravando… fale e pressione Parar quando terminar.',
+        'exp.transcribiendo': 'Transcrevendo…', 'exp.msgTranscrita': 'Transcrito ✓ — revise o texto antes de salvar.',
+        'exp.errTranscribir': 'Não foi possível transcrever', 'exp.errMic': 'Não foi possível acessar o microfone — verifique as permissões do navegador.',
+        'exp.escuchar': '🔊 Ouvir', 'exp.errAudio': 'Não foi possível reproduzir o áudio',
+        'exp.borrarNota': 'Excluir', 'exp.confirmBorrar': 'Excluir esta nota? Não pode ser desfeito.',
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
