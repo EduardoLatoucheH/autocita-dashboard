@@ -134,7 +134,9 @@
 
         .bubble-group { display: flex; flex-wrap: wrap; gap: 8px; }
         .bubble { padding: 7px 14px; border: 1.5px solid var(--gray-200); border-radius: 100px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--white); color: var(--gray-700); transition: all .15s; }
+        .bubble:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-dark); }
         .bubble.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+        .bubble:disabled { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
 
         .bloque-fila { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .bloque-fila select { flex: 2; }
@@ -367,7 +369,30 @@
             <section class="section" id="citas">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.citas">Crear Cita</h2>
                 <div class="card">
+                    <div class="card-title" data-i18n="citas.individualTitle">Agregar cita</div>
+                    <p class="card-subtitle" data-i18n="citas.individualDesc">Un paciente, un doctor, una fecha — elegí la hora entre lo que el doctor realmente tiene libre.</p>
+                    <div id="alertIndividual"></div>
+                    <div class="form-group">
+                        <label data-i18n="common.paciente">Paciente</label>
+                        <select id="citaPaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="common.doctor">Doctor</label>
+                        <select id="citaDoctor" onchange="actualizarSlotsCitaIndividual()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="common.fecha">Fecha</label>
+                        <input type="date" id="citaFecha" oninput="actualizarSlotsCitaIndividual()">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="citas.horaDisponible">Hora disponible</label>
+                        <div id="citaSlotsBubbles" class="bubble-group"><span style="color:var(--gray-500);font-size:13px" data-i18n="citas.elegiDoctorFecha">Elegí doctor y fecha para ver horas disponibles</span></div>
+                    </div>
+                    <button class="btn btn-block" onclick="crearCitaIndividual()" data-i18n="citas.btnCrear">Crear cita</button>
+                </div>
+                <div class="card">
                     <div class="card-title" data-i18n="citas.bloqueTitle">Cita en bloque (un paciente, varios doctores el mismo día)</div>
+                    <p class="card-subtitle" data-i18n="citas.bloqueDesc">Para cuando el mismo paciente ve a varios doctores el mismo día — cada fila muestra la disponibilidad real de ese doctor.</p>
                     <div id="alertBloque"></div>
                     <div class="form-group">
                         <label data-i18n="common.paciente">Paciente</label>
@@ -375,7 +400,7 @@
                     </div>
                     <div class="form-group">
                         <label data-i18n="common.fecha">Fecha</label>
-                        <input type="date" id="bloqueFecha">
+                        <input type="date" id="bloqueFecha" oninput="renderFilasBloque()">
                     </div>
                     <div id="bloqueFilas"></div>
                     <button class="btn btn-ghost" style="margin-top:4px;margin-bottom:12px" onclick="agregarFilaBloque()" data-i18n="citas.btnAgregarDoctor">+ Agregar doctor</button>
@@ -391,15 +416,15 @@
                     </div>
                     <div class="form-group">
                         <label data-i18n="common.doctor">Doctor</label>
-                        <select id="recurrenteDoctor"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
+                        <select id="recurrenteDoctor" onchange="actualizarSlotsRecurrente()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
                         <label data-i18n="citas.fechaPrimera">Fecha de la primera cita</label>
-                        <input type="date" id="recurrenteFecha" oninput="actualizarPreviewRecurrente()">
+                        <input type="date" id="recurrenteFecha" oninput="actualizarSlotsRecurrente()">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.hora">Hora</label>
-                        <input type="time" id="recurrenteHora" value="09:00" oninput="actualizarPreviewRecurrente()">
+                        <label data-i18n="citas.horaDisponible">Hora disponible</label>
+                        <div id="recurrenteSlotsBubbles" class="bubble-group"><span style="color:var(--gray-500);font-size:13px" data-i18n="citas.elegiDoctorFecha">Elegí doctor y fecha para ver horas disponibles</span></div>
                     </div>
                     <div style="display:flex;gap:12px">
                         <div class="form-group" style="flex:1">
@@ -1373,6 +1398,11 @@ function construirFechaISO(fechaBase, minutos) {
     const h = Math.floor(minutos / 60), m = minutos % 60;
     return `${fechaBase}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
 }
+// "14:30" -> "2:30 pm" — para mostrar las burbujas de /slots en formato legible
+function formatearHora12(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    return minToHora(h * 60 + m);
+}
 // ── CITAS ─────────────────────────────────────────────────────────
 async function loadCitas() {
     try {
@@ -1780,6 +1810,7 @@ async function eliminarListaEspera(id) {
 function populatePacienteSelectBloque() {
     const sel = document.getElementById('bloquePaciente');
     const selExp = document.getElementById('expedientePaciente');
+    const selInd = document.getElementById('citaPaciente');
     const opciones = pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
     if (sel) {
         const actual = sel.value;
@@ -1791,40 +1822,165 @@ function populatePacienteSelectBloque() {
         selExp.innerHTML = `<option value="">${t('exp.elegirPaciente')}</option>` + opciones;
         if (actual) selExp.value = actual;
     }
+    if (selInd) {
+        const actual = selInd.value;
+        selInd.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` + opciones;
+        if (actual) selInd.value = actual;
+    }
 }
+function populateDoctorSelectCitaIndividual() {
+    const sel = document.getElementById('citaDoctor');
+    if (!sel) return;
+    const actual = sel.value;
+    sel.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
+        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    if (actual) sel.value = actual;
+}
+// ── CITA INDIVIDUAL (un paciente, un doctor, hora real de /slots) ──
+let citaIndividualSlots = [];
+let citaIndividualHora = null;
+async function actualizarSlotsCitaIndividual() {
+    const doctorId = document.getElementById('citaDoctor').value;
+    const fecha = document.getElementById('citaFecha').value;
+    citaIndividualHora = null;
+    citaIndividualSlots = [];
+    if (!doctorId || !fecha) { renderCitaIndividualSlots(t('citas.elegiDoctorFecha')); return; }
+    const doc = doctoresCache.find(d => d.id === doctorId);
+    if (!doc?.calendar_id) { renderCitaIndividualSlots(t('citas.sinCalendario')); return; }
+    renderCitaIndividualSlots(t('common.loading'));
+    try {
+        citaIndividualSlots = await apiFetch(`/slots?fecha=${fecha}&calendar_id=${doc.calendar_id}`);
+        renderCitaIndividualSlots();
+    } catch (e) {
+        renderCitaIndividualSlots(e.message, true);
+    }
+}
+function renderCitaIndividualSlots(mensaje, esError) {
+    const el = document.getElementById('citaSlotsBubbles');
+    if (!el) return;
+    if (mensaje) {
+        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${mensaje}</span>`;
+        return;
+    }
+    if (!citaIndividualSlots.length) {
+        el.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('citas.sinHorasDisponibles')}</span>`;
+        return;
+    }
+    el.innerHTML = citaIndividualSlots.map(s => `
+        <button type="button" class="bubble ${citaIndividualHora === s.hora ? 'selected' : ''}"
+            ${s.disponible ? `onclick="seleccionarHoraCitaIndividual('${s.hora}')"` : 'disabled'}>${formatearHora12(s.hora)}</button>
+    `).join('');
+}
+function seleccionarHoraCitaIndividual(hora) {
+    citaIndividualHora = hora;
+    renderCitaIndividualSlots();
+}
+async function crearCitaIndividual() {
+    const alertEl = document.getElementById('alertIndividual');
+    const pacienteId = document.getElementById('citaPaciente').value;
+    const doctorId = document.getElementById('citaDoctor').value;
+    const fecha = document.getElementById('citaFecha').value;
+    if (!pacienteId || !doctorId || !fecha || !citaIndividualHora) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errIndividual')}</div>`;
+        return;
+    }
+    const doc = doctoresCache.find(d => d.id === doctorId);
+    try {
+        await apiFetch('/cita/crear', {
+            method: 'POST',
+            body: JSON.stringify({
+                paciente_id: pacienteId,
+                fecha: `${fecha}T${citaIndividualHora}:00`,
+                duracion: doc?.duracion_cita || 30,
+                tipo_consulta: 'Consulta',
+                doctor_id: doctorId,
+                calendar_id: doc?.calendar_id || null
+            })
+        });
+        alertEl.innerHTML = `<div class="alert alert-success">${t('citas.msgCreada')}</div>`;
+        document.getElementById('citaPaciente').value = '';
+        document.getElementById('citaDoctor').value = '';
+        document.getElementById('citaFecha').value = '';
+        citaIndividualHora = null;
+        citaIndividualSlots = [];
+        renderCitaIndividualSlots(t('citas.elegiDoctorFecha'));
+        loadCitas();
+        loadDashboard();
+        setTimeout(() => alertEl.innerHTML = '', 4000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+let bloqueFilasHoras = [];
+let bloqueSlotsCache = {};
 function agregarFilaBloque() {
     bloqueFilasDoctores.push('');
+    bloqueFilasHoras.push(null);
     renderFilasBloque();
 }
 function quitarFilaBloque(idx) {
     bloqueFilasDoctores.splice(idx, 1);
+    bloqueFilasHoras.splice(idx, 1);
     renderFilasBloque();
 }
 function actualizarFilaBloque(idx, docId) {
     bloqueFilasDoctores[idx] = docId;
+    bloqueFilasHoras[idx] = null;
     renderFilasBloque();
 }
-function renderFilasBloque() {
+function seleccionarHoraBloque(idx, hora) {
+    bloqueFilasHoras[idx] = hora;
+    renderFilasBloque();
+}
+async function renderFilasBloque() {
     const el = document.getElementById('bloqueFilas');
     if (!el) return;
     if (!bloqueFilasDoctores.length) {
         el.innerHTML = `<p style="color:var(--gray-500);font-size:13px;margin-bottom:8px">${t('citas.agregaAlMenosUno')}</p>`;
         return;
     }
-    let horaActual = 9 * 60;
+    const fecha = document.getElementById('bloqueFecha')?.value;
+    // Trae de /slots (una sola vez por doctor+fecha, cacheado) la disponibilidad
+    // real — así cada fila ofrece horas que el doctor de verdad tiene libres,
+    // en vez de apilarlas a ciegas desde las 9am como antes.
+    await Promise.all(bloqueFilasDoctores.map(async (docId) => {
+        if (!docId || !fecha) return;
+        const doc = doctoresCache.find(d => d.id === docId);
+        if (!doc?.calendar_id) return;
+        const key = `${docId}_${fecha}`;
+        if (bloqueSlotsCache[key]) return;
+        try {
+            bloqueSlotsCache[key] = await apiFetch(`/slots?fecha=${fecha}&calendar_id=${doc.calendar_id}`);
+        } catch (e) {
+            bloqueSlotsCache[key] = [];
+        }
+    }));
     el.innerHTML = bloqueFilasDoctores.map((docId, idx) => {
         const doc = doctoresCache.find(d => d.id === docId);
-        const dur = doc ? (doc.duracion_cita || 30) : 30;
-        const inicio = horaActual, fin = horaActual + dur;
-        horaActual = fin;
         const opciones = doctoresCache.map(d => `<option value="${d.id}" ${d.id === docId ? 'selected' : ''}>${d.nombre}</option>`).join('');
+        let bubblesHtml = `<span style="color:var(--gray-500);font-size:12.5px">${t('citas.elegiDoctorFecha')}</span>`;
+        if (doc && fecha) {
+            if (!doc.calendar_id) {
+                bubblesHtml = `<span style="color:var(--gray-500);font-size:12.5px">${t('citas.sinCalendario')}</span>`;
+            } else {
+                const slots = bloqueSlotsCache[`${docId}_${fecha}`] || [];
+                bubblesHtml = !slots.length
+                    ? `<span style="color:var(--gray-500);font-size:12.5px">${t('citas.sinHorasDisponibles')}</span>`
+                    : slots.map(s => `
+                        <button type="button" class="bubble ${bloqueFilasHoras[idx] === s.hora ? 'selected' : ''}" style="padding:5px 11px;font-size:11.5px"
+                            ${s.disponible ? `onclick="seleccionarHoraBloque(${idx}, '${s.hora}')"` : 'disabled'}>${formatearHora12(s.hora)}</button>
+                    `).join('');
+            }
+        }
         return `
-        <div class="bloque-fila">
-            <select onchange="actualizarFilaBloque(${idx}, this.value)">
-                <option value="">${t('common.elegirDoctor')}</option>${opciones}
-            </select>
-            <span class="hora-preview">${doc ? minToHora(inicio) + ' – ' + minToHora(fin) : '—'}</span>
-            <button type="button" class="btn btn-danger" style="padding:6px 10px;box-shadow:none" onclick="quitarFilaBloque(${idx})">✕</button>
+        <div style="padding:10px;background:var(--gray-50);border-radius:var(--radius-sm);margin-bottom:10px">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <select onchange="actualizarFilaBloque(${idx}, this.value)" style="flex:1">
+                    <option value="">${t('common.elegirDoctor')}</option>${opciones}
+                </select>
+                <button type="button" class="btn btn-danger btn-sm" style="box-shadow:none" onclick="quitarFilaBloque(${idx})">✕</button>
+            </div>
+            <div class="bubble-group">${bubblesHtml}</div>
         </div>`;
     }).join('');
 }
@@ -1832,31 +1988,34 @@ async function crearCitasBloque() {
     const alertEl = document.getElementById('alertBloque');
     const pacienteId = document.getElementById('bloquePaciente').value;
     const fecha = document.getElementById('bloqueFecha').value;
-    const filas = bloqueFilasDoctores.filter(d => d);
+    const filas = bloqueFilasDoctores.map((d, i) => ({ doctorId: d, hora: bloqueFilasHoras[i] })).filter(f => f.doctorId);
     if (!pacienteId || !fecha || !filas.length) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errBloque')}</div>`;
         return;
     }
+    if (filas.some(f => !f.hora)) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('citas.errBloqueHora')}</div>`;
+        return;
+    }
     try {
-        let horaActual = 9 * 60;
-        for (const docId of filas) {
-            const doc = doctoresCache.find(d => d.id === docId);
-            const dur = doc.duracion_cita || 30;
+        for (const f of filas) {
+            const doc = doctoresCache.find(d => d.id === f.doctorId);
             await apiFetch('/cita/crear', {
                 method: 'POST',
                 body: JSON.stringify({
                     paciente_id: pacienteId,
-                    fecha: construirFechaISO(fecha, horaActual),
-                    duracion: dur,
+                    fecha: `${fecha}T${f.hora}:00`,
+                    duracion: doc.duracion_cita || 30,
                     tipo_consulta: 'Seguimiento',
                     doctor_id: doc.id,
                     calendar_id: doc.calendar_id || null
                 })
             });
-            horaActual += dur;
         }
         alertEl.innerHTML = `<div class="alert alert-success">${t('citas.msgCreadas', { n: filas.length })}</div>`;
         bloqueFilasDoctores = [];
+        bloqueFilasHoras = [];
+        bloqueSlotsCache = {};
         renderFilasBloque();
         document.getElementById('bloquePaciente').value = '';
         document.getElementById('bloqueFecha').value = '';
@@ -1884,6 +2043,53 @@ function populateRecurrenteSelects() {
         if (actual) selDoc.value = actual;
     }
 }
+let recurrenteSlots = [];
+let recurrenteHoraSel = null;
+async function actualizarSlotsRecurrente() {
+    const doctorId = document.getElementById('recurrenteDoctor').value;
+    const fecha = document.getElementById('recurrenteFecha').value;
+    recurrenteHoraSel = null;
+    recurrenteSlots = [];
+    if (!doctorId || !fecha) {
+        renderRecurrenteSlots(t('citas.elegiDoctorFecha'));
+        actualizarPreviewRecurrente();
+        return;
+    }
+    const doc = doctoresCache.find(d => d.id === doctorId);
+    if (!doc?.calendar_id) {
+        renderRecurrenteSlots(t('citas.sinCalendario'));
+        actualizarPreviewRecurrente();
+        return;
+    }
+    renderRecurrenteSlots(t('common.loading'));
+    try {
+        recurrenteSlots = await apiFetch(`/slots?fecha=${fecha}&calendar_id=${doc.calendar_id}`);
+        renderRecurrenteSlots();
+    } catch (e) {
+        renderRecurrenteSlots(e.message, true);
+    }
+    actualizarPreviewRecurrente();
+}
+function renderRecurrenteSlots(mensaje, esError) {
+    const el = document.getElementById('recurrenteSlotsBubbles');
+    if (!el) return;
+    if (mensaje) {
+        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${mensaje}</span>`;
+        return;
+    }
+    if (!recurrenteSlots.length) {
+        el.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('citas.sinHorasDisponibles')}</span>`;
+        return;
+    }
+    el.innerHTML = recurrenteSlots.map(s => `
+        <button type="button" class="bubble ${recurrenteHoraSel === s.hora ? 'selected' : ''}"
+            ${s.disponible ? `onclick="seleccionarHoraRecurrente('${s.hora}')"` : 'disabled'}>${formatearHora12(s.hora)}</button>
+    `).join('');
+}
+function seleccionarHoraRecurrente(hora) {
+    recurrenteHoraSel = hora;
+    renderRecurrenteSlots();
+}
 function actualizarPreviewRecurrente() {
     const fechaInicio = document.getElementById('recurrenteFecha').value;
     const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
@@ -1903,7 +2109,7 @@ async function crearCitasRecurrentes() {
     const paciente_id = document.getElementById('recurrentePaciente').value;
     const doctor_id = document.getElementById('recurrenteDoctor').value;
     const fechaInicio = document.getElementById('recurrenteFecha').value;
-    const hora = document.getElementById('recurrenteHora').value;
+    const hora = recurrenteHoraSel;
     const cadaSemanas = parseInt(document.getElementById('recurrenteCadaSemanas').value) || 1;
     const cantidad = parseInt(document.getElementById('recurrenteCantidad').value) || 1;
     if (!paciente_id || !doctor_id || !fechaInicio || !hora) {
@@ -1935,6 +2141,9 @@ async function crearCitasRecurrentes() {
         }
         alertEl.innerHTML = `<div class="alert alert-success">${t('citas.msgCreadas', { n: creadas })}</div>`;
         document.getElementById('recurrentePreview').innerHTML = '';
+        recurrenteHoraSel = null;
+        recurrenteSlots = [];
+        renderRecurrenteSlots(t('citas.elegiDoctorFecha'));
         loadCitas();
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
@@ -1953,6 +2162,7 @@ async function loadDoctores() {
         populateListaEsperaSelects();
         populateEmergDoctorSelect();
         populateRecurrenteSelects();
+        populateDoctorSelectCitaIndividual();
         poblarVinculoDoctor();
         renderTablaDoctores();
     } catch (e) { console.error('Doctores:', e); }
@@ -2544,6 +2754,12 @@ const translations = {
         'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'No hay pacientes aún', 'pac.sinDoctores': 'No hay doctores disponibles todavía',
         'pac.msgAgregado': 'Paciente agregado ✓', 'pac.msgConCitas': ' con {n} cita(s)',
         'pac.msgConflictoTel': 'Guardado, pero ese teléfono ya estaba registrado con otra cédula — revisá cuál de los dos pacientes lo usa realmente.',
+        'citas.individualTitle': 'Agregar cita', 'citas.individualDesc': 'Un paciente, un doctor, una fecha — elegí la hora entre lo que el doctor realmente tiene libre.',
+        'citas.bloqueDesc': 'Para cuando el mismo paciente ve a varios doctores el mismo día — cada fila muestra la disponibilidad real de ese doctor.',
+        'citas.horaDisponible': 'Hora disponible', 'citas.elegiDoctorFecha': 'Elegí doctor y fecha para ver horas disponibles',
+        'citas.sinCalendario': 'Este doctor no tiene calendario configurado', 'citas.sinHorasDisponibles': 'No hay horas disponibles ese día',
+        'citas.btnCrear': 'Crear cita', 'citas.errIndividual': 'Elegí paciente, doctor, fecha y hora', 'citas.msgCreada': 'Cita creada ✓',
+        'citas.errBloqueHora': 'Elegí una hora para cada doctor agregado',
         'citas.bloqueTitle': 'Cita en bloque (un paciente, varios doctores el mismo día)', 'citas.btnAgregarDoctor': '+ Agregar doctor',
         'citas.btnCrearBloque': 'Crear citas en bloque', 'citas.recurrenteTitle': 'Citas recurrentes (varias semanas)',
         'citas.recurrenteDesc': 'Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.',
@@ -2655,6 +2871,12 @@ const translations = {
         'pac.colRegistrado': 'Registered', 'pac.noPacientes': 'No patients yet', 'pac.sinDoctores': 'No doctors available yet',
         'pac.msgAgregado': 'Patient added ✓', 'pac.msgConCitas': ' with {n} appointment(s)',
         'pac.msgConflictoTel': 'Saved, but that phone number was already registered under a different ID — check which of the two patients actually uses it.',
+        'citas.individualTitle': 'Add appointment', 'citas.individualDesc': 'One patient, one doctor, one date — pick the time from what the doctor actually has open.',
+        'citas.bloqueDesc': 'For when the same patient sees several doctors the same day — each row shows that doctor\'s real availability.',
+        'citas.horaDisponible': 'Available time', 'citas.elegiDoctorFecha': 'Pick a doctor and date to see available times',
+        'citas.sinCalendario': 'This doctor has no calendar configured', 'citas.sinHorasDisponibles': 'No available times that day',
+        'citas.btnCrear': 'Create appointment', 'citas.errIndividual': 'Pick a patient, doctor, date and time', 'citas.msgCreada': 'Appointment created ✓',
+        'citas.errBloqueHora': 'Pick a time for each doctor added',
         'citas.bloqueTitle': 'Block appointment (one patient, several doctors same day)', 'citas.btnAgregarDoctor': '+ Add doctor',
         'citas.btnCrearBloque': 'Create block appointments', 'citas.recurrenteTitle': 'Recurring appointments (multiple weeks)',
         'citas.recurrenteDesc': 'For ongoing treatments — e.g. physical therapy once a week for 6 weeks.',
@@ -2766,6 +2988,12 @@ const translations = {
         'pac.colRegistrado': 'Registrado', 'pac.noPacientes': 'Nenhum paciente ainda', 'pac.sinDoctores': 'Nenhum médico disponível ainda',
         'pac.msgAgregado': 'Paciente adicionado ✓', 'pac.msgConCitas': ' com {n} consulta(s)',
         'pac.msgConflictoTel': 'Salvo, mas esse telefone já estava registrado com outro documento — verifique qual dos dois pacientes realmente o usa.',
+        'citas.individualTitle': 'Adicionar consulta', 'citas.individualDesc': 'Um paciente, um médico, uma data — escolha o horário entre o que o médico realmente tem livre.',
+        'citas.bloqueDesc': 'Para quando o mesmo paciente vê vários médicos no mesmo dia — cada linha mostra a disponibilidade real desse médico.',
+        'citas.horaDisponible': 'Horário disponível', 'citas.elegiDoctorFecha': 'Escolha médico e data para ver os horários disponíveis',
+        'citas.sinCalendario': 'Este médico não tem calendário configurado', 'citas.sinHorasDisponibles': 'Não há horários disponíveis nesse dia',
+        'citas.btnCrear': 'Criar consulta', 'citas.errIndividual': 'Escolha paciente, médico, data e horário', 'citas.msgCreada': 'Consulta criada ✓',
+        'citas.errBloqueHora': 'Escolha um horário para cada médico adicionado',
         'citas.bloqueTitle': 'Consulta em bloco (um paciente, vários médicos no mesmo dia)', 'citas.btnAgregarDoctor': '+ Adicionar médico',
         'citas.btnCrearBloque': 'Criar consultas em bloco', 'citas.recurrenteTitle': 'Consultas recorrentes (várias semanas)',
         'citas.recurrenteDesc': 'Para tratamentos com acompanhamento — ex. fisioterapia uma vez por semana durante 6 semanas.',
