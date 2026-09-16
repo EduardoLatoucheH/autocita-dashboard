@@ -2425,7 +2425,6 @@ async function loadExpediente() {
                         <span>${new Date(n.created_at).toLocaleString(getLocale())}${n.tipo === 'voz' ? ' 🎤' : ''}</span>
                         <span style="display:flex;gap:10px">
                             ${n.audio_url ? `<a href="#" onclick="reproducirAudioNota('${n.id}');return false" data-i18n="exp.escuchar">${t('exp.escuchar')}</a>` : ''}
-                            ${userDoctorId && n.doctor_id === userDoctorId ? `<a href="#" style="color:var(--danger)" onclick="borrarNotaExpediente('${n.id}');return false" data-i18n="exp.borrarNota">${t('exp.borrarNota')}</a>` : ''}
                         </span>
                     </div>
                     <div>${n.contenido}</div>
@@ -2539,15 +2538,10 @@ async function reproducirAudioNota(notaId) {
         alert(t('exp.errAudio'));
     }
 }
-async function borrarNotaExpediente(notaId) {
-    if (!confirm(t('exp.confirmBorrar'))) return;
-    try {
-        await apiFetch(`/expediente/${notaId}`, { method: 'DELETE' });
-        loadExpediente();
-    } catch (e) {
-        alert(e.message);
-    }
-}
+// NOTA: a propósito no hay función para borrar una nota de expediente — el
+// registro clínico es inmutable (ver nota junto a POST /expediente en el
+// backend). Si un doctor se equivoca, la corrección es agregar una nota
+// nueva aclarando, no borrar la anterior.
 // ── ODONTOGRAMA (solo se muestra si clinicaCache.tipo_negocio === 'dental') ──
 const ESTADOS_DIENTE = {
     sano:       { label: 'Sano',       bg: 'var(--gray-100)',     color: 'var(--gray-500)',     border: 'var(--gray-300)' },
