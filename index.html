@@ -1175,6 +1175,16 @@ function tiempoRelativo(fechaIso) {
     return `${dias} d`;
 }
 
+// Antes el backend metía la fecha cruda de la cita ("2026-09-14T08:00:00")
+// dentro del texto de actividad, y acá se mostraba tal cual con la "T" pegada.
+// El backend ya se corrigió para las entradas nuevas, pero esto además
+// reformatea CUALQUIER ISO que aparezca en el texto (incluidas las entradas
+// viejas que ya quedaron guardadas así) — así no depende de un backfill de la
+// base de datos para verse bien.
+function formatearTextoActividad(texto) {
+    if (!texto) return texto;
+    return texto.replace(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?/g, (_, yyyy, mm, dd, hh, min) => `${dd}/${mm} a las ${hh}:${min}`);
+}
 async function loadActividad() {
     const cont = document.getElementById('actividadLista');
     if (!cont) return;
@@ -1185,7 +1195,7 @@ async function loadActividad() {
             return;
         }
         cont.innerHTML = items.map(item => {
-            const texto = item.detalle || item.accion;
+            const texto = formatearTextoActividad(item.detalle || item.accion);
             const meta = `${item.usuario_email ? `<strong>${item.usuario_email}</strong> · ` : ''}${tiempoRelativo(item.created_at)}`;
             return `<div class="actividad-item"><div class="actividad-dot"></div><div><div class="actividad-texto">${texto}</div><div class="actividad-meta">${meta}</div></div></div>`;
         }).join('');
