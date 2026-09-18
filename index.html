@@ -55,6 +55,7 @@
             --ico-stet:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M4 3h3M15 3h3"/><circle cx="19" cy="15" r="2"/><path d="M11 14v1a6 6 0 0 0 6 6h0"/></svg>');
             --ico-bill:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18l3-2 3 2 3-2 3 2 3-2V3l-3 2-3-2-3 2-3-2Z"/><path d="M9 9h6M9 13h4"/></svg>');
             --ico-file:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>');
+            --ico-block: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>');
             --ico-gear:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>');
             --radius-sm: 8px;
         }
@@ -226,6 +227,8 @@
     .dia-chip:has(input:checked){background:var(--verde,var(--primary));border-color:var(--verde,var(--primary));color:var(--white)}
     .form-hint{display:block;margin-top:6px;font-size:12px;color:var(--gris,var(--gray-500));line-height:1.45}
     .horario-preview{padding:10px 12px;border:1px dashed var(--borde,var(--gray-200));border-radius:8px;font-size:14px;color:var(--texto,var(--gray-700));background:var(--gray-100);min-height:20px}
+    .fila-bloqueo{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-200);font-size:13px}
+    .fila-bloqueo:last-child{border-bottom:none}
     .check-especial{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--gray-700);cursor:pointer}
     .check-especial input{margin:0;cursor:pointer}
     .horarios-dia{margin-top:10px}
@@ -255,6 +258,7 @@
     .nav-link[data-section="pacientes"]::before   { -webkit-mask-image: var(--ico-user);  mask-image: var(--ico-user); }
     .nav-link[data-section="citas"]::before       { -webkit-mask-image: var(--ico-plus);  mask-image: var(--ico-plus); }
     .nav-link[data-section="listaEspera"]::before { -webkit-mask-image: var(--ico-clock); mask-image: var(--ico-clock); }
+    .nav-link[data-section="bloqueos"]::before    { -webkit-mask-image: var(--ico-block); mask-image: var(--ico-block); }
     .nav-link[data-section="doctores"]::before    { -webkit-mask-image: var(--ico-stet);  mask-image: var(--ico-stet); }
     .nav-link[data-section="facturacion"]::before { -webkit-mask-image: var(--ico-bill);  mask-image: var(--ico-bill); }
     .nav-link[data-section="expedientes"]::before { -webkit-mask-image: var(--ico-file);  mask-image: var(--ico-file); }
@@ -324,6 +328,7 @@
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
             <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
             <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
+            <button class="nav-link" data-section="bloqueos" data-i18n="nav.bloqueos" onclick="showSection('bloqueos', this)">Bloqueos</button>
             <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
             <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
             <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
@@ -554,6 +559,30 @@
                 </div>
             </section>
             <!-- Lista de Espera -->
+            <section class="section" id="bloqueos">
+                <h1 data-i18n="bloq.title">Bloqueos de agenda</h1>
+                <div class="card">
+                    <div class="card-title" data-i18n="bloq.nuevoTitle">Bloquear un espacio</div>
+                    <p class="card-sub" data-i18n="bloq.nuevoSub">Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.</p>
+                    <div id="alertBloqueo"></div>
+                    <div class="form-group"><label data-i18n="common.doctor">Doctor</label><select id="bloqDoctor"></select></div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.desde">Desde</label><input type="date" id="bloqDesde"></div>
+                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.hasta">Hasta</label><input type="date" id="bloqHasta"></div>
+                    </div>
+                    <label class="check-especial"><input type="checkbox" id="bloqSoloHoras" onchange="toggleHorasBloqueo()"><span data-i18n="bloq.soloHoras">Solo unas horas de esos días (si no, se bloquea el día completo)</span></label>
+                    <div class="form-row" id="bloqHorasRow" style="display:none">
+                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaDesde">Hora desde</label><select id="bloqHoraDesde"></select></div>
+                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaHasta">Hora hasta</label><select id="bloqHoraHasta"></select></div>
+                    </div>
+                    <div class="form-group"><label data-i18n="bloq.motivo">Motivo (opcional)</label><input type="text" id="bloqMotivo" data-i18n-placeholder="bloq.motivoPh" placeholder="Ej: Vacaciones, congreso, cirugía"></div>
+                    <button class="btn btn-block" onclick="crearBloqueo()" data-i18n="bloq.btnCrear">Bloquear</button>
+                </div>
+                <div class="card">
+                    <div class="card-title" data-i18n="bloq.listaTitle">Bloqueos vigentes</div>
+                    <div id="listaBloqueos"><span style="color:var(--gray-500);font-size:13px" data-i18n="common.loading">Cargando...</span></div>
+                </div>
+            </section>
             <section class="section" id="listaEspera">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.listaEspera">Lista de Espera</h2>
                 <div class="card">
@@ -2962,12 +2991,91 @@ function estadoBadge(estado) {
     const label = { pendiente: t('badge.pendiente'), recordatorio_enviado: t('badge.recordatorio_enviado'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada') };
     return `<span class="badge ${map[estado] || 'badge-warning'}">${label[estado] || label.pendiente}</span>`;
 }
+
+// ─── Bloqueos de agenda ──────────────────────────────────────────────────────
+// Vacaciones (rango de días completos) y huecos sueltos (una franja horaria de
+// cada día del rango). Al crear o borrar uno, el backend regenera los cupos de
+// ese doctor — por eso el cambio se ve de inmediato y no hasta el cron de 3am.
+function toggleHorasBloqueo() {
+    const on = document.getElementById('bloqSoloHoras').checked;
+    document.getElementById('bloqHorasRow').style.display = on ? '' : 'none';
+    if (on && !document.getElementById('bloqHoraDesde').options.length) {
+        const o = opcionesHora();
+        document.getElementById('bloqHoraDesde').innerHTML = o;
+        document.getElementById('bloqHoraHasta').innerHTML = o;
+    }
+}
+async function loadBloqueos() {
+    const sel = document.getElementById('bloqDoctor');
+    if (sel && !sel.options.length) {
+        sel.innerHTML = (doctoresCache || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    }
+    const cont = document.getElementById('listaBloqueos');
+    try {
+        const data = await apiFetch('/bloqueos');
+        if (!data.length) {
+            cont.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('bloq.vacio')}</span>`;
+            return;
+        }
+        cont.innerHTML = data.map(b => {
+            const rango = b.fecha_inicio === b.fecha_fin ? b.fecha_inicio : `${b.fecha_inicio} → ${b.fecha_fin}`;
+            const horas = b.hora_inicio ? `${String(b.hora_inicio).slice(0,5)} a ${String(b.hora_fin).slice(0,5)}` : t('bloq.diaCompleto');
+            return `<div class="fila-bloqueo">
+                <div><strong>${b.doctores?.nombre || ''}</strong> — ${rango}<br>
+                <span style="color:var(--gray-500);font-size:12px">${horas}${b.motivo ? ' · ' + escapeHtmlPanel(b.motivo) : ''}</span></div>
+                <button class="btn-sm btn-danger" onclick="borrarBloqueo('${b.id}')">${t('common.eliminar')}</button>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${e.message}</span>`;
+    }
+}
+function escapeHtmlPanel(x) { const d = document.createElement('div'); d.textContent = x; return d.innerHTML; }
+async function crearBloqueo() {
+    const alertEl = document.getElementById('alertBloqueo');
+    const doctor_id = document.getElementById('bloqDoctor').value;
+    const fecha_inicio = document.getElementById('bloqDesde').value;
+    const fecha_fin = document.getElementById('bloqHasta').value || fecha_inicio;
+    const soloHoras = document.getElementById('bloqSoloHoras').checked;
+    const hora_inicio = soloHoras ? document.getElementById('bloqHoraDesde').value : null;
+    const hora_fin = soloHoras ? document.getElementById('bloqHoraHasta').value : null;
+    const motivo = document.getElementById('bloqMotivo').value || null;
+    if (!doctor_id || !fecha_inicio) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('bloq.errDatos')}</div>`;
+        return;
+    }
+    if (soloHoras && (!hora_inicio || !hora_fin)) {
+        alertEl.innerHTML = `<div class="alert alert-error">${t('bloq.errHoras')}</div>`;
+        return;
+    }
+    try {
+        await apiFetch('/bloqueos', { method: 'POST', body: JSON.stringify({ doctor_id, fecha_inicio, fecha_fin, hora_inicio, hora_fin, motivo }) });
+        alertEl.innerHTML = `<div class="alert alert-success">${t('bloq.ok')}</div>`;
+        ['bloqDesde','bloqHasta','bloqMotivo'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('bloqSoloHoras').checked = false;
+        toggleHorasBloqueo();
+        loadBloqueos();
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
+async function borrarBloqueo(id) {
+    if (!confirm(t('bloq.confirmBorrar'))) return;
+    try {
+        await apiFetch(`/bloqueos/${id}`, { method: 'DELETE' });
+        loadBloqueos();
+    } catch (e) {
+        document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
 function showSection(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
+    if (id === 'bloqueos') loadBloqueos();
     closeMobileMenu();
 }
 function toggleMobileMenu() {
@@ -3081,7 +3189,7 @@ const translations = {
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'set.rec2Nota': 'Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.', 'doc.especial': 'Horarios especiales por día (un día con horario distinto al resto)', 'doc.especialSinDias': 'Marque primero los días que atiende.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'set.rec2Nota': 'Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.', 'nav.bloqueos': 'Bloqueos', 'bloq.title': 'Bloqueos de agenda', 'bloq.nuevoTitle': 'Bloquear un espacio', 'bloq.nuevoSub': 'Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.', 'bloq.desde': 'Desde', 'bloq.hasta': 'Hasta', 'bloq.soloHoras': 'Solo unas horas de esos días (si no, se bloquea el día completo)', 'bloq.horaDesde': 'Hora desde', 'bloq.horaHasta': 'Hora hasta', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ej: Vacaciones, congreso, cirugía', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueos vigentes', 'bloq.vacio': 'No hay bloqueos vigentes.', 'bloq.diaCompleto': 'Día completo', 'bloq.ok': 'Bloqueo creado — los cupos ya se recalcularon.', 'bloq.errDatos': 'Elegí el doctor y la fecha de inicio.', 'bloq.errHoras': 'Poné las dos horas.', 'bloq.confirmBorrar': '¿Eliminar este bloqueo? Los cupos vuelven a quedar disponibles.', 'doc.especial': 'Horarios especiales por día (un día con horario distinto al resto)', 'doc.especialSinDias': 'Marque primero los días que atiende.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto que Sara le muestra al paciente', 'set.horarioGeneralDesc': 'Se usa para calcular las horas disponibles de los doctores que no tienen su propio horario configurado.',
         'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
         'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
@@ -3198,7 +3306,7 @@ const translations = {
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'set.rec2Nota': 'Not available yet: the Meta-approved template for this second reminder is still pending. The value is saved but nothing is sent.', 'doc.especial': 'Special hours per day (one day with different hours)', 'doc.especialSinDias': 'Select the working days first.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'set.rec2Nota': 'Not available yet: the Meta-approved template for this second reminder is still pending. The value is saved but nothing is sent.', 'nav.bloqueos': 'Blocks', 'bloq.title': 'Schedule blocks', 'bloq.nuevoTitle': 'Block time off', 'bloq.nuevoSub': 'Vacation, a conference, an afternoon meeting. Those slots stop being offered — to anyone, Sara included.', 'bloq.desde': 'From', 'bloq.hasta': 'To', 'bloq.soloHoras': 'Only certain hours of those days (otherwise the whole day is blocked)', 'bloq.horaDesde': 'From time', 'bloq.horaHasta': 'To time', 'bloq.motivo': 'Reason (optional)', 'bloq.motivoPh': 'e.g. Vacation, conference, surgery', 'bloq.btnCrear': 'Block', 'bloq.listaTitle': 'Active blocks', 'bloq.vacio': 'No active blocks.', 'bloq.diaCompleto': 'Full day', 'bloq.ok': 'Block created — slots have been recalculated.', 'bloq.errDatos': 'Pick the doctor and the start date.', 'bloq.errHoras': 'Set both times.', 'bloq.confirmBorrar': 'Delete this block? Those slots become available again.', 'doc.especial': 'Special hours per day (one day with different hours)', 'doc.especialSinDias': 'Select the working days first.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
         'set.horarioTextoDesc': 'text shown to patients', 'set.horarioGeneralDesc': 'Used to calculate available times for doctors who don\'t have their own hours configured.',
         'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
         'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
@@ -3315,7 +3423,7 @@ const translations = {
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'set.rec2Nota': 'Ainda não disponível: falta o modelo aprovado pela Meta para este segundo aviso. O valor é salvo mas nada é enviado.', 'doc.especial': 'Horários especiais por dia (um dia com horário diferente)', 'doc.especialSinDias': 'Marque primeiro os dias de atendimento.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'set.rec2Nota': 'Ainda não disponível: falta o modelo aprovado pela Meta para este segundo aviso. O valor é salvo mas nada é enviado.', 'nav.bloqueos': 'Bloqueios', 'bloq.title': 'Bloqueios de agenda', 'bloq.nuevoTitle': 'Bloquear um espaço', 'bloq.nuevoSub': 'Férias, um congresso, uma tarde de reunião. Essas vagas deixam de ser oferecidas — a ninguém, nem à Sara.', 'bloq.desde': 'De', 'bloq.hasta': 'Até', 'bloq.soloHoras': 'Apenas algumas horas desses dias (caso contrário bloqueia o dia inteiro)', 'bloq.horaDesde': 'Hora de', 'bloq.horaHasta': 'Hora até', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ex: Férias, congresso, cirurgia', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueios vigentes', 'bloq.vacio': 'Não há bloqueios vigentes.', 'bloq.diaCompleto': 'Dia inteiro', 'bloq.ok': 'Bloqueio criado — as vagas foram recalculadas.', 'bloq.errDatos': 'Escolha o médico e a data inicial.', 'bloq.errHoras': 'Informe as duas horas.', 'bloq.confirmBorrar': 'Excluir este bloqueio? As vagas voltam a ficar disponíveis.', 'doc.especial': 'Horários especiais por dia (um dia com horário diferente)', 'doc.especialSinDias': 'Marque primeiro os dias de atendimento.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto mostrado ao paciente', 'set.horarioGeneralDesc': 'Usado para calcular os horários disponíveis dos doutores que não têm horário próprio configurado.',
         'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
         'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
