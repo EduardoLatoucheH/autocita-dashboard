@@ -434,11 +434,12 @@
                     </div>
                     <div class="form-group">
                         <label data-i18n="common.doctor">Doctor</label>
-                        <select id="citaDoctor" onchange="actualizarSlotsCitaIndividual()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
+                        <select id="citaDoctor" onchange="cargarDiasDisponiblesCita()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.fecha">Fecha</label>
-                        <input type="date" id="citaFecha" oninput="actualizarSlotsCitaIndividual()">
+                        <label data-i18n="citas.diaDisponible">Día disponible</label>
+                        <div id="citaDiasBubbles" class="bubble-group"><span style="color:var(--gray-500);font-size:13px" data-i18n="citas.elegiDoctor">Elegí un doctor para ver los días que atiende</span></div>
+                        <input type="hidden" id="citaFecha">
                     </div>
                     <div class="form-group">
                         <label data-i18n="citas.horaDisponible">Hora disponible</label>
@@ -1922,6 +1923,57 @@ function populateDoctorSelectCitaIndividual() {
 // ── CITA INDIVIDUAL (un paciente, un doctor, hora real de /slots) ──
 let citaIndividualSlots = [];
 let citaIndividualHora = null;
+// Al elegir doctor se piden los próximos días CON CUPO REAL y se pintan como
+// burbujas. Antes acá había un <input type="date"> abierto: se podía elegir un
+// sábado que el doctor no atiende, y recién entonces te enterabas de que no
+// había horas. Ahora los días que no ofrece ni aparecen.
+let citaDiasDisponibles = [];
+const DIA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+async function cargarDiasDisponiblesCita() {
+    const doctorId = document.getElementById('citaDoctor').value;
+    const cont = document.getElementById('citaDiasBubbles');
+    document.getElementById('citaFecha').value = '';
+        cargarDiasDisponiblesCita();
+    citaDiasDisponibles = [];
+    citaIndividualSlots = [];
+    citaIndividualHora = null;
+    renderCitaIndividualSlots(t('citas.elegiDoctorFecha'));
+    if (!doctorId) {
+        cont.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('citas.elegiDoctor')}</span>`;
+        return;
+    }
+    cont.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('common.loading')}</span>`;
+    try {
+        const r = await apiFetch(`/proximos-disponibles?doctor_id=${doctorId}&dias=8`);
+        citaDiasDisponibles = r.dias || [];
+        if (!citaDiasDisponibles.length) {
+            cont.innerHTML = `<span style="color:var(--gray-500);font-size:13px">${t('citas.sinDiasDisponibles')}</span>`;
+            return;
+        }
+        cont.innerHTML = citaDiasDisponibles.map((d) => {
+            const [y, m, dd] = d.fecha.split('-');
+            return `<button type="button" class="bubble" data-fecha="${d.fecha}" onclick="elegirDiaCita('${d.fecha}', this)">${DIA_CORTO[d.dia_semana]} ${dd}/${m}</button>`;
+        }).join('');
+        // Si el doctor todavía no tiene días marcados en su ficha, se avisa acá
+        // mismo: significa que está generando cupos todos los días, sábados
+        // incluidos, y que hay que ir a configurarlo.
+        if (r.dias_configurados === false) {
+            cont.innerHTML += `<div class="form-hint" style="width:100%;color:var(--warning)">${t('citas.doctorSinDias')}</div>`;
+        }
+    } catch (e) {
+        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${e.message}</span>`;
+    }
+}
+function elegirDiaCita(fecha, btn) {
+    document.getElementById('citaFecha').value = fecha;
+    document.querySelectorAll('#citaDiasBubbles .bubble').forEach((b) => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    // Las horas salen del mismo día ya consultado — no hace falta otra llamada.
+    const dia = citaDiasDisponibles.find((d) => d.fecha === fecha);
+    citaIndividualHora = null;
+    citaIndividualSlots = (dia?.horas || []).map((h) => ({ hora: h, disponible: true }));
+    renderCitaIndividualSlots();
+}
 async function actualizarSlotsCitaIndividual() {
     const doctorId = document.getElementById('citaDoctor').value;
     const fecha = document.getElementById('citaFecha').value;
@@ -2910,7 +2962,7 @@ const translations = {
         'pac.msgConflictoTel': 'Guardado, pero ese teléfono ya estaba registrado con otra cédula — revisá cuál de los dos pacientes lo usa realmente.',
         'citas.individualTitle': 'Agregar cita', 'citas.individualDesc': 'Un paciente, un doctor, una fecha — elegí la hora entre lo que el doctor realmente tiene libre.',
         'citas.bloqueDesc': 'Para cuando el mismo paciente ve a varios doctores el mismo día — cada fila muestra la disponibilidad real de ese doctor.',
-        'citas.horaDisponible': 'Hora disponible', 'citas.elegiDoctorFecha': 'Elegí doctor y fecha para ver horas disponibles',
+        'citas.horaDisponible': 'Hora disponible', 'citas.diaDisponible': 'Día disponible', 'citas.elegiDoctor': 'Elegí un doctor para ver los días que atiende', 'citas.sinDiasDisponibles': 'Este doctor no tiene días con cupo en las próximas semanas.', 'citas.doctorSinDias': 'Este doctor no tiene días de atención configurados — está generando cupos todos los días, sábados incluidos. Configuralo en Doctores.', 'citas.elegiDoctorFecha': 'Elegí doctor y fecha para ver horas disponibles',
         'citas.sinCalendario': 'Este doctor no tiene calendario configurado', 'citas.sinHorasDisponibles': 'No hay horas disponibles ese día',
         'citas.btnCrear': 'Crear cita', 'citas.errIndividual': 'Elegí paciente, doctor, fecha y hora', 'citas.msgCreada': 'Cita creada ✓',
         'citas.errBloqueHora': 'Elegí una hora para cada doctor agregado',
@@ -3027,7 +3079,7 @@ const translations = {
         'pac.msgConflictoTel': 'Saved, but that phone number was already registered under a different ID — check which of the two patients actually uses it.',
         'citas.individualTitle': 'Add appointment', 'citas.individualDesc': 'One patient, one doctor, one date — pick the time from what the doctor actually has open.',
         'citas.bloqueDesc': 'For when the same patient sees several doctors the same day — each row shows that doctor\'s real availability.',
-        'citas.horaDisponible': 'Available time', 'citas.elegiDoctorFecha': 'Pick a doctor and date to see available times',
+        'citas.horaDisponible': 'Available time', 'citas.diaDisponible': 'Available day', 'citas.elegiDoctor': 'Pick a doctor to see the days they work', 'citas.sinDiasDisponibles': 'This doctor has no days with openings in the coming weeks.', 'citas.doctorSinDias': 'This doctor has no working days set — slots are being generated every day, Saturdays included. Set them up under Doctors.', 'citas.elegiDoctorFecha': 'Pick a doctor and date to see available times',
         'citas.sinCalendario': 'This doctor has no calendar configured', 'citas.sinHorasDisponibles': 'No available times that day',
         'citas.btnCrear': 'Create appointment', 'citas.errIndividual': 'Pick a patient, doctor, date and time', 'citas.msgCreada': 'Appointment created ✓',
         'citas.errBloqueHora': 'Pick a time for each doctor added',
@@ -3144,7 +3196,7 @@ const translations = {
         'pac.msgConflictoTel': 'Salvo, mas esse telefone já estava registrado com outro documento — verifique qual dos dois pacientes realmente o usa.',
         'citas.individualTitle': 'Adicionar consulta', 'citas.individualDesc': 'Um paciente, um médico, uma data — escolha o horário entre o que o médico realmente tem livre.',
         'citas.bloqueDesc': 'Para quando o mesmo paciente vê vários médicos no mesmo dia — cada linha mostra a disponibilidade real desse médico.',
-        'citas.horaDisponible': 'Horário disponível', 'citas.elegiDoctorFecha': 'Escolha médico e data para ver os horários disponíveis',
+        'citas.horaDisponible': 'Horário disponível', 'citas.diaDisponible': 'Dia disponível', 'citas.elegiDoctor': 'Escolha um médico para ver os dias em que atende', 'citas.sinDiasDisponibles': 'Este médico não tem dias com vagas nas próximas semanas.', 'citas.doctorSinDias': 'Este médico não tem dias de atendimento configurados — está gerando vagas todos os dias, sábados incluídos. Configure em Médicos.', 'citas.elegiDoctorFecha': 'Escolha médico e data para ver os horários disponíveis',
         'citas.sinCalendario': 'Este médico não tem calendário configurado', 'citas.sinHorasDisponibles': 'Não há horários disponíveis nesse dia',
         'citas.btnCrear': 'Criar consulta', 'citas.errIndividual': 'Escolha paciente, médico, data e horário', 'citas.msgCreada': 'Consulta criada ✓',
         'citas.errBloqueHora': 'Escolha um horário para cada médico adicionado',
