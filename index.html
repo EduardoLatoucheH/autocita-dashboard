@@ -969,7 +969,11 @@ async function apiFetch(path, opts = {}) {
         throw new Error('Sesión expirada');
     }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
+    // El backend manda el motivo real de Meta en `detalle` (ej: "Template name
+    // does not exist", "Recipient phone number not in allowed list"). Antes se
+    // perdía y el usuario solo veía "WhatsApp rechazó el mensaje", que no dice
+    // nada y obliga a ir a buscar a los logs de Railway.
+    if (!res.ok) throw new Error(data.detalle ? `${data.error}: ${data.detalle}` : (data.error || 'Error'));
     return data;
 }
 function sessionExpired() {
