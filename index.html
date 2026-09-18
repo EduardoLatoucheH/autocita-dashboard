@@ -196,6 +196,17 @@
             .modal-box { padding: 18px; }
             .modal-actions { flex-direction: column; }
         }
+    /* Días que atiende el doctor — reemplazan el texto libre de horario, que
+       permitía escribir "L a S de 7 a 7" y contradecir los cupos reales. */
+    .dias-chips{display:flex;flex-wrap:wrap;gap:8px}
+    .dia-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--borde,#e2e8e4);border-radius:999px;cursor:pointer;font-size:13px;user-select:none;background:#fff;transition:all .15s}
+    .dia-chip:hover{border-color:var(--verde,#2D6A4F)}
+    .dia-chip input{margin:0;cursor:pointer}
+    .dia-chip:has(input:checked){background:var(--verde,#2D6A4F);border-color:var(--verde,#2D6A4F);color:#fff}
+    .form-hint{display:block;margin-top:6px;font-size:12px;color:var(--gris,#6B7672);line-height:1.45}
+    .horario-preview{padding:10px 12px;border:1px dashed var(--borde,#e2e8e4);border-radius:8px;font-size:14px;color:var(--texto,#37423D);background:#f7faf8;min-height:20px}
+    .horario-preview.vacio{color:var(--gris,#6B7672);font-style:italic}
+    .campo-bloqueado{background:#f2f4f2;color:var(--gris,#6B7672);cursor:not-allowed}
     </style>
 </head>
 <body>
@@ -532,7 +543,24 @@
                     <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
                     <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
                     <div class="form-group"><label data-i18n="doc.telefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
-                    <div class="form-group"><label data-i18n="doc.horario">Horario de atención (texto para Sara — opcional, vacío usa el horario general de la clínica)</label><input type="text" id="docHorario" data-i18n-placeholder="doc.horarioPh" placeholder="Ej: Lunes a Viernes 8am-12pm"></div>
+                    <div class="form-group">
+                        <label data-i18n="doc.dias">Días que atiende</label>
+                        <div id="docDias" class="dias-chips">
+                            <label class="dia-chip"><input type="checkbox" value="1"><span data-i18n="dia.lun">Lun</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="2"><span data-i18n="dia.mar">Mar</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="3"><span data-i18n="dia.mie">Mié</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="4"><span data-i18n="dia.jue">Jue</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="5"><span data-i18n="dia.vie">Vie</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="6"><span data-i18n="dia.sab">Sáb</span></label>
+                            <label class="dia-chip"><input type="checkbox" value="0"><span data-i18n="dia.dom">Dom</span></label>
+                        </div>
+                        <small class="form-hint" data-i18n="doc.diasHint">Si no marca ninguno, se generan cupos todos los días (como antes).</small>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="doc.horario">Horario que ve el paciente</label>
+                        <div id="docHorarioPreview" class="horario-preview" data-i18n="doc.horarioVacio">Marque los días y las horas y acá verá el texto que Sara le dice al paciente.</div>
+                        <input type="hidden" id="docHorario">
+                    </div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
                         <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">Hora inicio</label><select id="docHoraInicio"></select></div>
                         <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">Hora fin</label><select id="docHoraFin"></select></div>
@@ -2229,6 +2257,14 @@ function editarDoctor(id) {
     document.getElementById('docPrecio').value = doc.precio || 0;
     document.getElementById('docTelefono').value = doc.telefono || '';
     document.getElementById('docHorario').value = doc.horario || '';
+    marcarDias(doc.dias_semana);
+    actualizarPreviewHorario();
+    // Si el doctor viene de antes de que existieran los días, el preview queda
+    // vacío pero su texto viejo sigue guardado — se muestra para no perderlo.
+    if (!Array.isArray(doc.dias_semana) || !doc.dias_semana.length) {
+        const prev = document.getElementById('docHorarioPreview');
+        if (prev && doc.horario) { prev.textContent = doc.horario; prev.classList.add('vacio'); }
+    }
     document.getElementById('docHoraInicio').value = doc.hora_inicio || '';
     document.getElementById('docHoraFin').value = doc.hora_fin || '';
     document.getElementById('docAlmuerzoInicio').value = doc.almuerzo_inicio || '';
@@ -2242,6 +2278,8 @@ function editarDoctor(id) {
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
     ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docTelefono', 'docHorario', 'docHoraInicio', 'docHoraFin', 'docAlmuerzoInicio', 'docAlmuerzoFin', 'docInstrucciones'].forEach(id => document.getElementById(id).value = '');
+    marcarDias([]);
+    actualizarPreviewHorario();
     document.getElementById('doctorFormTitle').textContent = t('doc.addTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.addTitle');
     document.getElementById('alertDoctor').innerHTML = '';
@@ -2287,6 +2325,69 @@ function actualizarPreviewSlotsDoctor() {
     document.getElementById(id).addEventListener('change', actualizarPreviewSlotsDoctor);
     document.getElementById(id).addEventListener('input', actualizarPreviewSlotsDoctor);
 });
+// ─── Días que atiende el doctor ──────────────────────────────────────────────
+// El texto de horario ya no se escribe: se arma con estas mismas piezas, así
+// nunca puede prometerle al paciente un sábado que el sistema no va a ofrecer.
+// Espejo exacto de describirHorario() del backend — si cambia allá, cambia acá.
+const NOMBRE_DIA_PANEL = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function diasSeleccionados() {
+    return [...document.querySelectorAll('#docDias input:checked')].map(c => Number(c.value)).sort((a,b) => a-b);
+}
+function hora12Panel(hhmm) {
+    const m = String(hhmm || '').match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    const h = Number(m[1]), min = m[2];
+    const suf = h < 12 ? 'am' : 'pm';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return min === '00' ? `${h12}${suf}` : `${h12}:${min}${suf}`;
+}
+function describirDiasPanel(dias) {
+    const orden = [...new Set((dias || []).map(Number))].filter(d => d >= 0 && d <= 6).sort((a,b) => a-b);
+    if (!orden.length) return null;
+    if (orden.length === 7) return 'Todos los días';
+    const piezas = [];
+    let inicio = orden[0], previo = orden[0];
+    for (let i = 1; i <= orden.length; i++) {
+        const actual = orden[i];
+        if (actual === previo + 1) { previo = actual; continue; }
+        if (previo - inicio >= 2) piezas.push(`${NOMBRE_DIA_PANEL[inicio]} a ${NOMBRE_DIA_PANEL[previo]}`);
+        else for (let d = inicio; d <= previo; d++) piezas.push(NOMBRE_DIA_PANEL[d]);
+        inicio = actual; previo = actual;
+    }
+    const txt = piezas.length === 1 ? piezas[0] : `${piezas.slice(0,-1).join(', ')} y ${piezas[piezas.length-1]}`;
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+function actualizarPreviewHorario() {
+    const prev = document.getElementById('docHorarioPreview');
+    const oculto = document.getElementById('docHorario');
+    if (!prev || !oculto) return;
+    const dias = describirDiasPanel(diasSeleccionados());
+    const desde = hora12Panel(document.getElementById('docHoraInicio')?.value);
+    const hasta = hora12Panel(document.getElementById('docHoraFin')?.value);
+    const almD = hora12Panel(document.getElementById('docAlmuerzoInicio')?.value);
+    const almH = hora12Panel(document.getElementById('docAlmuerzoFin')?.value);
+    if (!dias) {
+        prev.textContent = t('doc.horarioVacio');
+        prev.classList.add('vacio');
+        oculto.value = '';
+        return;
+    }
+    let texto = dias;
+    if (desde && hasta) texto += `, de ${desde} a ${hasta}`;
+    if (almD && almH) texto += ` (almuerzo de ${almD} a ${almH})`;
+    prev.textContent = texto;
+    prev.classList.remove('vacio');
+    oculto.value = texto;
+}
+function marcarDias(dias) {
+    const lista = Array.isArray(dias) ? dias.map(Number) : [];
+    document.querySelectorAll('#docDias input').forEach(c => { c.checked = lista.includes(Number(c.value)); });
+}
+document.addEventListener('change', (e) => {
+    if (e.target.closest('#docDias') || ['docHoraInicio','docHoraFin','docAlmuerzoInicio','docAlmuerzoFin'].includes(e.target.id)) {
+        actualizarPreviewHorario();
+    }
+});
 async function guardarDoctor() {
     const alertEl = document.getElementById('alertDoctor');
     const nombre = document.getElementById('docNombre').value;
@@ -2304,7 +2405,8 @@ async function guardarDoctor() {
         alertEl.innerHTML = `<div class="alert alert-error">${t('doc.errNombre')}</div>`;
         return;
     }
-    const body = { nombre, especialidad, duracion_cita, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones };
+    const dias_semana = diasSeleccionados();
+    const body = { nombre, especialidad, duracion_cita, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones, dias_semana };
     try {
         if (editandoDoctorId) {
             await apiFetch(`/doctores/${editandoDoctorId}`, {
@@ -2347,7 +2449,7 @@ async function loadSettings() {
                 </select>
                 <p class="card-subtitle" style="margin-top:6px;margin-bottom:0">Solo "dental" activa el odontograma en Expedientes por ahora.</p>
             </div>
-            <div class="form-group"><label data-i18n="set.whatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" value="${clinica.meta_phone_id || ''}" placeholder="${t('set.whatsappPhoneIdPh')}"></div>
+            <div class="form-group"><label data-i18n="set.whatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" class="campo-bloqueado" value="${clinica.meta_phone_id || ''}" placeholder="${t('set.whatsappPhoneIdPh')}" readonly><small class="form-hint">${t('set.whatsappPhoneIdNota')}</small></div>
             <div class="form-group"><label>${t('set.horario')} (${t('set.horarioTextoDesc')})</label><input type="text" id="clHorario" value="${clinica.horario || ''}"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
                 <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">${t('doc.horaInicio')}</label><select id="clHoraInicio">${opcionesHora(clinica.hora_inicio)}</select></div>
@@ -2375,7 +2477,10 @@ async function guardarConfigClinica() {
         telefono: document.getElementById('clTelefono').value || null,
         direccion: document.getElementById('clDireccion').value || null,
         tipo_negocio: document.getElementById('clTipoNegocio').value,
-        meta_phone_id: document.getElementById('clWhatsappPhoneId').value || null,
+        // meta_phone_id ya no se manda desde acá: el campo es de solo lectura.
+        // Un cliente que lo borrara sin querer se quedaba sin recordatorios y
+        // nadie se enteraba, porque los crons saltaban esa clínica en silencio.
+        // Se configura desde el panel de admin de AutomatIA.
         horario: document.getElementById('clHorario').value || null,
         hora_inicio: document.getElementById('clHoraInicio').value || null,
         hora_fin: document.getElementById('clHoraFin').value || null,
@@ -2817,7 +2922,7 @@ const translations = {
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'El Phone Number ID de tu WhatsApp Business (Meta for Developers)',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto que Sara le muestra al paciente', 'set.horarioGeneralDesc': 'Se usa para calcular las horas disponibles de los doctores que no tienen su propio horario configurado.',
         'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
         'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
@@ -2934,7 +3039,7 @@ const translations = {
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Your WhatsApp Business Phone Number ID (Meta for Developers)',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
         'set.horarioTextoDesc': 'text shown to patients', 'set.horarioGeneralDesc': 'Used to calculate available times for doctors who don\'t have their own hours configured.',
         'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
         'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
@@ -3051,7 +3156,7 @@ const translations = {
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'O Phone Number ID do seu WhatsApp Business (Meta for Developers)',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto mostrado ao paciente', 'set.horarioGeneralDesc': 'Usado para calcular os horários disponíveis dos doutores que não têm horário próprio configurado.',
         'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
         'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
