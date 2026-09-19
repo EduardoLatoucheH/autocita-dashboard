@@ -508,6 +508,7 @@
                     <div id="recurrentePreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
                     <button class="btn btn-block" onclick="crearCitasRecurrentes()" data-i18n="citas.btnCrearRecurrente">Crear citas recurrentes</button>
                 </div>
+                <div id="avisoSinExpediente" style="display:none"></div>
                 <div class="card">
                     <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
                     <div class="toolbar">
@@ -734,6 +735,7 @@
                 <div class="card" id="expedienteListaCard" style="display:none">
                     <div class="card-title" data-i18n="exp.historialTitle">Historial</div>
                     <div id="expedienteLista"></div>
+                    <div id="expedienteAccesos"></div>
                 </div>
             </section>
             <!-- Settings -->
@@ -1538,6 +1540,7 @@ async function loadCitas() {
         populateFacturaCitaSelect();
         poblarFiltroDoctorCitas();
         renderTablaCitas();
+        loadCitasSinExpediente();
     } catch (e) { console.error('Citas:', e); }
 }
 function poblarFiltroDoctorCitas() {
@@ -1624,13 +1627,26 @@ function renderTablaCitas() {
         const btnRecordatorio = c.estado !== 'cancelada'
             ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
             : '—';
+        // Ciclo de la cita. Los tres estados son excluyentes y avanzan en un
+        // solo sentido: nadie "des-llega" ni "des-atiende". Por eso se muestra
+        // un único botón a la vez, el del paso que sigue.
+        let btnCiclo = '';
+        if (c.estado !== 'cancelada') {
+            if (c.atendida_at) {
+                btnCiclo = `<span style="color:var(--primary);font-size:12px;margin-right:6px" title="${c.atendida_at}">✓ ${t('citas.atendida')}</span>`;
+            } else if (c.llego_at) {
+                btnCiclo = `<button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>`;
+            } else {
+                btnCiclo = `<button class="btn btn-ghost btn-sm" style="margin-right:4px" onclick="marcarLlego('${c.id}')">${t('citas.btnLlego')}</button>`;
+            }
+        }
         return `<tr>
             <td>${nombrePaciente(c)}</td>
             <td>${fechaStr}</td>
             <td>${horaStr}</td>
             <td>${nombreDoctor(c)}</td>
             <td>${badge}</td>
-            <td>${btnCancelar}${btnRecordatorio}</td>
+            <td>${btnCiclo}${btnCancelar}${btnRecordatorio}</td>
         </tr>`;
     }).join('');
 }
@@ -2705,6 +2721,38 @@ async function guardarConfigRecordatorios() {
     }
 }
 // ── EXPEDIENTES ───────────────────────────────────────────────────
+// Pacientes cuyo aviso de acceso ya se aceptó en esta sesión. Vive en memoria
+// a propósito: al volver a entrar al panel, la advertencia aparece de nuevo.
+const expedientesConfirmados = new Set();
+// Quién consultó este expediente. El backend registra el acceso del lado del
+// servidor dentro de GET /expediente, así que no hay forma de leer sin dejar
+// rastro — esta vista solo muestra lo que ya quedó grabado.
+async function loadAccesosExpediente(pacienteId) {
+    const cont = document.getElementById('expedienteAccesos');
+    if (!cont) return;
+    // El backend solo se la muestra al dueño y al jefe de área. Se corta acá
+    // para no pedir un 403 en cada expediente que abre un doctor — funcionaba
+    // igual, pero llenaba la consola de errores que no son errores.
+    if (!['dueno', 'jefe_area'].includes(userRol)) { cont.innerHTML = ''; return; }
+    try {
+        const accesos = await apiFetch(`/expediente/accesos?paciente_id=${pacienteId}`);
+        if (!accesos?.length) { cont.innerHTML = ''; return; }
+        cont.innerHTML = `<details style="margin-top:14px">
+            <summary style="cursor:pointer;font-size:13px;color:var(--gray-500)">
+                ${t('exp.quienConsulto')} (${accesos.length})
+            </summary>
+            <div style="margin-top:8px;font-size:12px;color:var(--gray-600)">
+                ${accesos.slice(0, 30).map(a => `<div style="padding:4px 0;border-bottom:1px solid var(--gray-200)">
+                    ${a.usuario_email || a.usuario || '—'} · ${new Date(a.created_at).toLocaleString(getLocale())}
+                </div>`).join('')}
+            </div>
+        </details>`;
+    } catch (e) {
+        // La auditoría es informativa: si falla, el expediente se ve igual.
+        console.error('accesos:', e);
+        cont.innerHTML = '';
+    }
+}
 async function loadExpediente() {
     const pacienteId = document.getElementById('expedientePaciente').value;
     const formCard = document.getElementById('expedienteFormCard');
@@ -2716,9 +2764,26 @@ async function loadExpediente() {
         odCard.style.display = 'none';
         return;
     }
+    // El jefe de área puede leer expedientes de pacientes que no son suyos, y
+    // cada lectura queda registrada con su nombre en el historial del paciente.
+    // El aviso existe para que eso no sea una sorpresa: quien entra sabe que
+    // está dejando rastro ANTES de entrar, no después.
+    // Se pregunta una sola vez por paciente y por sesión — repetirlo en cada
+    // recarga convertiría la advertencia en un clic automático sin lectura.
+    if (userRol === 'jefe_area' && !expedientesConfirmados.has(pacienteId)) {
+        if (!confirm(t('exp.confirmarAcceso'))) {
+            document.getElementById('expedientePaciente').value = '';
+            formCard.style.display = 'none';
+            listaCard.style.display = 'none';
+            odCard.style.display = 'none';
+            return;
+        }
+        expedientesConfirmados.add(pacienteId);
+    }
     formCard.style.display = 'block';
     listaCard.style.display = 'block';
     loadOdontograma(pacienteId);
+    loadAccesosExpediente(pacienteId);
     const listaEl = document.getElementById('expedienteLista');
     listaEl.innerHTML = `<p class="loading">${t('common.loading')}</p>`;
     try {
@@ -2991,9 +3056,76 @@ async function eliminarMiembro(id) {
     } catch (e) { alert('Error: ' + e.message); }
 }
 function estadoBadge(estado) {
-    const map = { pendiente: 'badge-warning', recordatorio_enviado: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger' };
-    const label = { pendiente: t('badge.pendiente'), recordatorio_enviado: t('badge.recordatorio_enviado'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada') };
+    const map = { pendiente: 'badge-warning', recordatorio_enviado: 'badge-warning', confirmada: 'badge-success', cancelada: 'badge-danger', atendida: 'badge-success' };
+    const label = { pendiente: t('badge.pendiente'), recordatorio_enviado: t('badge.recordatorio_enviado'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada'), atendida: t('badge.atendida') };
     return `<span class="badge ${map[estado] || 'badge-warning'}">${label[estado] || label.pendiente}</span>`;
+}
+
+// ─── Ciclo de la cita: llegó → atendida → expediente ─────────────────────────
+// El backend ya guardaba llego_at y atendida_at desde hace días, pero no había
+// dónde hacer clic. Sin esto, la recepción no tiene forma de decir "el paciente
+// ya está acá" y el doctor no se entera de que le quedó un expediente sin
+// llenar hasta que alguien lo busca a mano.
+async function marcarLlego(id) {
+    try {
+        await apiFetch(`/citas/${id}/llego`, { method: 'POST' });
+        await loadCitas();
+    } catch (e) {
+        alert(e.message);
+    }
+}
+// Al cerrar la cita, el backend responde si ese paciente ya tiene nota para
+// ESTA cita. Si no la tiene, se le ofrece al doctor ir a escribirla en el
+// momento — que es cuando se acuerda de lo que pasó, no tres días después.
+async function marcarAtendida(id) {
+    try {
+        const r = await apiFetch(`/citas/${id}/atendida`, { method: 'POST' });
+        await loadCitas();
+        if (r?.expediente_pendiente && r?.paciente_id) {
+            if (confirm(t('citas.pedirExpediente'))) {
+                irAExpediente(r.paciente_id);
+            }
+        }
+    } catch (e) {
+        alert(e.message);
+    }
+}
+// Lleva a la sección de Expedientes con ese paciente ya seleccionado, para que
+// el doctor no tenga que buscarlo en la lista después de cerrar la cita.
+function irAExpediente(pacienteId) {
+    // showSection apaga todos los links del menú y solo enciende el que recibe
+    // como botón. Al llamarla por código no hay botón, así que el menú queda
+    // sin nada resaltado — se busca el link por data-section y se pasa.
+    const link = document.querySelector('.nav-link[data-section="expedientes"]');
+    showSection('expedientes', link);
+    const sel = document.getElementById('expedientePaciente');
+    if (sel) {
+        sel.value = pacienteId;
+        loadExpediente();
+    }
+}
+// Las citas ya atendidas a las que nadie les escribió la nota. Se muestra como
+// aviso arriba de la tabla: es el mismo recordatorio del paso anterior, pero
+// para las que se pasaron por alto en su momento.
+async function loadCitasSinExpediente() {
+    const cont = document.getElementById('avisoSinExpediente');
+    if (!cont) return;
+    try {
+        const pendientes = await apiFetch('/citas/sin-expediente');
+        if (!pendientes?.length) { cont.style.display = 'none'; return; }
+        cont.style.display = 'block';
+        cont.innerHTML = `<div class="alert alert-warning">
+            <strong>${pendientes.length} ${t('citas.sinExpedienteTitulo')}</strong>
+            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+                ${pendientes.slice(0, 8).map(c => `<button class="btn btn-ghost btn-sm"
+                    onclick="irAExpediente('${c.paciente_id}')">${(c.pacientes?.nombre) || '—'} · ${c.fecha ? new Date(c.fecha).toLocaleDateString(getLocale()) : ''}</button>`).join('')}
+            </div>
+        </div>`;
+    } catch (e) {
+        // Que falle este aviso nunca debe tapar la tabla de citas.
+        console.error('sin-expediente:', e);
+        cont.style.display = 'none';
+    }
 }
 
 // ─── Bloqueos de agenda ──────────────────────────────────────────────────────
@@ -3206,7 +3338,12 @@ const translations = {
         'set.soyDoctorTitle': '¿Sos también uno de los doctores?',
         'set.soyDoctorDesc': 'Si además de dueño atendés pacientes, vinculá tu cuenta a tu registro de doctor para ver tu propio expediente clínico igual que los demás doctores.',
         'set.noSoyDoctor': 'No soy doctor', 'set.vinculoOk': 'Cuenta vinculada a ese doctor', 'set.vinculoQuitado': 'Vínculo quitado',
-        'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
+        'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada', 'badge.atendida': 'Atendida',
+        'citas.btnLlego': '✋ Llegó', 'citas.btnAtendida': '✓ Terminar', 'citas.atendida': 'Atendida',
+        'citas.pedirExpediente': 'Cita cerrada. Todavía no tiene nota en el expediente. ¿Querés escribirla ahora?',
+        'citas.sinExpedienteTitulo': 'cita(s) atendida(s) sin nota en el expediente',
+        'exp.confirmarAcceso': 'Vas a abrir el expediente de un paciente que no es tuyo. El acceso queda registrado con tu nombre en el historial de este paciente. ¿Continuar?',
+        'exp.quienConsulto': 'Quién consultó este expediente',
         'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
     en: {
@@ -3323,7 +3460,12 @@ const translations = {
         'set.soyDoctorTitle': 'Are you also one of the doctors?',
         'set.soyDoctorDesc': 'If besides being the owner you also see patients, link your account to your doctor record to see your own clinical record like other doctors.',
         'set.noSoyDoctor': "I'm not a doctor", 'set.vinculoOk': 'Account linked to that doctor', 'set.vinculoQuitado': 'Link removed',
-        'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled',
+        'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled', 'badge.atendida': 'Seen',
+        'citas.btnLlego': '✋ Arrived', 'citas.btnAtendida': '✓ Finish', 'citas.atendida': 'Seen',
+        'citas.pedirExpediente': 'Appointment closed. There is still no record note for it. Do you want to write it now?',
+        'citas.sinExpedienteTitulo': 'completed appointment(s) with no record note',
+        'exp.confirmarAcceso': 'You are about to open the record of a patient who is not yours. This access is logged with your name in the patient\'s history. Continue?',
+        'exp.quienConsulto': 'Who accessed this record',
         'badge.recordatorio_enviado': 'Reminder sent',
     },
     pt: {
@@ -3440,7 +3582,12 @@ const translations = {
         'set.soyDoctorTitle': 'Você também é um dos médicos?',
         'set.soyDoctorDesc': 'Se além de dono você também atende pacientes, vincule sua conta ao seu registro de médico para ver seu próprio prontuário como os demais médicos.',
         'set.noSoyDoctor': 'Não sou médico', 'set.vinculoOk': 'Conta vinculada a esse médico', 'set.vinculoQuitado': 'Vínculo removido',
-        'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada',
+        'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada', 'badge.atendida': 'Atendida',
+        'citas.btnLlego': '✋ Chegou', 'citas.btnAtendida': '✓ Finalizar', 'citas.atendida': 'Atendida',
+        'citas.pedirExpediente': 'Consulta encerrada. Ainda não tem nota no prontuário. Quer escrevê-la agora?',
+        'citas.sinExpedienteTitulo': 'consulta(s) atendida(s) sem nota no prontuário',
+        'exp.confirmarAcceso': 'Você vai abrir o prontuário de um paciente que não é seu. O acesso fica registrado com o seu nome no histórico deste paciente. Continuar?',
+        'exp.quienConsulto': 'Quem consultou este prontuário',
         'badge.recordatorio_enviado': 'Lembrete enviado',
     }
 };
