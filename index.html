@@ -2951,19 +2951,108 @@ async function loadOdontograma(pacienteId) {
         document.getElementById('odontogramaGrid').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
     }
 }
-function renderOdontograma() {
-    const grid = document.getElementById('odontogramaGrid');
-    const fila = (nums) => `<div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:4px">${nums.map(dienteBtn).join('')}</div>`;
-    grid.innerHTML = fila(DIENTES_FDI.slice(0, 16)) + fila(DIENTES_FDI.slice(16, 32));
-    renderOdontogramaEditor();
+// ─── Odontograma: arco dental ────────────────────────────────────────────────
+// Antes era una grilla de 32 cuadraditos en dos filas. Funcionaba, pero un
+// odontólogo no lee una tabla: lee una boca. Ubicar el 26 en una fila de
+// números obliga a contar; en un arco se encuentra de un vistazo, porque está
+// donde está en la boca del paciente.
+//
+// Los dientes se posicionan sobre dos elipses (arcada superior e inferior) y
+// se giran para quedar perpendiculares al arco, como en una ficha dental de
+// verdad. La numeración FDI ya viene ordenada de izquierda a derecha del
+// observador: cuadrante 1 (18-11) a la izquierda, cuadrante 2 (21-28) a la
+// derecha — que es como se ve al paciente de frente.
+const ARCO = { cx: 300, rx: 250, ry: 98, cySup: 150, cyInf: 172 };
+// Los molares son más anchos que los incisivos. Sin esta variación el arco se
+// ve uniforme y artificial; con ella se lee como una dentadura.
+const ANCHO_DIENTE = [30, 29, 28, 24, 22, 20, 17, 16, 16, 17, 20, 22, 24, 28, 29, 30];
+// Repartir los dientes por ÁNGULO igual no sirve: en una elipse achatada los
+// extremos se curvan más y los molares terminan encimados (se veía: 18–17 a
+// 21px cuando necesitan 30). Hay que repartir por LONGITUD DE ARCO, y además
+// darle a cada diente un tramo proporcional a su ancho — un molar ocupa casi
+// el doble que un incisivo.
+//
+// Esta tabla mapea longitud recorrida → ángulo, una sola vez al cargar.
+const _ARCO_TABLA = (() => {
+    const pasos = 400, tabla = [];
+    let acum = 0, px = ARCO.cx - ARCO.rx, py = 0;
+    for (let k = 0; k <= pasos; k++) {
+        const t = Math.PI * k / pasos;
+        const x = ARCO.cx - ARCO.rx * Math.cos(t);
+        const y = -ARCO.ry * Math.sin(t);
+        if (k > 0) acum += Math.hypot(x - px, y - py);
+        tabla.push({ t, s: acum });
+        px = x; py = y;
+    }
+    return tabla;
+})();
+// Centro de cada diente, como fracción del arco total, según su ancho.
+const _CENTRO_DIENTE = (() => {
+    const total = ANCHO_DIENTE.reduce((a, b) => a + b, 0);
+    const out = []; let acum = 0;
+    for (const w of ANCHO_DIENTE) { out.push((acum + w / 2) / total); acum += w; }
+    return out;
+})();
+function anguloEnArco(fraccion) {
+    const objetivo = fraccion * _ARCO_TABLA[_ARCO_TABLA.length - 1].s;
+    for (let k = 1; k < _ARCO_TABLA.length; k++) {
+        if (_ARCO_TABLA[k].s >= objetivo) {
+            const a = _ARCO_TABLA[k - 1], b = _ARCO_TABLA[k];
+            return a.t + (b.t - a.t) * ((objetivo - a.s) / (b.s - a.s || 1));
+        }
+    }
+    return Math.PI;
 }
-function dienteBtn(numero) {
+function posicionDiente(i, superior) {
+    const t = anguloEnArco(_CENTRO_DIENTE[i]);
+    const x = ARCO.cx - ARCO.rx * Math.cos(t);
+    const y = superior
+        ? ARCO.cySup - ARCO.ry * Math.sin(t)
+        : ARCO.cyInf + ARCO.ry * Math.sin(t);
+    // Giro tangencial: el diente "mira" hacia afuera del arco. La tangente de
+    // la elipse se calcula de su derivada, no del ángulo — con la elipse
+    // achatada no son lo mismo y los molares quedarían torcidos.
+    const dx = ARCO.rx * Math.sin(t);
+    const dy = (superior ? -1 : 1) * ARCO.ry * Math.cos(t);
+    const giro = Math.atan2(dy, dx) * 180 / Math.PI;
+    return { x, y, giro, ancho: ANCHO_DIENTE[i] };
+}
+function dienteSVG(numero, i, superior) {
+    const { x, y, giro, ancho } = posicionDiente(i, superior);
     const d = odontogramaCache[String(numero)];
     const st = ESTADOS_DIENTE[d?.estado || 'sano'];
-    const isSel = dienteSeleccionado === String(numero);
-    return `<button type="button" onclick="seleccionarDiente('${numero}')" title="${st.label}"
-        style="width:34px;height:34px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
-        background:${st.bg};color:${st.color};border:2px solid ${isSel ? 'var(--gray-900)' : st.border};">${numero}</button>`;
+    const sel = dienteSeleccionado === String(numero);
+    const alto = 38;
+    return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${giro.toFixed(1)})"
+               style="cursor:pointer" onclick="seleccionarDiente('${numero}')">
+        <title>${numero} — ${st.label}${d?.notas ? ': ' + d.notas.replace(/"/g, '&quot;') : ''}</title>
+        <rect x="${-ancho / 2}" y="${-alto / 2}" width="${ancho}" height="${alto}" rx="7"
+              fill="${st.bg}" stroke="${sel ? 'var(--gray-900)' : st.border}" stroke-width="${sel ? 3 : 1.5}"/>
+        <text x="0" y="4" text-anchor="middle" transform="rotate(${(-giro).toFixed(1)})"
+              font-size="11" font-weight="700" fill="${st.color}"
+              style="font-family:inherit;pointer-events:none">${numero}</text>
+    </g>`;
+}
+function renderOdontograma() {
+    const grid = document.getElementById('odontogramaGrid');
+    const sup = DIENTES_FDI.slice(0, 16).map((n, i) => dienteSVG(n, i, true)).join('');
+    const inf = DIENTES_FDI.slice(16, 32).map((n, i) => dienteSVG(n, i, false)).join('');
+    // La leyenda se arma del mismo objeto que pinta los dientes, así nunca
+    // puede quedar desincronizada de los colores reales.
+    const leyenda = Object.entries(ESTADOS_DIENTE).map(([k, v]) => `
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-700)">
+            <span style="width:12px;height:12px;border-radius:3px;background:${v.bg};border:1.5px solid ${v.border};display:inline-block"></span>${v.label}
+        </span>`).join('');
+    grid.innerHTML = `
+        <svg viewBox="0 0 600 320" style="width:100%;max-width:620px;display:block;margin:0 auto" role="img" aria-label="Odontograma">
+            <text x="300" y="164" text-anchor="middle" font-size="10" fill="var(--gray-500)"
+                  style="font-family:inherit;letter-spacing:.08em">DERECHA · IZQUIERDA</text>
+            <line x1="300" y1="18" x2="300" y2="150" stroke="var(--gray-200)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="300" y1="172" x2="300" y2="304" stroke="var(--gray-200)" stroke-width="1" stroke-dasharray="3 4"/>
+            ${sup}${inf}
+        </svg>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:16px">${leyenda}</div>`;
+    renderOdontogramaEditor();
 }
 function seleccionarDiente(numero) {
     dienteSeleccionado = String(numero);
