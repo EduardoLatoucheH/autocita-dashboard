@@ -1237,7 +1237,11 @@ async function loadDashboard() {
                 const btnRecordatorio = c.estado !== 'cancelada'
                     ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
                     : '—';
-                return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td><td>${btnRecordatorio}</td></tr>`;
+                // Los mismos botones del ciclo que en "Todas las Citas". Van acá
+                // porque es donde la recepción pasa el día: la tabla completa
+                // vive al final de Crear Cita, después de tres formularios, y
+                // nadie va a bajar hasta allá cada vez que llega un paciente.
+                return `<tr><td>${nombrePaciente(c)}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td><td>${botonesCicloCita(c)}${btnRecordatorio}</td></tr>`;
             }).join('');
         }
         const noCanceladas = citas.filter(c => c.estado !== 'cancelada');
@@ -1634,19 +1638,7 @@ function renderTablaCitas() {
         const btnRecordatorio = c.estado !== 'cancelada'
             ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
             : '—';
-        // Ciclo de la cita. Los tres estados son excluyentes y avanzan en un
-        // solo sentido: nadie "des-llega" ni "des-atiende". Por eso se muestra
-        // un único botón a la vez, el del paso que sigue.
-        let btnCiclo = '';
-        if (c.estado !== 'cancelada') {
-            if (c.atendida_at) {
-                btnCiclo = `<span style="color:var(--primary);font-size:12px;margin-right:6px" title="${c.atendida_at}">✓ ${t('citas.atendida')}</span>`;
-            } else if (c.llego_at) {
-                btnCiclo = `<button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>`;
-            } else {
-                btnCiclo = `<button class="btn btn-ghost btn-sm" style="margin-right:4px" onclick="marcarLlego('${c.id}')">${t('citas.btnLlego')}</button>`;
-            }
-        }
+        const btnCiclo = botonesCicloCita(c);
         return `<tr>
             <td>${nombrePaciente(c)}</td>
             <td>${fechaStr}</td>
@@ -3072,10 +3064,29 @@ function estadoBadge(estado) {
 // dónde hacer clic. Sin esto, la recepción no tiene forma de decir "el paciente
 // ya está acá" y el doctor no se entera de que le quedó un expediente sin
 // llenar hasta que alguien lo busca a mano.
+// Devuelve el botón del paso que sigue para una cita. Una sola función para
+// las dos tablas (Dashboard y Todas las Citas): si la lógica viviera duplicada,
+// tarde o temprano una de las dos se quedaría vieja.
+//
+// Los tres estados son excluyentes y avanzan en un solo sentido — nadie
+// "des-llega" ni "des-atiende" — así que se muestra un único botón a la vez.
+function botonesCicloCita(c) {
+    if (c.estado === 'cancelada') return '';
+    if (c.atendida_at) {
+        return `<span style="color:var(--primary);font-size:12px;margin-right:6px" title="${c.atendida_at}">✓ ${t('citas.atendida')}</span>`;
+    }
+    if (c.llego_at) {
+        return `<button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>`;
+    }
+    return `<button class="btn btn-ghost btn-sm" style="margin-right:4px" onclick="marcarLlego('${c.id}')">${t('citas.btnLlego')}</button>`;
+}
 async function marcarLlego(id) {
     try {
         await apiFetch(`/citas/${id}/llego`, { method: 'POST' });
+        // Las dos tablas, porque el botón ahora existe en las dos y el usuario
+        // puede estar mirando cualquiera de ellas.
         await loadCitas();
+        loadDashboard();
     } catch (e) {
         alert(e.message);
     }
@@ -3087,6 +3098,7 @@ async function marcarAtendida(id) {
     try {
         const r = await apiFetch(`/citas/${id}/atendida`, { method: 'POST' });
         await loadCitas();
+        loadDashboard();
         if (r?.expediente_pendiente && r?.paciente_id) {
             if (confirm(t('citas.pedirExpediente'))) {
                 irAExpediente(r.paciente_id);
