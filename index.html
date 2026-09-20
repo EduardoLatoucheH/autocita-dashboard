@@ -51,6 +51,7 @@
             --ico-dash:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>');
             --ico-user:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>');
             --ico-plus:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"/></svg>');
+            --ico-list:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>');
             --ico-clock: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>');
             --ico-stet:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M4 3h3M15 3h3"/><circle cx="19" cy="15" r="2"/><path d="M11 14v1a6 6 0 0 0 6 6h0"/></svg>');
             --ico-bill:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18l3-2 3 2 3-2 3 2 3-2V3l-3 2-3-2-3 2-3-2Z"/><path d="M9 9h6M9 13h4"/></svg>');
@@ -256,6 +257,7 @@
     .nav-link.active::before { opacity: 1; }
     .nav-link[data-section="dashboard"]::before   { -webkit-mask-image: var(--ico-dash);  mask-image: var(--ico-dash); }
     .nav-link[data-section="pacientes"]::before   { -webkit-mask-image: var(--ico-user);  mask-image: var(--ico-user); }
+    .nav-link[data-section="listaCitas"]::before  { -webkit-mask-image: var(--ico-list);  mask-image: var(--ico-list); }
     .nav-link[data-section="citas"]::before       { -webkit-mask-image: var(--ico-plus);  mask-image: var(--ico-plus); }
     .nav-link[data-section="listaEspera"]::before { -webkit-mask-image: var(--ico-clock); mask-image: var(--ico-clock); }
     .nav-link[data-section="bloqueos"]::before    { -webkit-mask-image: var(--ico-block); mask-image: var(--ico-block); }
@@ -326,6 +328,7 @@
         <div class="nav-group">
             <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
+            <button class="nav-link" data-section="listaCitas" data-i18n="nav.listaCitas" onclick="showSection('listaCitas', this)">Citas</button>
             <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
             <button class="nav-link" data-section="listaEspera" data-i18n="nav.listaEspera" onclick="showSection('listaEspera', this)">Lista de espera</button>
             <button class="nav-link" data-section="bloqueos" data-i18n="nav.bloqueos" onclick="showSection('bloqueos', this)">Bloqueos</button>
@@ -508,35 +511,6 @@
                     <div id="recurrentePreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
                     <button class="btn btn-block" onclick="crearCitasRecurrentes()" data-i18n="citas.btnCrearRecurrente">Crear citas recurrentes</button>
                 </div>
-                <div id="avisoSinExpediente" style="display:none"></div>
-                <div class="card">
-                    <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
-                    <div class="toolbar">
-                        <input type="text" class="search-input" id="citasBuscar" placeholder="Buscar por paciente o teléfono..." oninput="renderTablaCitas()">
-                        <select id="citasFiltroDoctor" onchange="renderTablaCitas()"><option value="" data-i18n="citas.todosDoctores">Todos los doctores</option></select>
-                        <select id="citasFiltroEstado" onchange="renderTablaCitas()">
-                            <option value="" data-i18n="citas.todosEstados">Todos los estados</option>
-                            <option value="pendiente" data-i18n="badge.pendiente">Pendiente</option>
-                            <option value="confirmada" data-i18n="badge.confirmada">Confirmada</option>
-                            <option value="cancelada" data-i18n="badge.cancelada">Cancelada</option>
-                        </select>
-                        <input type="date" id="citasFiltroDesde" onchange="renderTablaCitas()">
-                        <input type="date" id="citasFiltroHasta" onchange="renderTablaCitas()">
-                        <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosCitas()" data-i18n="common.limpiar">Limpiar</button>
-                        <button class="btn btn-ghost btn-sm" onclick="exportarCitasCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
-                    </div>
-                    <div class="table-wrap"><table>
-                        <thead><tr>
-                            <th class="sortable" data-sort="paciente" onclick="ordenarTablaCitas('paciente')" data-i18n="common.colPaciente">Paciente<span class="arrow">▲</span></th>
-                            <th class="sortable" data-sort="fecha" onclick="ordenarTablaCitas('fecha')" data-i18n="common.colFecha">Fecha<span class="arrow">▲</span></th>
-                            <th data-i18n="common.colHora">Hora</th>
-                            <th class="sortable" data-sort="doctor" onclick="ordenarTablaCitas('doctor')" data-i18n="common.doctor">Doctor<span class="arrow">▲</span></th>
-                            <th class="sortable" data-sort="estado" onclick="ordenarTablaCitas('estado')" data-i18n="common.colEstado">Estado<span class="arrow">▲</span></th>
-                            <th data-i18n="common.colAccion">Acción</th>
-                        </tr></thead>
-                        <tbody id="tablaCitas"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
-                    </table></div>
-                </div>
                 <div class="card">
                     <div class="card-title" data-i18n="citas.emergTitle">⚠️ Herramientas de emergencia</div>
                     <div id="alertEmergencia"></div>
@@ -560,6 +534,43 @@
                 </div>
             </section>
             <!-- Lista de Espera -->
+            <!-- Todas las citas — sección propia.
+                 Antes vivía al final de "Crear Cita", después de tres
+                 formularios: la vista que más usa la recepción quedaba
+                 enterrada bajo la que menos usa. Ahora es su propia pestaña. -->
+            <section class="section" id="listaCitas">
+                <h2 style="margin-bottom: 24px;" data-i18n="title.listaCitas">Citas</h2>
+                <div id="avisoSinExpediente" style="display:none"></div>
+                <div class="card">
+                    <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
+                    <div class="toolbar">
+                        <input type="text" class="search-input" id="citasBuscar" placeholder="Buscar por paciente o teléfono..." oninput="renderTablaCitas()">
+                        <select id="citasFiltroDoctor" onchange="renderTablaCitas()"><option value="" data-i18n="citas.todosDoctores">Todos los doctores</option></select>
+                        <select id="citasFiltroEstado" onchange="renderTablaCitas()">
+                            <option value="" data-i18n="citas.todosEstados">Todos los estados</option>
+                            <option value="pendiente" data-i18n="badge.pendiente">Pendiente</option>
+                            <option value="confirmada" data-i18n="badge.confirmada">Confirmada</option>
+                            <option value="atendida" data-i18n="badge.atendida">Atendida</option>
+                            <option value="cancelada" data-i18n="badge.cancelada">Cancelada</option>
+                        </select>
+                        <input type="date" id="citasFiltroDesde" onchange="renderTablaCitas()">
+                        <input type="date" id="citasFiltroHasta" onchange="renderTablaCitas()">
+                        <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosCitas()" data-i18n="common.limpiar">Limpiar</button>
+                        <button class="btn btn-ghost btn-sm" onclick="exportarCitasCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
+                    </div>
+                    <div class="table-wrap"><table>
+                        <thead><tr>
+                            <th class="sortable" data-sort="paciente" onclick="ordenarTablaCitas('paciente')" data-i18n="common.colPaciente">Paciente<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="fecha" onclick="ordenarTablaCitas('fecha')" data-i18n="common.colFecha">Fecha<span class="arrow">▲</span></th>
+                            <th data-i18n="common.colHora">Hora</th>
+                            <th class="sortable" data-sort="doctor" onclick="ordenarTablaCitas('doctor')" data-i18n="common.doctor">Doctor<span class="arrow">▲</span></th>
+                            <th class="sortable" data-sort="estado" onclick="ordenarTablaCitas('estado')" data-i18n="common.colEstado">Estado<span class="arrow">▲</span></th>
+                            <th data-i18n="common.colAccion">Acción</th>
+                        </tr></thead>
+                        <tbody id="tablaCitas"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
             <section class="section" id="bloqueos">
                 <h1 data-i18n="bloq.title">Bloqueos de agenda</h1>
                 <div class="card">
@@ -720,7 +731,6 @@
                     <div class="card-title" data-i18n="exp.agregarNotaTitle">Agregar nota</div>
                     <div id="alertExpediente"></div>
                     <div class="form-group"><label data-i18n="exp.nota">Nota</label><textarea id="expedienteContenido" data-i18n-placeholder="exp.notaPh" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
-                    <div class="form-group"><label data-i18n="exp.medicamentos">Medicamentos recetados (opcional)</label><input type="text" id="expedienteMedicamentos" data-i18n-placeholder="exp.medicamentosPh" placeholder="Ej: Acetaminofén 500mg cada 8h"></div>
                     <div style="display:flex;gap:12px">
                         <div class="form-group" style="flex:1"><label data-i18n="exp.dolorInicial">Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
                         <div class="form-group" style="flex:1"><label data-i18n="exp.dolorActual">Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
@@ -1140,16 +1150,16 @@ async function loadRol() {
 }
 function aplicarPermisos() {
     const permisos = {
-        dueno:          ['dashboard','pacientes','citas','listaEspera','bloqueos','doctores','facturacion','settings'],
+        dueno:          ['dashboard','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','facturacion','settings'],
         // Recepción NO ve Bloqueos: el RLS de bloqueos_agenda solo deja crear
         // al dueño, al jefe de área o al propio doctor. Mostrarle el formulario
         // sería ofrecerle un botón que siempre le va a fallar. Igual no le hace
         // falta: los cupos bloqueados ya no aparecen al crear una cita.
-        recepcionista:  ['dashboard','pacientes','citas','listaEspera','doctores','facturacion'],
-        doctor:         ['dashboard','citas','bloqueos','expedientes'],
+        recepcionista:  ['dashboard','pacientes','listaCitas','citas','listaEspera','doctores','facturacion'],
+        doctor:         ['dashboard','listaCitas','citas','bloqueos','expedientes'],
         // Jefe de área: lo mismo que un doctor, más los expedientes de sus
         // colegas (el backend registra cada acceso) y la vista de pacientes.
-        jefe_area:      ['dashboard','pacientes','citas','listaEspera','bloqueos','doctores','expedientes'],
+        jefe_area:      ['dashboard','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
@@ -1617,7 +1627,7 @@ function renderTablaCitas() {
         return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
     });
 
-    document.querySelectorAll('#citas th.sortable').forEach(th => {
+    document.querySelectorAll('#listaCitas th.sortable').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
         if (th.dataset.sort === citasSortCol) th.classList.add(citasSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
     });
@@ -2798,7 +2808,6 @@ async function loadExpediente() {
                         </span>
                     </div>
                     <div>${n.contenido}</div>
-                    ${n.medicamentos ? `<div style="font-size:13px;color:var(--primary);margin-top:4px">💊 ${n.medicamentos}</div>` : ''}
                     ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
                     ${n.plan_tratamiento ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📋 ${n.plan_tratamiento}</div>` : ''}
                 </div>
@@ -2813,7 +2822,6 @@ async function agregarNotaExpediente() {
     const alertEl = document.getElementById('alertExpediente');
     const pacienteId = document.getElementById('expedientePaciente').value;
     const contenido = document.getElementById('expedienteContenido').value;
-    const medicamentos = document.getElementById('expedienteMedicamentos').value;
     const dolor_inicial = document.getElementById('expedienteDolorInicial').value;
     const dolor_actual = document.getElementById('expedienteDolorActual').value;
     const plan_tratamiento = document.getElementById('expedientePlanTratamiento').value;
@@ -2825,13 +2833,12 @@ async function agregarNotaExpediente() {
         await apiFetch('/expediente', {
             method: 'POST',
             body: JSON.stringify({
-                paciente_id: pacienteId, contenido, medicamentos, dolor_inicial, dolor_actual, plan_tratamiento,
+                paciente_id: pacienteId, contenido, dolor_inicial, dolor_actual, plan_tratamiento,
                 audio_url: notaAudioUrlPendiente, tipo: notaAudioUrlPendiente ? 'voz' : 'texto',
             })
         });
         alertEl.innerHTML = `<div class="alert alert-success">${t('exp.msgGuardada')}</div>`;
         document.getElementById('expedienteContenido').value = '';
-        document.getElementById('expedienteMedicamentos').value = '';
         document.getElementById('expedienteDolorInicial').value = '';
         document.getElementById('expedienteDolorActual').value = '';
         document.getElementById('expedientePlanTratamiento').value = '';
@@ -3243,7 +3250,7 @@ function closeMobileMenu() {
 // ── IDIOMA DEL PANEL (traducción completa) ───────────────────────
 const translations = {
     es: {
-        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita',
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita', 'nav.listaCitas': 'Citas', 'title.listaCitas': 'Citas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
@@ -3331,8 +3338,7 @@ const translations = {
         'fact.consulta': 'Consulta', 'fact.servicio': 'Servicio', 'fact.total': 'Total', 'fact.agregarServicio': 'Agregar servicio...',
         'fact.errCompletar': 'Completá nombre y precio', 'fact.confirmEliminarServicio': '¿Eliminar este servicio del catálogo?',
         'exp.seleccionarPaciente': 'Seleccionar paciente', 'exp.elegirPaciente': 'Elegir paciente...', 'exp.agregarNotaTitle': 'Agregar nota',
-        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicaciones, observaciones...', 'exp.medicamentos': 'Medicamentos recetados (opcional)',
-        'exp.medicamentosPh': 'Ej: Acetaminofén 500mg cada 8h', 'exp.dolorInicial': 'Dolor inicial (0-10, opcional)',
+        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicaciones, observaciones...', 'exp.dolorInicial': 'Dolor inicial (0-10, opcional)',
         'exp.dolorActual': 'Dolor actual (0-10, opcional)', 'exp.dolorLabel': 'Dolor', 'exp.planTratamiento': 'Plan de tratamiento (opcional)',
         'exp.planTratamientoPh': 'Objetivos, técnicas, frecuencia sugerida...', 'exp.btnGuardar': 'Guardar nota',
         'exp.notaVoz': '🎤 Nota de voz', 'exp.detener': 'Detener', 'exp.grabando': 'Grabando… hablá y presioná Detener cuando termines.',
@@ -3365,7 +3371,7 @@ const translations = {
         'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
     en: {
-        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment',
+        'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment', 'nav.listaCitas': 'Appointments', 'title.listaCitas': 'Appointments',
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
@@ -3453,8 +3459,7 @@ const translations = {
         'fact.consulta': 'Consultation', 'fact.servicio': 'Service', 'fact.total': 'Total', 'fact.agregarServicio': 'Add service...',
         'fact.errCompletar': 'Fill in name and price', 'fact.confirmEliminarServicio': 'Delete this service from the catalog?',
         'exp.seleccionarPaciente': 'Select patient', 'exp.elegirPaciente': 'Choose patient...', 'exp.agregarNotaTitle': 'Add note',
-        'exp.nota': 'Note', 'exp.notaPh': 'Diagnosis, instructions, observations...', 'exp.medicamentos': 'Prescribed medications (optional)',
-        'exp.medicamentosPh': 'E.g.: Acetaminophen 500mg every 8h', 'exp.dolorInicial': 'Initial pain (0-10, optional)',
+        'exp.nota': 'Note', 'exp.notaPh': 'Diagnosis, instructions, observations...', 'exp.dolorInicial': 'Initial pain (0-10, optional)',
         'exp.dolorActual': 'Current pain (0-10, optional)', 'exp.dolorLabel': 'Pain', 'exp.planTratamiento': 'Treatment plan (optional)',
         'exp.planTratamientoPh': 'Goals, techniques, suggested frequency...', 'exp.btnGuardar': 'Save note',
         'exp.notaVoz': '🎤 Voice note', 'exp.detener': 'Stop', 'exp.grabando': 'Recording… speak, then press Stop when done.',
@@ -3487,7 +3492,7 @@ const translations = {
         'badge.recordatorio_enviado': 'Reminder sent',
     },
     pt: {
-        'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta',
+        'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta', 'nav.listaCitas': 'Consultas', 'title.listaCitas': 'Consultas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
@@ -3575,8 +3580,7 @@ const translations = {
         'fact.consulta': 'Consulta', 'fact.servicio': 'Serviço', 'fact.total': 'Total', 'fact.agregarServicio': 'Adicionar serviço...',
         'fact.errCompletar': 'Preencha nome e preço', 'fact.confirmEliminarServicio': 'Excluir este serviço do catálogo?',
         'exp.seleccionarPaciente': 'Selecionar paciente', 'exp.elegirPaciente': 'Escolher paciente...', 'exp.agregarNotaTitle': 'Adicionar nota',
-        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicações, observações...', 'exp.medicamentos': 'Medicamentos prescritos (opcional)',
-        'exp.medicamentosPh': 'Ex: Paracetamol 500mg a cada 8h', 'exp.dolorInicial': 'Dor inicial (0-10, opcional)',
+        'exp.nota': 'Nota', 'exp.notaPh': 'Diagnóstico, indicações, observações...', 'exp.dolorInicial': 'Dor inicial (0-10, opcional)',
         'exp.dolorActual': 'Dor atual (0-10, opcional)', 'exp.dolorLabel': 'Dor', 'exp.planTratamiento': 'Plano de tratamento (opcional)',
         'exp.planTratamientoPh': 'Objetivos, técnicas, frequência sugerida...', 'exp.btnGuardar': 'Salvar nota',
         'exp.notaVoz': '🎤 Nota de voz', 'exp.detener': 'Parar', 'exp.grabando': 'Gravando… fale e pressione Parar quando terminar.',
