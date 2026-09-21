@@ -1072,7 +1072,13 @@ function detectarInvitacion() {
     const params = new URLSearchParams(hash.replace(/^#/, ''));
     const token = params.get('access_token');
     const type = params.get('type');
-    if (!token || (type !== 'invite' && type !== 'signup')) return;
+    // 'recovery' va incluido: cuando se reenvía el acceso a alguien que ya
+    // había activado su cuenta, Supabase manda un correo de recuperación en vez
+    // de una invitación. El link llega bien pero traía type=recovery, esta
+    // función lo descartaba, y el usuario veía el login normal sin forma de
+    // poner contraseña. Para el panel los tres casos son lo mismo: hay un token
+    // válido y hay que dejar elegir clave.
+    if (!token || !['invite', 'signup', 'recovery'].includes(type)) return;
     inviteAccessToken = token;
     document.querySelectorAll('.auth-tab').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.auth-pane').forEach(el => el.classList.remove('active'));
