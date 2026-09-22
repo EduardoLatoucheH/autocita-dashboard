@@ -1181,16 +1181,16 @@ async function loadRol() {
 }
 function aplicarPermisos() {
     const permisos = {
-        dueno:          ['dashboard','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','facturacion','settings'],
+        dueno:          ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','facturacion','settings'],
         // Recepción NO ve Bloqueos: el RLS de bloqueos_agenda solo deja crear
         // al dueño, al jefe de área o al propio doctor. Mostrarle el formulario
         // sería ofrecerle un botón que siempre le va a fallar. Igual no le hace
         // falta: los cupos bloqueados ya no aparecen al crear una cita.
-        recepcionista:  ['dashboard','pacientes','listaCitas','citas','listaEspera','doctores','facturacion'],
-        doctor:         ['dashboard','listaCitas','citas','bloqueos','expedientes'],
+        recepcionista:  ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','doctores','facturacion'],
+        doctor:         ['dashboard','inbox','listaCitas','citas','bloqueos','expedientes'],
         // Jefe de área: lo mismo que un doctor, más los expedientes de sus
         // colegas (el backend registra cada acceso) y la vista de pacientes.
-        jefe_area:      ['dashboard','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes'],
+        jefe_area:      ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes'],
     };
     const visibles = permisos[userRol] || permisos['dueno'];
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
