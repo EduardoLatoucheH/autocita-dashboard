@@ -58,6 +58,7 @@
             --ico-file:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>');
             --ico-block: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>');
             --ico-gear:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>');
+            --ico-chat:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>');
             --radius-sm: 8px;
         }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
@@ -151,6 +152,19 @@
         .badge-danger { background: var(--danger-soft); color: var(--danger); }
 
         .loading { text-align: center; color: var(--gray-500); padding: 20px; font-size: 13px; }
+        /* Inbox */
+        .inbox-wrap { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+        .inbox-lista { max-height: 70vh; overflow-y: auto; padding: 8px; }
+        .inbox-hilo { min-height: 400px; display: flex; flex-direction: column; }
+        .conv { padding: 10px; border-radius: 8px; cursor: pointer; border-bottom: 1px solid var(--gray-200); }
+        .conv:hover { background: var(--gray-100); }
+        .conv.activa { background: var(--gray-100); }
+        .msgs { flex: 1; max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px; }
+        .msg { max-width: 78%; padding: 8px 11px; border-radius: 12px; font-size: 14px; line-height: 1.45; word-break: break-word; }
+        .msg.ent { align-self: flex-start; background: var(--gray-100); }
+        .msg.sal { align-self: flex-end; background: var(--primary-soft); }
+        .msg .meta { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+        @media (max-width: 768px) { .inbox-wrap { grid-template-columns: 1fr; } .inbox-lista { max-height: 320px; } }
         .alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13.5px; font-weight: 500; }
         .alert-success { background: var(--primary-soft); color: var(--primary-dark); }
         .alert-error { background: var(--danger-soft); color: var(--danger); }
@@ -256,6 +270,7 @@
     }
     .nav-link.active::before { opacity: 1; }
     .nav-link[data-section="dashboard"]::before   { -webkit-mask-image: var(--ico-dash);  mask-image: var(--ico-dash); }
+    .nav-link[data-section="inbox"]::before       { -webkit-mask-image: var(--ico-chat);  mask-image: var(--ico-chat); }
     .nav-link[data-section="pacientes"]::before   { -webkit-mask-image: var(--ico-user);  mask-image: var(--ico-user); }
     .nav-link[data-section="listaCitas"]::before  { -webkit-mask-image: var(--ico-list);  mask-image: var(--ico-list); }
     .nav-link[data-section="citas"]::before       { -webkit-mask-image: var(--ico-plus);  mask-image: var(--ico-plus); }
@@ -327,6 +342,7 @@
         <div class="logo"><h1>AutoCita</h1><span>Booking AI</span></div>
         <div class="nav-group">
             <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
+            <button class="nav-link" data-section="inbox" onclick="showSection('inbox', this)">Inbox<span id="badgeNoLeidos" class="badge badge-danger" style="display:none;margin-left:6px"></span></button>
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
             <button class="nav-link" data-section="listaCitas" data-i18n="nav.listaCitas" onclick="showSection('listaCitas', this)">Citas</button>
             <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
@@ -387,6 +403,15 @@
                         <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
                     </div>
                     <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
+                </div>
+            </section>
+            <!-- Inbox -->
+            <section class="section" id="inbox">
+                <h2 style="margin-bottom:8px">Inbox</h2>
+                <div class="card-subtitle" style="margin-bottom:20px">Al responder acá, Sara se calla sola en esa conversación. La reactivás con el botón cuando termines.</div>
+                <div class="inbox-wrap">
+                    <div class="card inbox-lista" id="listaConversaciones"><div class="loading">Cargando...</div></div>
+                    <div class="card inbox-hilo" id="hiloConversacion"><div class="loading">Elegí una conversación</div></div>
                 </div>
             </section>
             <!-- Pacientes -->
@@ -1318,6 +1343,95 @@ function tiempoRelativo(fechaIso) {
     if (hrs < 24) return `${hrs} h`;
     const dias = Math.floor(hrs / 24);
     return `${dias} d`;
+}
+
+// ── INBOX ────────────────────────────────────────────────────────
+let conversacionesCache = [];
+let convActiva = null;
+
+async function loadConversaciones() {
+    try {
+        conversacionesCache = await apiFetch('/conversaciones');
+        renderConversaciones();
+        const sinLeer = conversacionesCache.reduce((s, c) => s + (c.no_leidos || 0), 0);
+        const badge = document.getElementById('badgeNoLeidos');
+        badge.style.display = sinLeer ? 'inline-block' : 'none';
+        badge.textContent = sinLeer;
+    } catch (e) { console.error('Conversaciones:', e); }
+}
+function renderConversaciones() {
+    const wrap = document.getElementById('listaConversaciones');
+    if (!conversacionesCache.length) { wrap.innerHTML = '<div class="loading">Sin conversaciones todavía</div>'; return; }
+    wrap.innerHTML = conversacionesCache.map(c => `
+      <div class="conv ${convActiva === c.id ? 'activa' : ''}" onclick="abrirConversacion('${c.id}')">
+        <div style="display:flex;justify-content:space-between;gap:8px">
+          <strong>${escapeHtmlPanel(c.nombre_perfil || c.telefono)}</strong>
+          ${c.no_leidos ? `<span class="badge badge-danger">${c.no_leidos}</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--gray-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtmlPanel(c.ultimo_mensaje_texto || '')}</div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:2px">
+          ${tiempoRelativo(c.ultimo_mensaje_at)}
+          ${c.bot_pausado ? ` · <span style="color:var(--danger)">Sara pausada${c.pausa_horas_restantes ? ` · vuelve en ${c.pausa_horas_restantes} h` : ''}</span>` : ''}
+        </div>
+      </div>`).join('');
+}
+async function abrirConversacion(id) {
+    convActiva = id;
+    renderConversaciones();
+    const c = conversacionesCache.find(x => x.id === id);
+    const hilo = document.getElementById('hiloConversacion');
+    hilo.innerHTML = '<div class="loading">Cargando...</div>';
+    try {
+        const msgs = await apiFetch(`/conversaciones/${id}/mensajes`);
+        const burbujas = msgs.map(m => `
+          <div class="msg ${m.direccion === 'entrante' ? 'ent' : 'sal'}">
+            ${m.texto ? escapeHtmlPanel(m.texto) : `<em>[${escapeHtmlPanel(m.tipo)}]</em>`}
+            <div class="meta">${m.quien === 'humano' ? escapeHtmlPanel(m.enviado_por || 'vos') : m.quien} · ${new Date(m.created_at).toLocaleString('es-CR')}${m.error ? ` · <span style="color:var(--danger)">${escapeHtmlPanel(m.error)}</span>` : ''}</div>
+          </div>`).join('');
+
+        // El reloj de las 24 horas. Pasado ese plazo Meta no deja responder
+        // libre y hace falta una plantilla aprobada. Si esto no se muestra,
+        // quien mira el inbox escribe, no sale, y no entiende por qué.
+        const aviso = c?.ventana_abierta
+            ? `<div style="font-size:12px;color:var(--gray-500)">Podés responder libre por ${c.ventana_horas_restantes} h más</div>`
+            : `<div style="font-size:12px;color:var(--danger)">Pasaron las 24 horas desde el último mensaje del paciente. Meta ya no deja responder libre: hace falta una plantilla aprobada.</div>`;
+
+        hilo.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
+            <strong>${escapeHtmlPanel(c?.nombre_perfil || c?.telefono || '')}</strong>
+            <button class="btn btn-ghost btn-sm" onclick="alternarBot('${id}', ${c?.bot_pausado ? 'false' : 'true'})">
+              ${c?.bot_pausado ? 'Reactivar a Sara' : 'Pausar a Sara'}
+            </button>
+          </div>
+          ${c?.bot_pausado ? `<div style="font-size:12px;color:var(--gray-500);margin-bottom:8px">Sara está callada en esta conversación${c.pausa_horas_restantes ? `. Vuelve sola en ${c.pausa_horas_restantes} h, o reactivala vos` : ''}.</div>` : ''}
+          <div class="msgs">${burbujas || '<div class="loading">Sin mensajes</div>'}</div>
+          ${aviso}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="respTexto" placeholder="Escribí tu respuesta" style="flex:1" ${c?.ventana_abierta ? '' : 'disabled'}>
+            <button class="btn btn-sm" onclick="responderConv('${id}')" ${c?.ventana_abierta ? '' : 'disabled'}>Enviar</button>
+          </div>`;
+        const cont = hilo.querySelector('.msgs');
+        if (cont) cont.scrollTop = cont.scrollHeight;
+        loadConversaciones();
+    } catch (e) { hilo.innerHTML = '<div class="loading">No se pudo cargar</div>'; }
+}
+async function alternarBot(id, pausar) {
+    try {
+        await apiFetch(`/conversaciones/${id}/bot`, { method: 'PATCH', body: JSON.stringify({ pausado: pausar }) });
+        await loadConversaciones();
+        abrirConversacion(id);
+    } catch (e) { alert('Error: ' + e.message); }
+}
+async function responderConv(id) {
+    const input = document.getElementById('respTexto');
+    const texto = input.value.trim();
+    if (!texto) return;
+    input.value = '';
+    try {
+        await apiFetch(`/conversaciones/${id}/responder`, { method: 'POST', body: JSON.stringify({ texto }) });
+        await loadConversaciones();
+        abrirConversacion(id);
+    } catch (e) { alert('No se pudo enviar: ' + e.message); input.value = texto; }
 }
 
 // Antes el backend metía la fecha cruda de la cita ("2026-09-14T08:00:00")
@@ -3332,6 +3446,7 @@ function showSection(id, btn) {
     if (btn) btn.classList.add('active');
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
     if (id === 'bloqueos') loadBloqueos();
+    if (id === 'inbox') loadConversaciones();
     closeMobileMenu();
 }
 function toggleMobileMenu() {
