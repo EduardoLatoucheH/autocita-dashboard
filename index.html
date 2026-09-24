@@ -824,6 +824,14 @@
                     <div id="settingsInfo" class="loading" data-i18n="common.loading">Cargando...</div>
                 </div>
                 <div class="card">
+                    <div class="card-title" data-i18n="set.agendarTitle">Link para agendar en línea</div>
+                    <p class="card-subtitle" data-i18n="set.agendarDesc">Compartilo donde quieras — bio de Instagram, grupos de WhatsApp, anuncios. Ahí el paciente elige doctor, día y hora reales y queda agendado solo, sin escribirte primero.</p>
+                    <div id="alertAgendar"></div>
+                    <div class="form-group"><label data-i18n="set.agendarLinkLabel">Nombre del link</label><input type="text" id="clSlug" placeholder="ej: clinica-sonrisa"></div>
+                    <div id="agendarPreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
+                    <button class="btn" onclick="guardarSlugClinica()" data-i18n="set.agendarGuardar">Guardar link</button>
+                </div>
+                <div class="card">
                     <div class="card-title" data-i18n="set.terminosTitle">Condiciones del Servicio</div>
                     <div id="settingsTerminos" class="card-subtitle"></div>
                 </div>
@@ -1440,7 +1448,10 @@ function renderConversaciones() {
     wrap.innerHTML = conversacionesCache.map(c => `
       <div class="conv ${convActiva === c.id ? 'activa' : ''}" onclick="abrirConversacion('${c.id}')">
         <div style="display:flex;justify-content:space-between;gap:8px">
-          <strong>${escapeHtmlPanel(c.nombre_perfil || c.telefono)}</strong>
+          <div style="min-width:0">
+            <strong>${escapeHtmlPanel(c.nombre_perfil || c.telefono)}</strong>
+            ${c.nombre_perfil ? `<div style="font-size:11px;color:var(--gray-500)">${escapeHtmlPanel(c.telefono)}</div>` : ''}
+          </div>
           ${c.no_leidos ? `<span class="badge badge-danger">${c.no_leidos}</span>` : ''}
         </div>
         <div style="font-size:12px;color:var(--gray-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtmlPanel(c.ultimo_mensaje_texto || '')}</div>
@@ -1473,7 +1484,10 @@ async function abrirConversacion(id) {
 
         hilo.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
-            <strong>${escapeHtmlPanel(c?.nombre_perfil || c?.telefono || '')}</strong>
+            <div style="min-width:0">
+              <strong>${escapeHtmlPanel(c?.nombre_perfil || c?.telefono || '')}</strong>
+              ${c?.nombre_perfil ? `<div style="font-size:11px;color:var(--gray-500)">${escapeHtmlPanel(c?.telefono || '')}</div>` : ''}
+            </div>
             <button class="btn btn-ghost btn-sm" onclick="alternarBot('${id}', ${c?.bot_pausado ? 'false' : 'true'})">
               ${c?.bot_pausado ? 'Reactivar a Sara' : 'Pausar a Sara'}
             </button>
@@ -2840,6 +2854,44 @@ async function guardarDoctor() {
     }
 }
 // ── SETTINGS ──────────────────────────────────────────────────────
+const URL_AGENDAR = 'https://autocita-production.up.railway.app';
+function normalizarSlugPreview(valor) {
+    return String(valor || '').toLowerCase().trim()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function actualizarAgendarPreview() {
+    const valor = document.getElementById('clSlug').value;
+    const limpio = normalizarSlugPreview(valor);
+    const preview = document.getElementById('agendarPreview');
+    if (!preview) return;
+    if (!limpio) {
+        preview.innerHTML = clinicaCache?.slug
+            ? `Tu link activo: <a href="${URL_AGENDAR}/agendar/${clinicaCache.slug}" target="_blank">${URL_AGENDAR}/agendar/${clinicaCache.slug}</a>`
+            : 'Todavía no tenés un link — escribí un nombre y guardá.';
+        return;
+    }
+    preview.innerHTML = `Va a quedar: <strong>${URL_AGENDAR}/agendar/${limpio}</strong>`;
+}
+document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'clSlug') actualizarAgendarPreview();
+});
+async function guardarSlugClinica() {
+    const alertEl = document.getElementById('alertAgendar');
+    const valor = document.getElementById('clSlug').value.trim();
+    try {
+        await apiFetch('/clinica/setup', { method: 'PATCH', body: JSON.stringify({ slug: valor }) });
+        await loadSettings();
+        alertEl.innerHTML = clinicaCache?.slug
+            ? `<div class="alert alert-success">Link guardado: <a href="${URL_AGENDAR}/agendar/${clinicaCache.slug}" target="_blank">${URL_AGENDAR}/agendar/${clinicaCache.slug}</a></div>`
+            : `<div class="alert alert-success">Link quitado</div>`;
+        setTimeout(() => alertEl.innerHTML = '', 6000);
+    } catch (e) {
+        // El backend traduce el choque de slugs duplicados a un mensaje claro
+        // (ver PATCH /clinica/setup) — acá solo se muestra tal cual.
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+    }
+}
 function renderEstadoTerminosSettings() {
     const el = document.getElementById('settingsTerminos');
     if (!el) return;
@@ -2861,6 +2913,8 @@ async function loadSettings() {
         }
         clinicaCache = clinica;
         document.getElementById('headerClinica').textContent = clinica.nombre || 'AutoCita';
+        document.getElementById('clSlug').value = clinica.slug || '';
+        actualizarAgendarPreview();
         infoEl.innerHTML = `
             <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" id="clNombre" value="${clinica.nombre || ''}"></div>
             <div class="form-group"><label>${t('pac.telefono')}</label><input type="text" id="clTelefono" value="${clinica.telefono || ''}"></div>
@@ -3645,6 +3699,7 @@ const translations = {
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
+        'set.agendarTitle': 'Link para agendar en línea', 'set.agendarDesc': 'Compartilo donde quieras — bio de Instagram, grupos de WhatsApp, anuncios. Ahí el paciente elige doctor, día y hora reales y queda agendado solo, sin escribirte primero.', 'set.agendarLinkLabel': 'Nombre del link', 'set.agendarGuardar': 'Guardar link',
         'set.terminosTitle': 'Condiciones del Servicio', 'set.terminosAceptadoEl': 'Aceptaste las Condiciones del Servicio el {fecha}.',
         'terms.title': 'Condiciones del Servicio', 'terms.intro': 'Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.',
         'terms.p1': 'AutoCita es un servicio de agenda por WhatsApp operado por 3102964957 S.R.L. — vos sos el responsable de los datos de tus pacientes que cargás en la plataforma.',
@@ -3772,6 +3827,7 @@ const translations = {
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
+        'set.agendarTitle': 'Online booking link', 'set.agendarDesc': 'Share it anywhere — Instagram bio, WhatsApp groups, ads. Patients pick a real doctor, day and time there and get booked on their own, without messaging you first.', 'set.agendarLinkLabel': 'Link name', 'set.agendarGuardar': 'Save link',
         'set.terminosTitle': 'Terms of Service', 'set.terminosAceptadoEl': 'You accepted the Terms of Service on {fecha}.',
         'terms.title': 'Terms of Service', 'terms.intro': 'Before continuing, please read and accept our Terms of Service.',
         'terms.p1': 'AutoCita is a WhatsApp scheduling service operated by 3102964957 S.R.L. — you are responsible for your patients\' data that you load into the platform.',
@@ -3899,6 +3955,7 @@ const translations = {
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
+        'set.agendarTitle': 'Link para agendar online', 'set.agendarDesc': 'Compartilhe onde quiser — bio do Instagram, grupos de WhatsApp, anúncios. O paciente escolhe médico, dia e horário reais e fica agendado sozinho, sem falar com você antes.', 'set.agendarLinkLabel': 'Nome do link', 'set.agendarGuardar': 'Salvar link',
         'set.terminosTitle': 'Condições do Serviço', 'set.terminosAceptadoEl': 'Você aceitou as Condições do Serviço em {fecha}.',
         'terms.title': 'Condições do Serviço', 'terms.intro': 'Antes de continuar, precisamos que leia e aceite nossas Condições do Serviço.',
         'terms.p1': 'AutoCita é um serviço de agendamento por WhatsApp operado pela 3102964957 S.R.L. — você é responsável pelos dados dos seus pacientes que carrega na plataforma.',
