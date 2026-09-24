@@ -215,6 +215,15 @@
         .modal-row span:first-child { color: var(--gray-500); }
         .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
         .modal-actions .btn { flex: 1; }
+        .modal-box-lg { max-width: 480px; }
+        .terms-resumen { background: var(--gray-100); border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+        .terms-resumen ul { margin: 0; padding-left: 18px; }
+        .terms-resumen li { font-size: 13px; color: var(--gray-700); margin-bottom: 6px; line-height: 1.45; }
+        .terms-resumen li:last-child { margin-bottom: 0; }
+        .ayuda-link-terms { display: inline-block; font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; }
+        .ayuda-link-terms:hover { text-decoration: underline; }
+        .terms-checkbox { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; font-size: 13.5px; color: var(--gray-700); cursor: pointer; }
+        .terms-checkbox input { margin-top: 2px; cursor: pointer; }
         @media (max-width: 900px) {
             .dashboard-grid { grid-template-columns: 1fr; }
         }
@@ -337,6 +346,30 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
     <div class="modal-overlay" id="citaModalOverlay" onclick="if(event.target===this) cerrarModalCita()">
         <div class="modal-box" id="citaModalBox"></div>
+    </div>
+    <!-- Condiciones del Servicio: no se cierra clickeando afuera ni tiene X —
+         hay que aceptar para poder usar el panel. -->
+    <div class="modal-overlay" id="terminosOverlay">
+        <div class="modal-box modal-box-lg">
+            <h3 data-i18n="terms.title">Condiciones del Servicio</h3>
+            <p class="card-subtitle" data-i18n="terms.intro">Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.</p>
+            <div class="terms-resumen">
+                <ul>
+                    <li data-i18n="terms.p1">AutoCita es un servicio de agenda por WhatsApp operado por 3102964957 S.R.L. — vos sos el responsable de los datos de tus pacientes que cargás en la plataforma.</li>
+                    <li data-i18n="terms.p2">El asistente automatizado puede cometer errores: revisá siempre la información crítica de citas y salud.</li>
+                    <li data-i18n="terms.p3">Podés cancelar el servicio cuando quieras escribiendo a hola@automatiaai.com.</li>
+                </ul>
+            </div>
+            <a id="terminosUrl" href="https://automatiaai.com/terminos.html" target="_blank" rel="noopener" class="ayuda-link-terms" data-i18n="terms.verCompletas">Leer las condiciones completas ↗</a>
+            <div id="terminosAlert" style="margin-top:10px"></div>
+            <label class="terms-checkbox">
+                <input type="checkbox" id="terminosCheck" onchange="terminosCheckCambio()">
+                <span data-i18n="terms.checkbox">He leído y acepto las Condiciones del Servicio</span>
+            </label>
+            <div class="modal-actions">
+                <button class="btn btn-block" id="terminosBtnAceptar" disabled onclick="aceptarTerminosPanel()" data-i18n="terms.btnAceptar">Aceptar y continuar</button>
+            </div>
+        </div>
     </div>
     <aside class="sidebar" id="sidebar">
         <div class="logo"><h1>AutoCita</h1><span>Booking AI</span></div>
@@ -791,6 +824,10 @@
                     <div id="settingsInfo" class="loading" data-i18n="common.loading">Cargando...</div>
                 </div>
                 <div class="card">
+                    <div class="card-title" data-i18n="set.terminosTitle">Condiciones del Servicio</div>
+                    <div id="settingsTerminos" class="card-subtitle"></div>
+                </div>
+                <div class="card">
                     <div class="card-title" data-i18n="set.recordatoriosTitle">Configuración de recordatorios</div>
                     <p class="card-subtitle" data-i18n="set.recordatoriosDesc">Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.</p>
                     <div id="alertRecordatorios"></div>
@@ -1169,14 +1206,52 @@ async function loadAll() {
     loadServicios();
     loadSettings();
 }
+let terminosInfo = null; // { version, url, aceptado, en } — última respuesta de /mi-rol
 async function loadRol() {
     try {
         const data = await apiFetch('/mi-rol');
         userRol = data.rol;
         userDoctorId = data.doctor_id || null;
+        terminosInfo = data.terminos || null;
         aplicarPermisos();
+        // Gate bloqueante: si esta persona (dueño, recepción o doctor) todavía
+        // no aceptó la versión vigente de las condiciones, no se sigue
+        // cargando el resto del panel hasta que lo haga.
+        if (terminosInfo && !terminosInfo.aceptado) {
+            await mostrarModalTerminos();
+        }
     } catch (e) {
         userRol = 'dueno'; // fallback: si falla, asumir dueño
+    }
+}
+function mostrarModalTerminos() {
+    return new Promise((resolve) => {
+        document.getElementById('terminosCheck').checked = false;
+        document.getElementById('terminosBtnAceptar').disabled = true;
+        document.getElementById('terminosAlert').innerHTML = '';
+        document.getElementById('terminosOverlay').classList.add('open');
+        window.__resolverTerminos = resolve;
+    });
+}
+function terminosCheckCambio() {
+    document.getElementById('terminosBtnAceptar').disabled = !document.getElementById('terminosCheck').checked;
+}
+async function aceptarTerminosPanel() {
+    const btn = document.getElementById('terminosBtnAceptar');
+    const alertEl = document.getElementById('terminosAlert');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('common.loading');
+    try {
+        await apiFetch('/terminos/aceptar', { method: 'POST' });
+        terminosInfo = { ...(terminosInfo || {}), aceptado: true, en: new Date().toISOString() };
+        document.getElementById('terminosOverlay').classList.remove('open');
+        if (window.__resolverTerminos) { window.__resolverTerminos(); window.__resolverTerminos = null; }
+        renderEstadoTerminosSettings();
+    } catch (e) {
+        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
     }
 }
 function aplicarPermisos() {
@@ -2765,8 +2840,19 @@ async function guardarDoctor() {
     }
 }
 // ── SETTINGS ──────────────────────────────────────────────────────
+function renderEstadoTerminosSettings() {
+    const el = document.getElementById('settingsTerminos');
+    if (!el) return;
+    if (terminosInfo?.aceptado) {
+        const fecha = terminosInfo.en ? new Date(terminosInfo.en).toLocaleDateString(currentLang === 'en' ? 'en-US' : (currentLang === 'pt' ? 'pt-BR' : 'es-CR'), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+        el.innerHTML = `<p>${t('set.terminosAceptadoEl', { fecha })}</p><a class="ayuda-link-terms" href="${terminosInfo.url || 'https://automatiaai.com/terminos.html'}" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
+    } else {
+        el.innerHTML = `<a class="ayuda-link-terms" href="https://automatiaai.com/terminos.html" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
+    }
+}
 async function loadSettings() {
     const infoEl = document.getElementById('settingsInfo');
+    renderEstadoTerminosSettings();
     try {
         const clinica = await apiFetch('/clinica');
         if (!clinica) {
@@ -3559,6 +3645,12 @@ const translations = {
         'exp.historialTitle': 'Historial', 'exp.sinNotas': 'Sin notas todavía', 'exp.errNota': 'Escribí una nota', 'exp.msgGuardada': 'Nota guardada ✓',
         'set.idiomaTitle': 'Idioma del panel', 'set.idiomaDesc': 'Cambiá el idioma de todo el panel. No afecta el idioma en que Sara le escribe a tus pacientes.',
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
+        'set.terminosTitle': 'Condiciones del Servicio', 'set.terminosAceptadoEl': 'Aceptaste las Condiciones del Servicio el {fecha}.',
+        'terms.title': 'Condiciones del Servicio', 'terms.intro': 'Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.',
+        'terms.p1': 'AutoCita es un servicio de agenda por WhatsApp operado por 3102964957 S.R.L. — vos sos el responsable de los datos de tus pacientes que cargás en la plataforma.',
+        'terms.p2': 'El asistente automatizado puede cometer errores: revisá siempre la información crítica de citas y salud.',
+        'terms.p3': 'Podés cancelar el servicio cuando quieras escribiendo a hola@automatiaai.com.',
+        'terms.verCompletas': 'Leer las condiciones completas ↗', 'terms.checkbox': 'He leído y acepto las Condiciones del Servicio', 'terms.btnAceptar': 'Aceptar y continuar',
         'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'set.rec2Nota': 'Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.', 'nav.bloqueos': 'Bloqueos', 'bloq.title': 'Bloqueos de agenda', 'bloq.nuevoTitle': 'Bloquear un espacio', 'bloq.nuevoSub': 'Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.', 'bloq.desde': 'Desde', 'bloq.hasta': 'Hasta', 'bloq.soloHoras': 'Solo unas horas de esos días (si no, se bloquea el día completo)', 'bloq.horaDesde': 'Hora desde', 'bloq.horaHasta': 'Hora hasta', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ej: Vacaciones, congreso, cirugía', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueos vigentes', 'bloq.vacio': 'No hay bloqueos vigentes.', 'bloq.diaCompleto': 'Día completo', 'bloq.ok': 'Bloqueo creado — los cupos ya se recalcularon.', 'bloq.errDatos': 'Elegí el doctor y la fecha de inicio.', 'bloq.errHoras': 'Poné las dos horas.', 'bloq.confirmBorrar': '¿Eliminar este bloqueo? Los cupos vuelven a quedar disponibles.', 'doc.especial': 'Horarios especiales por día (un día con horario distinto al resto)', 'doc.especialSinDias': 'Marque primero los días que atiende.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto que Sara le muestra al paciente', 'set.horarioGeneralDesc': 'Se usa para calcular las horas disponibles de los doctores que no tienen su propio horario configurado.',
         'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
@@ -3680,6 +3772,12 @@ const translations = {
         'exp.historialTitle': 'History', 'exp.sinNotas': 'No notes yet', 'exp.errNota': 'Write a note', 'exp.msgGuardada': 'Note saved ✓',
         'set.idiomaTitle': 'Panel language', 'set.idiomaDesc': 'Change the language of the whole panel. This does not affect the language Sara uses with your patients.',
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
+        'set.terminosTitle': 'Terms of Service', 'set.terminosAceptadoEl': 'You accepted the Terms of Service on {fecha}.',
+        'terms.title': 'Terms of Service', 'terms.intro': 'Before continuing, please read and accept our Terms of Service.',
+        'terms.p1': 'AutoCita is a WhatsApp scheduling service operated by 3102964957 S.R.L. — you are responsible for your patients\' data that you load into the platform.',
+        'terms.p2': 'The automated assistant can make mistakes: always double-check critical appointment and health information.',
+        'terms.p3': 'You can cancel the service at any time by writing to hola@automatiaai.com.',
+        'terms.verCompletas': 'Read the full terms ↗', 'terms.checkbox': 'I have read and accept the Terms of Service', 'terms.btnAceptar': 'Accept and continue',
         'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'set.rec2Nota': 'Not available yet: the Meta-approved template for this second reminder is still pending. The value is saved but nothing is sent.', 'nav.bloqueos': 'Blocks', 'bloq.title': 'Schedule blocks', 'bloq.nuevoTitle': 'Block time off', 'bloq.nuevoSub': 'Vacation, a conference, an afternoon meeting. Those slots stop being offered — to anyone, Sara included.', 'bloq.desde': 'From', 'bloq.hasta': 'To', 'bloq.soloHoras': 'Only certain hours of those days (otherwise the whole day is blocked)', 'bloq.horaDesde': 'From time', 'bloq.horaHasta': 'To time', 'bloq.motivo': 'Reason (optional)', 'bloq.motivoPh': 'e.g. Vacation, conference, surgery', 'bloq.btnCrear': 'Block', 'bloq.listaTitle': 'Active blocks', 'bloq.vacio': 'No active blocks.', 'bloq.diaCompleto': 'Full day', 'bloq.ok': 'Block created — slots have been recalculated.', 'bloq.errDatos': 'Pick the doctor and the start date.', 'bloq.errHoras': 'Set both times.', 'bloq.confirmBorrar': 'Delete this block? Those slots become available again.', 'doc.especial': 'Special hours per day (one day with different hours)', 'doc.especialSinDias': 'Select the working days first.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
         'set.horarioTextoDesc': 'text shown to patients', 'set.horarioGeneralDesc': 'Used to calculate available times for doctors who don\'t have their own hours configured.',
         'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
@@ -3801,6 +3899,12 @@ const translations = {
         'exp.historialTitle': 'Histórico', 'exp.sinNotas': 'Nenhuma nota ainda', 'exp.errNota': 'Escreva uma nota', 'exp.msgGuardada': 'Nota salva ✓',
         'set.idiomaTitle': 'Idioma do painel', 'set.idiomaDesc': 'Altere o idioma de todo o painel. Isso não afeta o idioma em que a Sara escreve para seus pacientes.',
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
+        'set.terminosTitle': 'Condições do Serviço', 'set.terminosAceptadoEl': 'Você aceitou as Condições do Serviço em {fecha}.',
+        'terms.title': 'Condições do Serviço', 'terms.intro': 'Antes de continuar, precisamos que leia e aceite nossas Condições do Serviço.',
+        'terms.p1': 'AutoCita é um serviço de agendamento por WhatsApp operado pela 3102964957 S.R.L. — você é responsável pelos dados dos seus pacientes que carrega na plataforma.',
+        'terms.p2': 'O assistente automatizado pode cometer erros: sempre revise as informações críticas de consultas e saúde.',
+        'terms.p3': 'Você pode cancelar o serviço quando quiser escrevendo para hola@automatiaai.com.',
+        'terms.verCompletas': 'Ler as condições completas ↗', 'terms.checkbox': 'Li e aceito as Condições do Serviço', 'terms.btnAceptar': 'Aceitar e continuar',
         'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'set.rec2Nota': 'Ainda não disponível: falta o modelo aprovado pela Meta para este segundo aviso. O valor é salvo mas nada é enviado.', 'nav.bloqueos': 'Bloqueios', 'bloq.title': 'Bloqueios de agenda', 'bloq.nuevoTitle': 'Bloquear um espaço', 'bloq.nuevoSub': 'Férias, um congresso, uma tarde de reunião. Essas vagas deixam de ser oferecidas — a ninguém, nem à Sara.', 'bloq.desde': 'De', 'bloq.hasta': 'Até', 'bloq.soloHoras': 'Apenas algumas horas desses dias (caso contrário bloqueia o dia inteiro)', 'bloq.horaDesde': 'Hora de', 'bloq.horaHasta': 'Hora até', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ex: Férias, congresso, cirurgia', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueios vigentes', 'bloq.vacio': 'Não há bloqueios vigentes.', 'bloq.diaCompleto': 'Dia inteiro', 'bloq.ok': 'Bloqueio criado — as vagas foram recalculadas.', 'bloq.errDatos': 'Escolha o médico e a data inicial.', 'bloq.errHoras': 'Informe as duas horas.', 'bloq.confirmBorrar': 'Excluir este bloqueio? As vagas voltam a ficar disponíveis.', 'doc.especial': 'Horários especiais por dia (um dia com horário diferente)', 'doc.especialSinDias': 'Marque primeiro os dias de atendimento.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto mostrado ao paciente', 'set.horarioGeneralDesc': 'Usado para calcular os horários disponíveis dos doutores que não têm horário próprio configurado.',
         'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
