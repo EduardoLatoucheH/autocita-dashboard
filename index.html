@@ -2091,8 +2091,13 @@ async function loadListaEspera() {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">${t('le.nadie')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(le => {
-                const nombrePac = le.pacientes?.nombre || t('common.pacienteSinNombre');
-                const nombreDoc = le.doctores?.nombre || t('common.cualquiera');
+                // Fix seguridad 27/09/2026: estos dos campos venían sin escapeHtmlPanel
+                // (a diferencia de le.notas, dos líneas abajo, que sí lo tenía) — el
+                // nombre del paciente lo puede escribir cualquiera que le mande un
+                // WhatsApp a la clínica, así que sin esto era un XSS almacenado
+                // explotable por un desconocido, no solo un descuido visual.
+                const nombrePac = escapeHtmlPanel(le.pacientes?.nombre || t('common.pacienteSinNombre'));
+                const nombreDoc = escapeHtmlPanel(le.doctores?.nombre || t('common.cualquiera'));
                 const fecha = le.fecha_deseada ? new Date(le.fecha_deseada + 'T00:00:00').toLocaleDateString(getLocale()) : '—';
                 return `<tr>
                     <td><strong>${nombrePac}</strong></td>
