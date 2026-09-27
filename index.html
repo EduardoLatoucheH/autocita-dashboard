@@ -954,7 +954,7 @@ function renderCalendarLeyenda() {
     el.innerHTML = doctoresCache.map(d => `
         <span style="display:flex;align-items:center;gap:5px">
             <span style="width:10px;height:10px;border-radius:3px;background:${colorForDoctor(d.id)};display:inline-block"></span>
-            ${d.nombre}
+            ${escapeHtmlPanel(d.nombre)}
         </span>
     `).join('');
 }
@@ -1292,7 +1292,7 @@ function poblarVinculoDoctor() {
     const sel = document.getElementById('vinculoDoctorSelect');
     if (!sel) return;
     sel.innerHTML = `<option value="">${t('set.noSoyDoctor')}</option>` +
-        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
     sel.value = userDoctorId || '';
 }
 async function guardarVinculoDoctor(id) {
@@ -1544,8 +1544,8 @@ async function loadActividad() {
         }
         cont.innerHTML = items.map(item => {
             const texto = formatearTextoActividad(item.detalle || item.accion);
-            const meta = `${item.usuario_email ? `<strong>${item.usuario_email}</strong> · ` : ''}${tiempoRelativo(item.created_at)}`;
-            return `<div class="actividad-item"><div class="actividad-dot"></div><div><div class="actividad-texto">${texto}</div><div class="actividad-meta">${meta}</div></div></div>`;
+            const meta = `${item.usuario_email ? `<strong>${escapeHtmlPanel(item.usuario_email)}</strong> · ` : ''}${tiempoRelativo(item.created_at)}`;
+            return `<div class="actividad-item"><div class="actividad-dot"></div><div><div class="actividad-texto">${escapeHtmlPanel(texto)}</div><div class="actividad-meta">${meta}</div></div></div>`;
         }).join('');
     } catch (e) {
         console.error('Actividad:', e);
@@ -1631,9 +1631,9 @@ function renderTablaPacientes() {
             : '';
         return `
         <tr>
-            <td><strong>${p.nombre || '—'}</strong></td>
+            <td><strong>${escapeHtmlPanel(p.nombre || '—')}</strong></td>
             <td>${tels[0] || '—'}${extra}</td>
-            <td>${p.cedula || '—'}</td>
+            <td>${escapeHtmlPanel(p.cedula || '—')}</td>
             <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
         </tr>`;
     }).join('');
@@ -1719,7 +1719,7 @@ function renderDoctorBubblesPaciente() {
         return;
     }
     el.innerHTML = doctoresCache.map(d => `
-        <button type="button" class="bubble ${doctoresSeleccionados.includes(d.id) ? 'selected' : ''}" onclick="toggleDoctorBubble('${d.id}')">${d.nombre}</button>
+        <button type="button" class="bubble ${doctoresSeleccionados.includes(d.id) ? 'selected' : ''}" onclick="toggleDoctorBubble('${d.id}')">${escapeHtmlPanel(d.nombre)}</button>
     `).join('');
 }
 function toggleDoctorBubble(id) {
@@ -1741,7 +1741,7 @@ function actualizarResumenBloquePaciente() {
         const inicio = horaActual;
         const fin = horaActual + dur;
         horaActual = fin;
-        return `${doc.nombre}: ${minToHora(inicio)} – ${minToHora(fin)}`;
+        return `${escapeHtmlPanel(doc.nombre)}: ${minToHora(inicio)} – ${minToHora(fin)}`;
     });
     resumenEl.innerHTML = lineas.join('<br>');
 }
@@ -1778,7 +1778,7 @@ function poblarFiltroDoctorCitas() {
     if (!sel) return;
     const actual = sel.value;
     sel.innerHTML = `<option value="">${t('citas.todosDoctores')}</option>` +
-        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
     sel.value = actual;
 }
 function nombreDoctor(c) {
@@ -1929,7 +1929,7 @@ async function loadServicios() {
             } else {
                 tbody.innerHTML = data.map(s => `
                     <tr>
-                        <td><strong>${s.nombre}</strong></td>
+                        <td><strong>${escapeHtmlPanel(s.nombre)}</strong></td>
                         <td>₡${Number(s.precio).toLocaleString(getLocale())}</td>
                         <td><button class="btn btn-danger btn-sm" onclick="eliminarServicio('${s.id}')">${t('common.eliminar')}</button></td>
                     </tr>`).join('');
@@ -1984,15 +1984,15 @@ async function loadFactura() {
     detalleEl.innerHTML = `<p class="loading">${t('common.loading')}</p>`;
     try {
         const data = await apiFetch(`/cita/${citaId}/factura`);
-        const opcionesServicio = serviciosCache.map(s => `<option value="${s.id}">${s.nombre} — ₡${Number(s.precio).toLocaleString(getLocale())}</option>`).join('');
+        const opcionesServicio = serviciosCache.map(s => `<option value="${s.id}">${escapeHtmlPanel(s.nombre)} — ₡${Number(s.precio).toLocaleString(getLocale())}</option>`).join('');
         detalleEl.innerHTML = `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-200)">
-                <span>${t('fact.consulta')} (${data.cita.doctores?.nombre || '—'})</span>
+                <span>${t('fact.consulta')} (${escapeHtmlPanel(data.cita.doctores?.nombre || '—')})</span>
                 <strong>₡${Number(data.precio_consulta).toLocaleString(getLocale())}</strong>
             </div>
             ${data.servicios.map(s => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-200)">
-                    <span>${s.servicios?.nombre || t('fact.servicio')}</span>
+                    <span>${escapeHtmlPanel(s.servicios?.nombre || t('fact.servicio'))}</span>
                     <span style="display:flex;align-items:center;gap:8px">
                         ₡${Number(s.precio).toLocaleString(getLocale())}
                         <button class="btn btn-danger" style="padding:2px 8px;font-size:11px;box-shadow:none" onclick="quitarServicioCita('${citaId}','${s.id}')">✕</button>
@@ -2034,7 +2034,7 @@ function populateEmergDoctorSelect() {
     if (!sel) return;
     const actual = sel.value;
     sel.innerHTML = `<option value="">${t('common.todosDoctores')}</option>` +
-        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
     if (actual) sel.value = actual;
 }
 async function correrAgendaDia() {
@@ -2098,7 +2098,7 @@ async function loadListaEspera() {
                     <td><strong>${nombrePac}</strong></td>
                     <td>${nombreDoc}</td>
                     <td>${fecha}</td>
-                    <td>${le.notas || '—'}</td>
+                    <td>${escapeHtmlPanel(le.notas || '—')}</td>
                     <td>
                         <button class="btn btn-success btn-sm" style="margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">${t('le.btnAtendido')}</button>
                         <button class="btn btn-danger btn-sm" onclick="eliminarListaEspera('${le.id}')">${t('le.btnQuitar')}</button>
@@ -2113,14 +2113,14 @@ function populateListaEsperaSelects() {
     if (selPac) {
         const actual = selPac.value;
         selPac.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` +
-            pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+            pacientesCache.map(p => `<option value="${p.id}">${escapeHtmlPanel(p.nombre)}${escapeHtmlPanel(p.cedula ? ' — ' + p.cedula : '')}</option>`).join('');
         if (actual) selPac.value = actual;
     }
     const selDoc = document.getElementById('leDoctor');
     if (selDoc) {
         const actual = selDoc.value;
         selDoc.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
-            doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+            doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
         if (actual) selDoc.value = actual;
     }
 }
@@ -2171,7 +2171,7 @@ function populatePacienteSelectBloque() {
     const sel = document.getElementById('bloquePaciente');
     const selExp = document.getElementById('expedientePaciente');
     const selInd = document.getElementById('citaPaciente');
-    const opciones = pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+    const opciones = pacientesCache.map(p => `<option value="${p.id}">${escapeHtmlPanel(p.nombre)}${escapeHtmlPanel(p.cedula ? ' — ' + p.cedula : '')}</option>`).join('');
     if (sel) {
         const actual = sel.value;
         sel.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` + opciones;
@@ -2193,7 +2193,7 @@ function populateDoctorSelectCitaIndividual() {
     if (!sel) return;
     const actual = sel.value;
     sel.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
-        doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
     if (actual) sel.value = actual;
 }
 // ── CITA INDIVIDUAL (un paciente, un doctor, hora real de /slots) ──
@@ -2269,7 +2269,7 @@ function renderCitaIndividualSlots(mensaje, esError) {
     const el = document.getElementById('citaSlotsBubbles');
     if (!el) return;
     if (mensaje) {
-        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${mensaje}</span>`;
+        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${escapeHtmlPanel(mensaje)}</span>`;
         return;
     }
     if (!citaIndividualSlots.length) {
@@ -2367,7 +2367,7 @@ async function renderFilasBloque() {
     }));
     el.innerHTML = bloqueFilasDoctores.map((docId, idx) => {
         const doc = doctoresCache.find(d => d.id === docId);
-        const opciones = doctoresCache.map(d => `<option value="${d.id}" ${d.id === docId ? 'selected' : ''}>${d.nombre}</option>`).join('');
+        const opciones = doctoresCache.map(d => `<option value="${d.id}" ${d.id === docId ? 'selected' : ''}>${escapeHtmlPanel(d.nombre)}</option>`).join('');
         let bubblesHtml = `<span style="color:var(--gray-500);font-size:12.5px">${t('citas.elegiDoctorFecha')}</span>`;
         if (doc && fecha) {
             if (!doc.calendar_id) {
@@ -2442,14 +2442,14 @@ function populateRecurrenteSelects() {
     if (selPac) {
         const actual = selPac.value;
         selPac.innerHTML = `<option value="">${t('common.seleccionarPaciente')}</option>` +
-            pacientesCache.map(p => `<option value="${p.id}">${p.nombre}${p.cedula ? ' — ' + p.cedula : ''}</option>`).join('');
+            pacientesCache.map(p => `<option value="${p.id}">${escapeHtmlPanel(p.nombre)}${escapeHtmlPanel(p.cedula ? ' — ' + p.cedula : '')}</option>`).join('');
         if (actual) selPac.value = actual;
     }
     const selDoc = document.getElementById('recurrenteDoctor');
     if (selDoc) {
         const actual = selDoc.value;
         selDoc.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
-            doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+            doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
         if (actual) selDoc.value = actual;
     }
 }
@@ -2484,7 +2484,7 @@ function renderRecurrenteSlots(mensaje, esError) {
     const el = document.getElementById('recurrenteSlotsBubbles');
     if (!el) return;
     if (mensaje) {
-        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${mensaje}</span>`;
+        el.innerHTML = `<span style="color:${esError ? 'var(--danger)' : 'var(--gray-500)'};font-size:13px">${escapeHtmlPanel(mensaje)}</span>`;
         return;
     }
     if (!recurrenteSlots.length) {
@@ -2608,7 +2608,7 @@ function renderTablaDoctores() {
     }
     tbody.innerHTML = data.map(d => `
         <tr>
-            <td><strong>${d.nombre}</strong></td>
+            <td><strong>${escapeHtmlPanel(d.nombre)}</strong></td>
             <td>${d.especialidad}</td>
             <td>${d.duracion_cita || 30} min</td>
             <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
@@ -2897,7 +2897,7 @@ function renderEstadoTerminosSettings() {
     if (!el) return;
     if (terminosInfo?.aceptado) {
         const fecha = terminosInfo.en ? new Date(terminosInfo.en).toLocaleDateString(currentLang === 'en' ? 'en-US' : (currentLang === 'pt' ? 'pt-BR' : 'es-CR'), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-        el.innerHTML = `<p>${t('set.terminosAceptadoEl', { fecha })}</p><a class="ayuda-link-terms" href="${terminosInfo.url || 'https://automatiaai.com/terminos.html'}" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
+        el.innerHTML = `<p>${t('set.terminosAceptadoEl', { fecha })}</p><a class="ayuda-link-terms" href="${escapeHtmlPanel(terminosInfo.url || 'https://automatiaai.com/terminos.html')}" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
     } else {
         el.innerHTML = `<a class="ayuda-link-terms" href="https://automatiaai.com/terminos.html" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
     }
@@ -2916,9 +2916,9 @@ async function loadSettings() {
         document.getElementById('clSlug').value = clinica.slug || '';
         actualizarAgendarPreview();
         infoEl.innerHTML = `
-            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" id="clNombre" value="${clinica.nombre || ''}"></div>
-            <div class="form-group"><label>${t('pac.telefono')}</label><input type="text" id="clTelefono" value="${clinica.telefono || ''}"></div>
-            <div class="form-group"><label>${t('set.direccion')}</label><input type="text" id="clDireccion" value="${clinica.direccion || ''}"></div>
+            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" id="clNombre" value="${escapeHtmlPanel(clinica.nombre || '')}"></div>
+            <div class="form-group"><label>${escapeHtmlPanel(t('pac.telefono'))}</label><input type="text" id="clTelefono" value="${escapeHtmlPanel(clinica.telefono || '')}"></div>
+            <div class="form-group"><label>${escapeHtmlPanel(t('set.direccion'))}</label><input type="text" id="clDireccion" value="${escapeHtmlPanel(clinica.direccion || '')}"></div>
             <div class="form-group"><label>Tipo de negocio</label>
                 <select id="clTipoNegocio">
                     ${['clinica_general','dental','fisioterapia','psicologia','nutricion','spa_estetica','barberia_salon','otro'].map(v => `<option value="${v}" ${clinica.tipo_negocio === v ? 'selected' : ''}>${v.replace('_', ' ')}</option>`).join('')}
@@ -3067,7 +3067,7 @@ async function loadExpediente() {
                             ${n.audio_url ? `<a href="#" onclick="reproducirAudioNota('${n.id}');return false" data-i18n="exp.escuchar">${t('exp.escuchar')}</a>` : ''}
                         </span>
                     </div>
-                    <div>${n.contenido}</div>
+                    <div>${escapeHtmlPanel(n.contenido)}</div>
                     ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
                     ${n.plan_tratamiento ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📋 ${n.plan_tratamiento}</div>` : ''}
                 </div>
@@ -3285,7 +3285,7 @@ function dienteSVG(numero, i, superior) {
     const alto = 38;
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${giro.toFixed(1)})"
                style="cursor:pointer" onclick="seleccionarDiente('${numero}')">
-        <title>${numero} — ${st.label}${d?.notas ? ': ' + d.notas.replace(/"/g, '&quot;') : ''}</title>
+        <title>${numero} — ${st.label}${d?.notas ? ': ' + escapeHtmlPanel(d.notas) : ''}</title>
         <rect x="${-ancho / 2}" y="${-alto / 2}" width="${ancho}" height="${alto}" rx="7"
               fill="${st.bg}" stroke="${sel ? 'var(--gray-900)' : st.border}" stroke-width="${sel ? 3 : 1.5}"/>
         <text x="0" y="4" text-anchor="middle" transform="rotate(${(-giro).toFixed(1)})"
@@ -3331,7 +3331,7 @@ function renderOdontogramaEditor() {
                 <select id="odEstado">${Object.entries(ESTADOS_DIENTE).map(([k, v]) => `<option value="${k}" ${((d?.estado || 'sano') === k) ? 'selected' : ''}>${v.label}</option>`).join('')}</select>
             </div>
             <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px"><label>Notas (opcional)</label>
-                <input type="text" id="odNotas" value="${d?.notas ? d.notas.replace(/"/g, '&quot;') : ''}" placeholder="Ej: sensibilidad al frío">
+                <input type="text" id="odNotas" value="${d?.notas ? escapeHtmlPanel(d.notas) : ''}" placeholder="Ej: sensibilidad al frío">
             </div>
             <button class="btn" onclick="guardarDiente()">Guardar</button>
         </div>`;
@@ -3363,7 +3363,7 @@ async function loadEquipo() {
         } else {
             tbody.innerHTML = data.map(m => `
                 <tr>
-                    <td>${m.email}</td>
+                    <td>${escapeHtmlPanel(m.email)}</td>
                     <td><span class="badge badge-success">${m.rol === 'dueno' ? t('set.rolAdmin') : m.rol === 'recepcionista' ? t('set.rolRecepcionista') : t('set.rolDoctor')}</span></td>
                     <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
                     <td><button class="btn btn-danger btn-sm" onclick="eliminarMiembro('${m.id}')">${t('common.eliminar')}</button></td>
@@ -3379,7 +3379,7 @@ document.getElementById('equipoRol')?.addEventListener('change', function() {
         const sel = document.getElementById('equipoDoctor');
         if (sel) {
             sel.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
-                doctoresCache.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+                doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
         }
     }
 });
@@ -3492,7 +3492,7 @@ async function loadCitasSinExpediente() {
             <strong>${pendientes.length} ${t('citas.sinExpedienteTitulo')}</strong>
             <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
                 ${pendientes.slice(0, 8).map(c => `<button class="btn btn-ghost btn-sm"
-                    onclick="irAExpediente('${c.paciente_id}')">${(c.pacientes?.nombre) || '—'} · ${c.fecha ? new Date(c.fecha).toLocaleDateString(getLocale()) : ''}</button>`).join('')}
+                    onclick="irAExpediente('${c.paciente_id}')">${escapeHtmlPanel((c.pacientes?.nombre) || '—')} · ${c.fecha ? new Date(c.fecha).toLocaleDateString(getLocale()) : ''}</button>`).join('')}
             </div>
         </div>`;
     } catch (e) {
@@ -3518,7 +3518,7 @@ function toggleHorasBloqueo() {
 async function loadBloqueos() {
     const sel = document.getElementById('bloqDoctor');
     if (sel && !sel.options.length) {
-        sel.innerHTML = (doctoresCache || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+        sel.innerHTML = (doctoresCache || []).map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
     }
     const cont = document.getElementById('listaBloqueos');
     try {
@@ -3531,7 +3531,7 @@ async function loadBloqueos() {
             const rango = b.fecha_inicio === b.fecha_fin ? b.fecha_inicio : `${b.fecha_inicio} → ${b.fecha_fin}`;
             const horas = b.hora_inicio ? `${String(b.hora_inicio).slice(0,5)} a ${String(b.hora_fin).slice(0,5)}` : t('bloq.diaCompleto');
             return `<div class="fila-bloqueo">
-                <div><strong>${b.doctores?.nombre || ''}</strong> — ${rango}<br>
+                <div><strong>${escapeHtmlPanel(b.doctores?.nombre || '')}</strong> — ${rango}<br>
                 <span style="color:var(--gray-500);font-size:12px">${horas}${b.motivo ? ' · ' + escapeHtmlPanel(b.motivo) : ''}</span></div>
                 <button class="btn-sm btn-danger" onclick="borrarBloqueo('${b.id}')">${t('common.eliminar')}</button>
             </div>`;
@@ -3540,7 +3540,9 @@ async function loadBloqueos() {
         cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${e.message}</span>`;
     }
 }
-function escapeHtmlPanel(x) { const d = document.createElement('div'); d.textContent = x; return d.innerHTML; }
+// Fix 26/09/2026: ahora escapa también comillas — se usa dentro de atributos
+// value="...", donde un " en un nombre rompía el HTML (o permitía inyectar).
+function escapeHtmlPanel(x) { return String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 async function crearBloqueo() {
     const alertEl = document.getElementById('alertBloqueo');
     const doctor_id = document.getElementById('bloqDoctor').value;
