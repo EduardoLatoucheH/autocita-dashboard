@@ -310,7 +310,7 @@
         <!-- Registro -->
         <div id="paneRegister" class="auth-pane">
             <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
-            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="regPass" data-i18n-placeholder="login.passwordPh" placeholder="Mínimo 8 caracteres"></div>
+            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="regPass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
             <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="regPass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
             <div class="form-group"><label data-i18n="login.clinicName">Nombre de la clínica</label><input type="text" id="regNombre" data-i18n-placeholder="login.clinicNamePh" placeholder="Clínica San José"></div>
             <div class="form-group">
@@ -335,7 +335,7 @@
         <!-- Aceptar invitación (llegó por el link del correo de invitación) -->
         <div id="paneAceptarInvitacion" class="auth-pane">
             <p class="card-subtitle" data-i18n="invite.intro" style="margin-bottom:16px">Te invitaron a unirte al equipo. Elegí tu contraseña para activar tu cuenta.</p>
-            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="invitePass" data-i18n-placeholder="login.passwordPh" placeholder="Mínimo 8 caracteres"></div>
+            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="invitePass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
             <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="invitePass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
             <button class="btn btn-block" onclick="aceptarInvitacion()" data-i18n="invite.btnActivar">Activar mi cuenta</button>
         </div>
@@ -1092,7 +1092,7 @@ async function register() {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassMatch')}</div>`;
         return;
     }
-    if (pass.length < 8) {
+    if (!(pass && pass.length >= 10 && /[a-z]/.test(pass) && /[A-Z]/.test(pass) && /\d/.test(pass))) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
@@ -1164,7 +1164,7 @@ async function aceptarInvitacion() {
     const alertEl = document.getElementById('loginAlert');
     const pass = document.getElementById('invitePass').value;
     const pass2 = document.getElementById('invitePass2').value;
-    if (!pass || pass.length < 8) {
+    if (!(pass && pass.length >= 10 && /[a-z]/.test(pass) && /[A-Z]/.test(pass) && /\d/.test(pass))) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
@@ -3617,7 +3617,7 @@ const translations = {
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
         'login.tabLogin': 'Iniciar sesión', 'login.tabRegister': 'Crear cuenta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
-        'login.password': 'Contraseña', 'login.passwordPh': 'Mínimo 8 caracteres', 'login.confirmPassword': 'Confirmar contraseña',
+        'login.password': 'Contraseña', 'login.passwordPh': 'Mín. 10: mayúscula, minúscula y número', 'login.confirmPassword': 'Confirmar contraseña',
         'login.confirmPasswordPh': 'Repetí la contraseña', 'login.clinicName': 'Nombre de la clínica', 'login.clinicNamePh': 'Clínica San José',
         'login.tipoNegocio': 'Tipo de negocio',
         'tipoNegocio.clinica_general': 'Clínica General / Consultorio Médico', 'tipoNegocio.dental': 'Consultorio Dental',
@@ -3629,7 +3629,7 @@ const translations = {
         'invite.intro': 'Te invitaron a unirte al equipo. Elegí tu contraseña para activar tu cuenta.',
         'invite.btnActivar': 'Activar mi cuenta', 'invite.errActivar': 'No se pudo activar la cuenta. Pedile al dueño que te reenvíe la invitación.',
         'login.errCampos': 'Completá todos los campos', 'login.errPassMatch': 'Las contraseñas no coinciden',
-        'login.errPassLen': 'La contraseña debe tener al menos 8 caracteres', 'login.errCrearCuenta': 'Error al crear la cuenta',
+        'login.errPassLen': 'La contraseña debe tener al menos 10 caracteres, con mayúsculas, minúsculas y números', 'login.errCrearCuenta': 'Error al crear la cuenta',
         'login.errSinToken': 'No se recibió token', 'login.errCredenciales': 'Credenciales inválidas',
         'login.sesionExpirada': 'Tu sesión expiró. Ingresá de nuevo.',
         'common.loading': 'Cargando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Fecha', 'common.colHora': 'Hora',
@@ -3745,7 +3745,7 @@ const translations = {
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
         'login.tabLogin': 'Sign in', 'login.tabRegister': 'Create account', 'login.email': 'Email', 'login.emailPh': 'email@clinic.com',
-        'login.password': 'Password', 'login.passwordPh': 'At least 8 characters', 'login.confirmPassword': 'Confirm password',
+        'login.password': 'Password', 'login.passwordPh': 'Min. 10: uppercase, lowercase and a digit', 'login.confirmPassword': 'Confirm password',
         'login.confirmPasswordPh': 'Repeat your password', 'login.clinicName': 'Clinic name', 'login.clinicNamePh': 'San José Clinic',
         'login.tipoNegocio': 'Business type',
         'tipoNegocio.clinica_general': 'General Clinic / Medical Office', 'tipoNegocio.dental': 'Dental Office',
@@ -3757,7 +3757,7 @@ const translations = {
         'invite.intro': 'You were invited to join the team. Choose your password to activate your account.',
         'invite.btnActivar': 'Activate my account', 'invite.errActivar': 'Could not activate the account. Ask the owner to resend the invitation.',
         'login.errCampos': 'Fill in all fields', 'login.errPassMatch': 'Passwords do not match',
-        'login.errPassLen': 'Password must be at least 8 characters', 'login.errCrearCuenta': 'Error creating account',
+        'login.errPassLen': 'Password must be at least 10 characters, with uppercase, lowercase letters and digits', 'login.errCrearCuenta': 'Error creating account',
         'login.errSinToken': 'No token received', 'login.errCredenciales': 'Invalid credentials',
         'login.sesionExpirada': 'Your session expired. Please log in again.',
         'common.loading': 'Loading...', 'common.colPaciente': 'Patient', 'common.colFecha': 'Date', 'common.colHora': 'Time',
@@ -3873,7 +3873,7 @@ const translations = {
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
         'login.tabLogin': 'Entrar', 'login.tabRegister': 'Criar conta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
-        'login.password': 'Senha', 'login.passwordPh': 'Mínimo 8 caracteres', 'login.confirmPassword': 'Confirmar senha',
+        'login.password': 'Senha', 'login.passwordPh': 'Mín. 10: maiúscula, minúscula e número', 'login.confirmPassword': 'Confirmar senha',
         'login.confirmPasswordPh': 'Repita a senha', 'login.clinicName': 'Nome da clínica', 'login.clinicNamePh': 'Clínica São José',
         'login.tipoNegocio': 'Tipo de negócio',
         'tipoNegocio.clinica_general': 'Clínica Geral / Consultório Médico', 'tipoNegocio.dental': 'Consultório Odontológico',
@@ -3885,7 +3885,7 @@ const translations = {
         'invite.intro': 'Você foi convidado a se juntar à equipe. Escolha sua senha para ativar sua conta.',
         'invite.btnActivar': 'Ativar minha conta', 'invite.errActivar': 'Não foi possível ativar a conta. Peça ao dono para reenviar o convite.',
         'login.errCampos': 'Preencha todos os campos', 'login.errPassMatch': 'As senhas não coincidem',
-        'login.errPassLen': 'A senha deve ter pelo menos 8 caracteres', 'login.errCrearCuenta': 'Erro ao criar a conta',
+        'login.errPassLen': 'A senha deve ter pelo menos 10 caracteres, com maiúsculas, minúsculas e números', 'login.errCrearCuenta': 'Erro ao criar a conta',
         'login.errSinToken': 'Nenhum token recebido', 'login.errCredenciales': 'Credenciais inválidas',
         'login.sesionExpirada': 'Sua sessão expirou. Entre novamente.',
         'common.loading': 'Carregando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Data', 'common.colHora': 'Hora',
