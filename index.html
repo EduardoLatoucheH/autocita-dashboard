@@ -2,7 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- App instalable en iOS/Android (27/09/2026): con estos archivos el panel
+         se puede "Agregar a pantalla de inicio" y abre a pantalla completa como
+         una app, y es la misma base que después se empaqueta para las tiendas
+         (carpeta app-movil). manifest.webmanifest, sw.js y los íconos van en el
+         mismo repo que este archivo; si todavía no están subidos, el panel
+         funciona igual que siempre (el registro falla en silencio). -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#2F6B4F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AutoCita">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <title>AutoCita - Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,6 +72,7 @@
             --ico-file:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>');
             --ico-block: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>');
             --ico-gear:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>');
+            --ico-help:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>');
             --ico-chat:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>');
             --radius-sm: 8px;
         }
@@ -207,6 +222,21 @@
         .lang-btn.active { background: var(--primary); color: var(--white); }
 
         .dashboard-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+        /* App instalada (pantalla completa en iPhone/Android): respeta la
+           muesca y la barra de inicio del teléfono. */
+        @media (display-mode: standalone) {
+            .header { padding-top: calc(18px + env(safe-area-inset-top)); }
+            .sidebar { padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+            .content { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+        }
+        .sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 900px) { .sop-grid { grid-template-columns: 1fr; } }
+        .sop-item { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+        .sop-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+        .sop-msg { font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
+        .sop-resp { margin-top: 10px; padding: 10px 12px; background: var(--primary-soft, #e8f5ee); border-radius: 8px; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
+        .sop-estado { font-size: 13px; margin-top: 8px; }
+
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,25,20,0.55); z-index: 2000; align-items: center; justify-content: center; padding: 16px; }
         .modal-overlay.open { display: flex; }
         .modal-box { background: var(--white); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 380px; box-shadow: var(--shadow-md, 0 12px 32px rgba(0,0,0,0.2)); }
@@ -289,6 +319,7 @@
     .nav-link[data-section="facturacion"]::before { -webkit-mask-image: var(--ico-bill);  mask-image: var(--ico-bill); }
     .nav-link[data-section="expedientes"]::before { -webkit-mask-image: var(--ico-file);  mask-image: var(--ico-file); }
     .nav-link[data-section="settings"]::before    { -webkit-mask-image: var(--ico-gear);  mask-image: var(--ico-gear); }
+    .nav-link[data-section="ayuda"]::before       { -webkit-mask-image: var(--ico-help);  mask-image: var(--ico-help); }
 </style>
 </head>
 <body>
@@ -385,6 +416,7 @@
             <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
             <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
             <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
+            <button class="nav-link" data-section="ayuda" data-i18n="nav.ayuda" onclick="showSection('ayuda', this)">Ayuda</button>
         </div>
         <button class="nav-link logout-link" data-i18n="nav.logout" onclick="logout()">Logout</button>
     </aside>
@@ -807,6 +839,31 @@
                 </div>
             </section>
             <!-- Settings -->
+            <!-- Ayuda y sugerencias (27/09/2026) -->
+            <section class="section" id="ayuda">
+                <h2 style="margin-bottom: 24px;" data-i18n="title.ayuda">Ayuda y sugerencias</h2>
+                <div class="sop-grid">
+                    <div class="card">
+                        <div class="card-title" data-i18n="sop.ayudaTitle">¿Necesitás ayuda?</div>
+                        <p class="card-subtitle" data-i18n="sop.ayudaDesc">Contanos qué pasa y te respondemos por correo lo antes posible.</p>
+                        <div class="form-group"><input type="text" id="soporteAsunto" maxlength="150" placeholder="Asunto (opcional)" data-i18n-placeholder="sop.asuntoPh"></div>
+                        <div class="form-group"><textarea id="soporteAyudaMsg" rows="5" maxlength="4000" placeholder="Describí el problema o la duda…" data-i18n-placeholder="sop.ayudaPh" style="width:100%;resize:vertical"></textarea></div>
+                        <button class="btn" onclick="enviarSoporte('ayuda', this)" data-i18n="sop.enviarAyuda">Pedir ayuda</button>
+                        <div id="soporteAyudaEstado" class="sop-estado"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title" data-i18n="sop.sugTitle">Sugerencias</div>
+                        <p class="card-subtitle" data-i18n="sop.sugDesc">¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.</p>
+                        <div class="form-group"><textarea id="soporteSugMsg" rows="7" maxlength="4000" placeholder="Tu idea…" data-i18n-placeholder="sop.sugPh" style="width:100%;resize:vertical"></textarea></div>
+                        <button class="btn" onclick="enviarSoporte('sugerencia', this)" data-i18n="sop.enviarSug">Enviar sugerencia</button>
+                        <div id="soporteSugEstado" class="sop-estado"></div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top:20px">
+                    <div class="card-title" data-i18n="sop.misMensajes">Mis mensajes</div>
+                    <div id="soporteLista"></div>
+                </div>
+            </section>
             <section class="section" id="settings">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.settings">Configuración</h2>
                 <div class="card">
@@ -3597,6 +3654,7 @@ function showSection(id, btn) {
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
     if (id === 'bloqueos') loadBloqueos();
     if (id === 'inbox') loadConversaciones();
+    if (id === 'ayuda') cargarSoporte();
     closeMobileMenu();
 }
 function toggleMobileMenu() {
@@ -3607,12 +3665,74 @@ function closeMobileMenu() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
 }
+
+// ── Ayuda y sugerencias (27/09/2026) ─────────────────────────────
+// Pedido de Eduardo: una casilla de Ayuda y otra de Sugerencias que le
+// lleguen directo al panel principal de AutomatIA (y por correo). Acá el
+// cliente escribe y ve el estado y la respuesta de lo que mandó.
+async function enviarSoporte(tipo, btn) {
+    const esAyuda = tipo === 'ayuda';
+    const asuntoEl = esAyuda ? document.getElementById('soporteAsunto') : null;
+    const msgEl = document.getElementById(esAyuda ? 'soporteAyudaMsg' : 'soporteSugMsg');
+    const est = document.getElementById(esAyuda ? 'soporteAyudaEstado' : 'soporteSugEstado');
+    const mensaje = msgEl.value.trim();
+    if (mensaje.length < 3) { est.style.color = 'var(--danger)'; est.textContent = t('sop.corto'); return; }
+    if (btn) btn.disabled = true;
+    est.style.color = 'var(--gray-500)'; est.textContent = t('sop.enviando');
+    try {
+        const r = await fetch(API + '/soporte', { method: 'POST', headers: authH(), body: JSON.stringify({ tipo, asunto: asuntoEl ? asuntoEl.value.trim() : '', mensaje }) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+        msgEl.value = '';
+        if (asuntoEl) asuntoEl.value = '';
+        est.style.color = 'var(--primary-dark, #1f5c40)'; est.textContent = t('sop.enviado');
+        cargarSoporte();
+    } catch (e) {
+        est.style.color = 'var(--danger)'; est.textContent = 'Error: ' + e.message;
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+async function cargarSoporte() {
+    const cont = document.getElementById('soporteLista');
+    if (!cont) return;
+    try {
+        const r = await fetch(API + '/soporte', { headers: authH() });
+        const lista = await r.json().catch(() => []);
+        if (!r.ok) throw new Error((lista && lista.error) || ('HTTP ' + r.status));
+        if (!lista.length) { cont.innerHTML = '<div style="color:var(--gray-500);font-size:14px">' + escapeHtmlPanel(t('sop.vacio')) + '</div>'; return; }
+        const nombreEstado = { nuevo: t('sop.estado.nuevo'), en_proceso: t('sop.estado.en_proceso'), resuelto: t('sop.estado.resuelto'), descartado: t('sop.estado.descartado') };
+        const claseEstado = { nuevo: 'badge-warning', en_proceso: 'badge-warning', resuelto: 'badge-success', descartado: 'badge-danger' };
+        cont.innerHTML = lista.map(m => `
+            <div class="sop-item">
+                <div class="sop-meta">
+                    <span>${escapeHtmlPanel(new Date(m.created_at).toLocaleString())}</span>
+                    <span class="badge">${escapeHtmlPanel(m.tipo === 'ayuda' ? t('sop.tipo.ayuda') : t('sop.tipo.sugerencia'))}</span>
+                    <span class="badge ${claseEstado[m.estado] || ''}">${escapeHtmlPanel(nombreEstado[m.estado] || m.estado)}</span>
+                </div>
+                ${m.asunto ? `<div style="font-weight:600;margin-bottom:4px">${escapeHtmlPanel(m.asunto)}</div>` : ''}
+                <div class="sop-msg">${escapeHtmlPanel(m.mensaje)}</div>
+                ${m.respuesta ? `<div class="sop-resp"><strong>${escapeHtmlPanel(t('sop.respuesta'))}:</strong> ${escapeHtmlPanel(m.respuesta)}</div>` : ''}
+            </div>`).join('');
+    } catch (e) {
+        cont.innerHTML = '<div style="color:var(--danger);font-size:14px">' + escapeHtmlPanel('Error: ' + e.message) + '</div>';
+    }
+}
+
+// ── App instalable (PWA) ─────────────────────────────────────────
+// Registra el service worker si está subido junto a este archivo. Solo guarda
+// en caché la "cáscara" del panel para que abra sin conexión; nunca guarda
+// respuestas de la API (datos de pacientes/clientes siempre van en vivo).
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
 // ── IDIOMA DEL PANEL (traducción completa) ───────────────────────
 const translations = {
     es: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita', 'nav.listaCitas': 'Citas', 'title.listaCitas': 'Citas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
@@ -3741,6 +3861,7 @@ const translations = {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment', 'nav.listaCitas': 'Appointments', 'title.listaCitas': 'Appointments',
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
@@ -3869,6 +3990,7 @@ const translations = {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta', 'nav.listaCitas': 'Consultas', 'title.listaCitas': 'Consultas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
+        'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
