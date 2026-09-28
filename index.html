@@ -72,6 +72,7 @@
             --ico-file:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5M9 13h6M9 17h4"/></svg>');
             --ico-block: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>');
             --ico-gear:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>');
+            --ico-img:   url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>');
             --ico-help:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>');
             --ico-chat:  url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>');
             --radius-sm: 8px;
@@ -252,6 +253,12 @@
         .pieza-acciones .btn { flex: 1; }
         
         .sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        .redes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+        .redes-item { border: 1px solid var(--gray-200, #e5e7eb); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
+        .redes-item-nombre { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+        .redes-item-meta { font-size: 13px; color: var(--gray-500); min-height: 18px; }
+        .redes-item .btn { margin-top: 6px; align-self: flex-start; }
+        .redes-vacio { color: var(--gray-500); font-size: 14px; padding: 6px 0; }
         @media (max-width: 900px) { .sop-grid { grid-template-columns: 1fr; } }
         .sop-item { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
         .sop-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
@@ -342,6 +349,8 @@
     .nav-link[data-section="expedientes"]::before { -webkit-mask-image: var(--ico-file);  mask-image: var(--ico-file); }
     .nav-link[data-section="settings"]::before    { -webkit-mask-image: var(--ico-gear);  mask-image: var(--ico-gear); }
     .nav-link[data-section="ayuda"]::before       { -webkit-mask-image: var(--ico-help);  mask-image: var(--ico-help); }
+    .nav-link[data-section="redes"]::before       { -webkit-mask-image: var(--ico-img);   mask-image: var(--ico-img); }
+    .terms-fecha{font-size:13px;color:var(--gris,var(--gray-500));margin:-4px 0 12px}
 </style>
 </head>
 <body>
@@ -383,6 +392,17 @@
                     <option value="otro" data-i18n="tipoNegocio.otro">Otro</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label class="check-inline" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-weight:500">
+                    <input type="checkbox" id="regEsDoctor" onchange="document.getElementById('regDoctorCampos').style.display = this.checked ? 'block' : 'none'" style="width:auto;margin-top:3px">
+                    <span data-i18n="login.esDoctor">Además de ser el dueño, también atiendo pacientes (soy doctor/a)</span>
+                </label>
+                <small class="form-hint" data-i18n="login.esDoctorHint">Solo se define al crear la cuenta. Así vas a ver tu agenda y tus expedientes como los demás doctores.</small>
+            </div>
+            <div id="regDoctorCampos" style="display:none">
+                <div class="form-group"><label data-i18n="login.doctorNombre">Tu nombre como doctor/a</label><input type="text" id="regDoctorNombre" maxlength="120" data-i18n-placeholder="login.doctorNombrePh" placeholder="Dra. Ana Rodríguez"></div>
+                <div class="form-group"><label data-i18n="login.especialidad">Especialidad</label><input type="text" id="regEspecialidad" maxlength="80" data-i18n-placeholder="login.especialidadPh" placeholder="Medicina general"></div>
+            </div>
             <button class="btn btn-block" onclick="register()" data-i18n="login.tabRegister">Crear cuenta</button>
         </div>
         <!-- Aceptar invitación (llegó por el link del correo de invitación) -->
@@ -406,6 +426,7 @@
         <div class="modal-box modal-box-lg">
             <h3 data-i18n="terms.title">Condiciones del Servicio</h3>
             <p class="card-subtitle" data-i18n="terms.intro">Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.</p>
+            <p id="terminosPublicado" class="terms-fecha"></p>
             <div class="terms-resumen">
                 <ul>
                     <li data-i18n="terms.p1">AutoCita es un servicio de agenda por WhatsApp operado por 3102964957 S.R.L. — vos sos el responsable de los datos de tus pacientes que cargás en la plataforma.</li>
@@ -436,6 +457,7 @@
             <button class="nav-link" data-section="bloqueos" data-i18n="nav.bloqueos" onclick="showSection('bloqueos', this)">Bloqueos</button>
             <button class="nav-link" data-section="doctores" data-i18n="nav.doctores" onclick="showSection('doctores', this)">Doctores</button>
             <button class="nav-link" data-section="facturacion" data-i18n="nav.facturacion" onclick="showSection('facturacion', this)">Facturación</button>
+            <button class="nav-link" data-section="redes" data-i18n="nav.redes" onclick="showSection('redes', this)">Redes</button>
             <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
             <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
             <button class="nav-link" data-section="ayuda" data-i18n="nav.ayuda" onclick="showSection('ayuda', this)">Ayuda</button>
@@ -861,6 +883,23 @@
                 </div>
             </section>
             <!-- Settings -->
+            <!-- Imágenes para redes (28/09/2026): una pieza lista para publicar por
+                 cada servicio y cada doctor, con precio y detalle, sin IA. -->
+            <section class="section" id="redes">
+                <h2 style="margin-bottom: 8px;" data-i18n="title.redes">Imágenes para redes</h2>
+                <p class="card-subtitle" style="margin-bottom:20px" data-i18n="redes.intro">Elegí un servicio o un doctor y te armamos la imagen con nombre, precio y detalle en 3 estilos y 3 tamaños (post, vertical e historia). Podés subir una foto y descargarla o compartirla directo.</p>
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+                        <div class="card-title" style="margin:0" data-i18n="redes.servicios">Servicios</div>
+                        <button class="btn btn-sm btn-ghost" onclick="abrirPiezaLibre()" data-i18n="redes.libre">+ Imagen con otro texto</button>
+                    </div>
+                    <div id="redesServicios" class="redes-grid"></div>
+                </div>
+                <div class="card" style="margin-top:20px">
+                    <div class="card-title" data-i18n="redes.doctores">Doctores</div>
+                    <div id="redesDoctores" class="redes-grid"></div>
+                </div>
+            </section>
             <!-- Ayuda y sugerencias (27/09/2026) -->
             <section class="section" id="ayuda">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.ayuda">Ayuda y sugerencias</h2>
@@ -921,17 +960,6 @@
                     <div class="form-group"><label data-i18n="set.rec1">Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
                     <div class="form-group"><label data-i18n="set.rec2">Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2" class="campo-bloqueado" disabled><small class="form-hint" data-i18n="set.rec2Nota">Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.</small></div>
                     <button class="btn btn-block" onclick="guardarConfigRecordatorios()" data-i18n="set.btnGuardar">Guardar</button>
-                </div>
-                <!-- Solo visible para el dueño -->
-                <div id="vinculoDoctorSection" class="card" style="display:none">
-                    <div class="card-title" data-i18n="set.soyDoctorTitle">¿Sos también uno de los doctores?</div>
-                    <p class="card-subtitle" data-i18n="set.soyDoctorDesc">Si además de dueño atendés pacientes, vinculá tu cuenta a tu registro de doctor para ver tu propio expediente clínico igual que los demás doctores.</p>
-                    <div id="alertVinculoDoctor"></div>
-                    <div class="form-group">
-                        <select id="vinculoDoctorSelect" onchange="guardarVinculoDoctor(this.value)">
-                            <option value="" data-i18n="set.noSoyDoctor">No soy doctor</option>
-                        </select>
-                    </div>
                 </div>
                 <!-- Solo visible para el dueño -->
                 <div id="equipoSection" style="display:none">
@@ -1162,8 +1190,11 @@ async function register() {
     const pass2 = document.getElementById('regPass2').value;
     const nombre = document.getElementById('regNombre').value.trim();
     const tipo_negocio = document.getElementById('regTipoNegocio').value;
+    const es_doctor = document.getElementById('regEsDoctor').checked;
+    const doctor_nombre = document.getElementById('regDoctorNombre').value.trim();
+    const especialidad = document.getElementById('regEspecialidad').value.trim();
     const alertEl = document.getElementById('loginAlert');
-    if (!email || !pass || !nombre) {
+    if (!email || !pass || !nombre || (es_doctor && !doctor_nombre)) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errCampos')}</div>`;
         return;
     }
@@ -1179,7 +1210,7 @@ async function register() {
         const res = await fetch(API + '/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password: pass, clinica_nombre: nombre, tipo_negocio })
+            body: JSON.stringify({ email, password: pass, clinica_nombre: nombre, tipo_negocio, es_doctor, doctor_nombre, especialidad })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || t('login.errCrearCuenta'));
@@ -1188,7 +1219,7 @@ async function register() {
         setToken(token);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = '<div class="alert alert-error">' + e.message + '</div>';
+        alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(e.message) + '</div>';
     }
 }
 async function login() {
@@ -1208,7 +1239,7 @@ async function login() {
         setToken(token);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── ACEPTAR INVITACIÓN ────────────────────────────────────────────
@@ -1262,7 +1293,7 @@ async function aceptarInvitacion() {
         setToken(inviteAccessToken);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 function logout() {
@@ -1319,6 +1350,8 @@ function mostrarModalTerminos() {
         document.getElementById('terminosCheck').checked = false;
         document.getElementById('terminosBtnAceptar').disabled = true;
         document.getElementById('terminosAlert').innerHTML = '';
+        const pub = document.getElementById('terminosPublicado');
+        if (pub) pub.textContent = t('terms.publicadoEl', { fecha: fechaPublicacionTerminos() });
         document.getElementById('terminosOverlay').classList.add('open');
         window.__resolverTerminos = resolve;
     });
@@ -1339,25 +1372,25 @@ async function aceptarTerminosPanel() {
         if (window.__resolverTerminos) { window.__resolverTerminos(); window.__resolverTerminos = null; }
         renderEstadoTerminosSettings();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
         btn.disabled = false;
         btn.textContent = textoOriginal;
     }
 }
 function aplicarPermisos() {
     const permisos = {
-        dueno:          ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','facturacion','settings'],
+        dueno:          ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','facturacion','redes','settings','ayuda'],
         // Recepción NO ve Bloqueos: el RLS de bloqueos_agenda solo deja crear
         // al dueño, al jefe de área o al propio doctor. Mostrarle el formulario
         // sería ofrecerle un botón que siempre le va a fallar. Igual no le hace
         // falta: los cupos bloqueados ya no aparecen al crear una cita.
-        recepcionista:  ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','doctores','facturacion'],
-        doctor:         ['dashboard','inbox','listaCitas','citas','bloqueos','expedientes'],
+        recepcionista:  ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','doctores','facturacion','redes','ayuda'],
+        doctor:         ['dashboard','inbox','listaCitas','citas','bloqueos','expedientes','ayuda'],
         // Jefe de área: lo mismo que un doctor, más los expedientes de sus
         // colegas (el backend registra cada acceso) y la vista de pacientes.
-        jefe_area:      ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes'],
+        jefe_area:      ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes','ayuda'],
     };
-    const visibles = permisos[userRol] || permisos['dueno'];
+    const visibles = [...(permisos[userRol] || permisos['dueno'])];
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
     // registro de doctor (userDoctorId). Recepción nunca lo ve.
     if (userDoctorId && !visibles.includes('expedientes')) visibles.push('expedientes');
@@ -1367,30 +1400,6 @@ function aplicarPermisos() {
     });
     const equipoSec = document.getElementById('equipoSection');
     if (equipoSec) equipoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
-    const vinculoSec = document.getElementById('vinculoDoctorSection');
-    if (vinculoSec) vinculoSec.style.display = userRol === 'dueno' ? 'block' : 'none';
-}
-function poblarVinculoDoctor() {
-    const sel = document.getElementById('vinculoDoctorSelect');
-    if (!sel) return;
-    sel.innerHTML = `<option value="">${t('set.noSoyDoctor')}</option>` +
-        doctoresCache.map(d => `<option value="${d.id}">${escapeHtmlPanel(d.nombre)}</option>`).join('');
-    sel.value = userDoctorId || '';
-}
-async function guardarVinculoDoctor(id) {
-    const alertEl = document.getElementById('alertVinculoDoctor');
-    try {
-        await apiFetch('/clinica/setup', {
-            method: 'PATCH',
-            body: JSON.stringify({ doctor_id: id || null })
-        });
-        userDoctorId = id || null;
-        aplicarPermisos();
-        alertEl.innerHTML = `<div class="alert alert-success">${id ? t('set.vinculoOk') : t('set.vinculoQuitado')}</div>`;
-        setTimeout(() => alertEl.innerHTML = '', 3000);
-    } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
-    }
 }
 // Un doctor (o el dueño vinculado a un doctor, si así lo quisiéramos en el
 // futuro) solo debería ver sus propias citas en las listas. Por ahora la
@@ -1789,7 +1798,7 @@ async function crearPaciente() {
         if (citasCreadas) { loadCitas(); loadDashboard(); }
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── BUBBLES DE DOCTORES (form Agregar Paciente) ─────────────────────
@@ -2036,7 +2045,7 @@ async function crearServicio() {
         loadServicios();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function eliminarServicio(id) {
@@ -2055,7 +2064,8 @@ function populateFacturaCitaSelect() {
             const nombrePac = nombrePaciente(c);
             const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString(getLocale()) : '';
             const hora = c.fecha ? new Date(c.fecha).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '';
-            return `<option value="${c.id}">${nombrePac} — ${fecha} ${hora}</option>`;
+            // Fix seguridad 28/09/2026: el nombre lo puede escribir cualquiera por WhatsApp.
+            return `<option value="${escapeHtmlPanel(c.id)}">${escapeHtmlPanel(nombrePac)} — ${fecha} ${hora}</option>`;
         }).join('');
     if (actual) sel.value = actual;
 }
@@ -2093,7 +2103,7 @@ async function loadFactura() {
             </div>
         `;
     } catch (e) {
-        detalleEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+        detalleEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
     }
 }
 async function agregarServicioCita(citaId) {
@@ -2138,7 +2148,7 @@ async function correrAgendaDia() {
         loadCitas();
         loadDashboard();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function cancelarDiaCompleto() {
@@ -2159,7 +2169,7 @@ async function cancelarDiaCompleto() {
         loadCitas();
         loadDashboard();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── LISTA DE ESPERA ───────────────────────────────────────────────
@@ -2234,7 +2244,7 @@ async function agregarListaEspera() {
         loadListaEspera();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function marcarAtendidoListaEspera(id) {
@@ -2323,7 +2333,7 @@ async function cargarDiasDisponiblesCita() {
             cont.innerHTML += `<div class="form-hint" style="width:100%;color:var(--warning)">${t('citas.doctorSinDias')}</div>`;
         }
     } catch (e) {
-        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${e.message}</span>`;
+        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${escapeHtmlPanel(e.message)}</span>`;
     }
 }
 function elegirDiaCita(fecha, btn) {
@@ -2405,7 +2415,7 @@ async function crearCitaIndividual() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 let bloqueFilasHoras = [];
@@ -2520,7 +2530,7 @@ async function crearCitasBloque() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── CITAS RECURRENTES (varias semanas) ───────────────────────────
@@ -2645,7 +2655,7 @@ async function crearCitasRecurrentes() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── DOCTORES ──────────────────────────────────────────────────────
@@ -2660,7 +2670,6 @@ async function loadDoctores() {
         populateEmergDoctorSelect();
         populateRecurrenteSelects();
         populateDoctorSelectCitaIndividual();
-        poblarVinculoDoctor();
         renderTablaDoctores();
     } catch (e) { console.error('Doctores:', e); }
 }
@@ -2937,7 +2946,7 @@ async function guardarDoctor() {
         loadDoctores();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── SETTINGS ──────────────────────────────────────────────────────
@@ -2976,17 +2985,34 @@ async function guardarSlugClinica() {
     } catch (e) {
         // El backend traduce el choque de slugs duplicados a un mensaje claro
         // (ver PATCH /clinica/setup) — acá solo se muestra tal cual.
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
+}
+// Fecha de publicación de la versión vigente de las condiciones. Viene del
+// backend (terminos.publicado, 'AAAA-MM-DD'); se arma como fecha LOCAL para
+// que en Costa Rica (UTC-6) no se muestre el día anterior.
+const TERMINOS_PUBLICADO_RESPALDO = '2026-09-28';
+function localeTerminos() {
+    return currentLang === 'en' ? 'en-US' : (currentLang === 'pt' ? 'pt-BR' : 'es-CR');
+}
+function fechaPublicacionTerminos() {
+    const iso = /^\d{4}-\d{2}-\d{2}$/.test(terminosInfo?.publicado || '') ? terminosInfo.publicado : TERMINOS_PUBLICADO_RESPALDO;
+    const [a, m, d] = iso.split('-').map(Number);
+    return new Date(a, m - 1, d).toLocaleDateString(localeTerminos(), { year: 'numeric', month: 'long', day: 'numeric' });
 }
 function renderEstadoTerminosSettings() {
     const el = document.getElementById('settingsTerminos');
     if (!el) return;
+    const publicado = `<p>${escapeHtmlPanel(t('terms.publicadoEl', { fecha: fechaPublicacionTerminos() }))}</p>`;
+    const url = /^https:\/\//.test(terminosInfo?.url || '') ? terminosInfo.url : 'https://automatiaai.com/terminos.html';
+    const link = `<a class="ayuda-link-terms" href="${escapeHtmlPanel(url)}" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
     if (terminosInfo?.aceptado) {
-        const fecha = terminosInfo.en ? new Date(terminosInfo.en).toLocaleDateString(currentLang === 'en' ? 'en-US' : (currentLang === 'pt' ? 'pt-BR' : 'es-CR'), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-        el.innerHTML = `<p>${t('set.terminosAceptadoEl', { fecha })}</p><a class="ayuda-link-terms" href="${escapeHtmlPanel(terminosInfo.url || 'https://automatiaai.com/terminos.html')}" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
+        const en = terminosInfo.en ? new Date(terminosInfo.en) : null;
+        const fecha = en ? en.toLocaleDateString(localeTerminos(), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+        const hora = en ? en.toLocaleTimeString(localeTerminos(), { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+        el.innerHTML = `${publicado}<p><strong>${escapeHtmlPanel(t('set.terminosAceptadoEl', { fecha: hora ? `${fecha} · ${hora}` : fecha }))}</strong></p>${link}`;
     } else {
-        el.innerHTML = `<a class="ayuda-link-terms" href="https://automatiaai.com/terminos.html" target="_blank" rel="noopener">${t('terms.verCompletas')}</a>`;
+        el.innerHTML = publicado + link;
     }
 }
 async function loadSettings() {
@@ -3030,7 +3056,7 @@ async function loadSettings() {
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
         document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
     } catch (e) {
-        infoEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+        infoEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
     }
 }
 async function guardarConfigClinica() {
@@ -3057,7 +3083,7 @@ async function guardarConfigClinica() {
         document.getElementById('headerClinica').textContent = body.nombre || 'AutoCita';
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function guardarConfigRecordatorios() {
@@ -3072,7 +3098,7 @@ async function guardarConfigRecordatorios() {
         alertEl.innerHTML = `<div class="alert alert-success">${t('common.guardadoOk')}</div>`;
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── EXPEDIENTES ───────────────────────────────────────────────────
@@ -3161,7 +3187,7 @@ async function loadExpediente() {
             `).join('');
         }
     } catch (e) {
-        listaEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+        listaEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
     }
 }
 let notaAudioUrlPendiente = null; // seteado por toggleGrabacionVoz() al transcribir; se manda en el próximo guardado
@@ -3193,7 +3219,7 @@ async function agregarNotaExpediente() {
         loadExpediente();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 // ── NOTA DE VOZ (grabación + transcripción con Whisper) ──────────────────
@@ -3295,7 +3321,7 @@ async function loadOdontograma(pacienteId) {
         dienteSeleccionado = null;
         renderOdontograma();
     } catch (e) {
-        document.getElementById('odontogramaGrid').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+        document.getElementById('odontogramaGrid').innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
     }
 }
 // ─── Odontograma: arco dental ────────────────────────────────────────────────
@@ -3486,7 +3512,7 @@ async function invitarMiembro() {
         loadEquipo();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function eliminarMiembro(id) {
@@ -3624,7 +3650,7 @@ async function loadBloqueos() {
             </div>`;
         }).join('');
     } catch (e) {
-        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${e.message}</span>`;
+        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${escapeHtmlPanel(e.message)}</span>`;
     }
 }
 // Fix 26/09/2026: ahora escapa también comillas — se usa dentro de atributos
@@ -3656,7 +3682,7 @@ async function crearBloqueo() {
         loadBloqueos();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 async function borrarBloqueo(id) {
@@ -3665,7 +3691,7 @@ async function borrarBloqueo(id) {
         await apiFetch(`/bloqueos/${id}`, { method: 'DELETE' });
         loadBloqueos();
     } catch (e) {
-        document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+        document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
 function showSection(id, btn) {
@@ -3677,6 +3703,7 @@ function showSection(id, btn) {
     if (id === 'bloqueos') loadBloqueos();
     if (id === 'inbox') loadConversaciones();
     if (id === 'ayuda') cargarSoporte();
+    if (id === 'redes') renderRedes();
     closeMobileMenu();
 }
 function toggleMobileMenu() {
@@ -4106,6 +4133,37 @@ const PIEZA_CFG = {
     claveColor: 'autocita_pieza_color',
     negocio: () => (clinicaCache && clinicaCache.nombre) || (document.getElementById('headerClinica')?.textContent || '').trim(),
 };
+// ── Sección Redes ──────────────────────────────────────────────────
+function tarjetaRedes(nombre, meta, onclick) {
+    return `<div class="redes-item"><div class="redes-item-nombre">${escapeHtmlPanel(nombre)}</div><div class="redes-item-meta">${escapeHtmlPanel(meta)}</div><button class="btn btn-sm" onclick="${onclick}">🖼 ${escapeHtmlPanel(t('redes.crear'))}</button></div>`;
+}
+async function renderRedes() {
+    const cajaS = document.getElementById('redesServicios');
+    const cajaD = document.getElementById('redesDoctores');
+    if (!cajaS || !cajaD) return;
+    if (!serviciosCache.length) { try { await loadServicios(); } catch (e) {} }
+    const uuid = /^[0-9a-f-]{36}$/i;
+    const servicios = serviciosCache.filter(s => uuid.test(String(s.id)));
+    cajaS.innerHTML = servicios.length
+        ? servicios.map(s => tarjetaRedes(s.nombre, '₡' + Number(s.precio || 0).toLocaleString(getLocale()), `abrirPiezaDeServicio('${s.id}')`)).join('')
+        : `<div class="redes-vacio">${escapeHtmlPanel(t('redes.sinServicios'))}</div>`;
+    const doctores = doctoresCache.filter(d => uuid.test(String(d.id)));
+    cajaD.innerHTML = doctores.length
+        ? doctores.map(d => tarjetaRedes(d.nombre, [d.especialidad, Number(d.precio) ? '₡' + Number(d.precio).toLocaleString(getLocale()) : ''].filter(Boolean).join(' · '), `abrirPiezaDeDoctor('${d.id}')`)).join('')
+        : `<div class="redes-vacio">${escapeHtmlPanel(t('redes.sinDoctores'))}</div>`;
+}
+async function abrirPiezaDeDoctor(id) {
+    const d = doctoresCache.find(x => x.id === id);
+    if (!d) return;
+    if (!clinicaCache) { try { await ensureClinicaCache(); } catch (e) {} }
+    const precio = Number(d.precio) ? t('redes.consulta') + ' ₡' + Number(d.precio).toLocaleString('es-CR') : '';
+    const detalle = [d.especialidad, d.horario].filter(Boolean).join('. ');
+    abrirPiezaProducto({ nombre: d.nombre, precio, detalle, foto: null });
+}
+async function abrirPiezaLibre() {
+    if (!clinicaCache) { try { await ensureClinicaCache(); } catch (e) {} }
+    abrirPiezaProducto({ nombre: '', precio: '', detalle: '', foto: null });
+}
 async function abrirPiezaDeServicio(id) {
     const s = serviciosCache.find(x => x.id === id);
     if (!s) return;
@@ -4118,6 +4176,7 @@ const translations = {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita', 'nav.listaCitas': 'Citas', 'title.listaCitas': 'Citas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'nav.redes': 'Redes', 'title.redes': 'Imágenes para redes', 'redes.intro': 'Elegí un servicio o un doctor y te armamos la imagen con nombre, precio y detalle en 3 estilos y 3 tamaños (post, vertical e historia). Podés subir una foto y descargarla o compartirla directo.', 'redes.servicios': 'Servicios', 'redes.doctores': 'Doctores', 'redes.libre': '+ Imagen con otro texto', 'redes.crear': 'Crear imagen', 'redes.sinServicios': 'Todavía no hay servicios. Agregalos en Facturación → Servicios.', 'redes.sinDoctores': 'Todavía no hay doctores cargados.', 'redes.consulta': 'Consulta',
         'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
@@ -4126,6 +4185,12 @@ const translations = {
         'login.password': 'Contraseña', 'login.passwordPh': 'Mín. 10: mayúscula, minúscula y número', 'login.confirmPassword': 'Confirmar contraseña',
         'login.confirmPasswordPh': 'Repetí la contraseña', 'login.clinicName': 'Nombre de la clínica', 'login.clinicNamePh': 'Clínica San José',
         'login.tipoNegocio': 'Tipo de negocio',
+        'login.esDoctor': 'Además de ser el dueño, también atiendo pacientes (soy doctor/a)',
+        'login.esDoctorHint': 'Solo se define al crear la cuenta. Así vas a ver tu agenda y tus expedientes como los demás doctores.',
+        'login.doctorNombre': 'Tu nombre como doctor/a',
+        'login.doctorNombrePh': 'Dra. Ana Rodríguez',
+        'login.especialidad': 'Especialidad',
+        'login.especialidadPh': 'Medicina general',
         'tipoNegocio.clinica_general': 'Clínica General / Consultorio Médico', 'tipoNegocio.dental': 'Consultorio Dental',
         'tipoNegocio.fisioterapia': 'Fisioterapia / Rehabilitación', 'tipoNegocio.psicologia': 'Psicología / Salud Mental',
         'tipoNegocio.nutricion': 'Nutrición', 'tipoNegocio.spa_estetica': 'Spa / Centro de Estética',
@@ -4217,7 +4282,7 @@ const translations = {
         'set.clinicaTitle': 'Tu Clínica', 'set.direccion': 'Dirección', 'set.horario': 'Horario', 'set.plan': 'Plan',
         'set.agendarTitle': 'Link para agendar en línea', 'set.agendarDesc': 'Compartilo donde quieras — bio de Instagram, grupos de WhatsApp, anuncios. Ahí el paciente elige doctor, día y hora reales y queda agendado solo, sin escribirte primero.', 'set.agendarLinkLabel': 'Nombre del link', 'set.agendarGuardar': 'Guardar link',
         'set.terminosTitle': 'Condiciones del Servicio', 'set.terminosAceptadoEl': 'Aceptaste las Condiciones del Servicio el {fecha}.',
-        'terms.title': 'Condiciones del Servicio', 'terms.intro': 'Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.',
+        'terms.publicadoEl': 'Versión vigente publicada el {fecha}.', 'terms.title': 'Condiciones del Servicio', 'terms.intro': 'Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.',
         'terms.p1': 'AutoCita es un servicio de agenda por WhatsApp operado por 3102964957 S.R.L. — vos sos el responsable de los datos de tus pacientes que cargás en la plataforma.',
         'terms.p2': 'El asistente automatizado puede cometer errores: revisá siempre la información crítica de citas y salud.',
         'terms.p3': 'Podés cancelar el servicio cuando quieras escribiendo a hola@automatiaai.com.',
@@ -4232,9 +4297,6 @@ const translations = {
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Doctor asociado (si el rol es Doctor)', 'set.btnInvitar': 'Enviar invitación',
         'set.miembrosTitle': 'Miembros del equipo', 'set.colEmail': 'Email', 'set.sinMiembros': 'Sin miembros todavía',
         'set.errEmail': 'Ingresá un email', 'set.msgInvitado': 'Invitación enviada a {email} ✓', 'set.confirmEliminarMiembro': '¿Eliminar este miembro del equipo?',
-        'set.soyDoctorTitle': '¿Sos también uno de los doctores?',
-        'set.soyDoctorDesc': 'Si además de dueño atendés pacientes, vinculá tu cuenta a tu registro de doctor para ver tu propio expediente clínico igual que los demás doctores.',
-        'set.noSoyDoctor': 'No soy doctor', 'set.vinculoOk': 'Cuenta vinculada a ese doctor', 'set.vinculoQuitado': 'Vínculo quitado',
         'badge.pendiente': 'Pendiente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada', 'badge.atendida': 'Atendida',
         'citas.btnLlego': '✋ Llegó', 'citas.btnAtendida': '✓ Terminar', 'citas.atendida': 'Atendida',
         'citas.pedirExpediente': 'Cita cerrada. Todavía no tiene nota en el expediente. ¿Querés escribirla ahora?',
@@ -4247,6 +4309,7 @@ const translations = {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment', 'nav.listaCitas': 'Appointments', 'title.listaCitas': 'Appointments',
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
+        'nav.redes': 'Social', 'title.redes': 'Social media images', 'redes.intro': 'Pick a service or a doctor and we build the image with name, price and details in 3 styles and 3 sizes (post, portrait and story). You can upload a photo and download or share it right away.', 'redes.servicios': 'Services', 'redes.doctores': 'Doctors', 'redes.libre': '+ Image with custom text', 'redes.crear': 'Create image', 'redes.sinServicios': 'No services yet. Add them in Billing → Services.', 'redes.sinDoctores': 'No doctors yet.', 'redes.consulta': 'Consultation',
         'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
@@ -4255,6 +4318,12 @@ const translations = {
         'login.password': 'Password', 'login.passwordPh': 'Min. 10: uppercase, lowercase and a digit', 'login.confirmPassword': 'Confirm password',
         'login.confirmPasswordPh': 'Repeat your password', 'login.clinicName': 'Clinic name', 'login.clinicNamePh': 'San José Clinic',
         'login.tipoNegocio': 'Business type',
+        'login.esDoctor': 'Besides owning the clinic, I also see patients (I am a doctor)',
+        'login.esDoctorHint': 'This is only set when creating the account. You will see your schedule and records like the other doctors.',
+        'login.doctorNombre': 'Your name as a doctor',
+        'login.doctorNombrePh': 'Dr. Ana Rodríguez',
+        'login.especialidad': 'Specialty',
+        'login.especialidadPh': 'General medicine',
         'tipoNegocio.clinica_general': 'General Clinic / Medical Office', 'tipoNegocio.dental': 'Dental Office',
         'tipoNegocio.fisioterapia': 'Physical Therapy / Rehab', 'tipoNegocio.psicologia': 'Psychology / Mental Health',
         'tipoNegocio.nutricion': 'Nutrition', 'tipoNegocio.spa_estetica': 'Spa / Aesthetics Center',
@@ -4346,7 +4415,7 @@ const translations = {
         'set.clinicaTitle': 'Your Clinic', 'set.direccion': 'Address', 'set.horario': 'Hours', 'set.plan': 'Plan',
         'set.agendarTitle': 'Online booking link', 'set.agendarDesc': 'Share it anywhere — Instagram bio, WhatsApp groups, ads. Patients pick a real doctor, day and time there and get booked on their own, without messaging you first.', 'set.agendarLinkLabel': 'Link name', 'set.agendarGuardar': 'Save link',
         'set.terminosTitle': 'Terms of Service', 'set.terminosAceptadoEl': 'You accepted the Terms of Service on {fecha}.',
-        'terms.title': 'Terms of Service', 'terms.intro': 'Before continuing, please read and accept our Terms of Service.',
+        'terms.publicadoEl': 'Current version published on {fecha}.', 'terms.title': 'Terms of Service', 'terms.intro': 'Before continuing, please read and accept our Terms of Service.',
         'terms.p1': 'AutoCita is a WhatsApp scheduling service operated by 3102964957 S.R.L. — you are responsible for your patients\' data that you load into the platform.',
         'terms.p2': 'The automated assistant can make mistakes: always double-check critical appointment and health information.',
         'terms.p3': 'You can cancel the service at any time by writing to hola@automatiaai.com.',
@@ -4361,9 +4430,6 @@ const translations = {
         'set.rolAdmin': 'Administrator', 'set.doctorAsociado': 'Associated doctor (if role is Doctor)', 'set.btnInvitar': 'Send invitation',
         'set.miembrosTitle': 'Team members', 'set.colEmail': 'Email', 'set.sinMiembros': 'No members yet',
         'set.errEmail': 'Enter an email', 'set.msgInvitado': 'Invitation sent to {email} ✓', 'set.confirmEliminarMiembro': 'Remove this team member?',
-        'set.soyDoctorTitle': 'Are you also one of the doctors?',
-        'set.soyDoctorDesc': 'If besides being the owner you also see patients, link your account to your doctor record to see your own clinical record like other doctors.',
-        'set.noSoyDoctor': "I'm not a doctor", 'set.vinculoOk': 'Account linked to that doctor', 'set.vinculoQuitado': 'Link removed',
         'badge.pendiente': 'Pending', 'badge.confirmada': 'Confirmed', 'badge.cancelada': 'Cancelled', 'badge.atendida': 'Seen',
         'citas.btnLlego': '✋ Arrived', 'citas.btnAtendida': '✓ Finish', 'citas.atendida': 'Seen',
         'citas.pedirExpediente': 'Appointment closed. There is still no record note for it. Do you want to write it now?',
@@ -4376,6 +4442,7 @@ const translations = {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta', 'nav.listaCitas': 'Consultas', 'title.listaCitas': 'Consultas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
+        'nav.redes': 'Redes', 'title.redes': 'Imagens para redes', 'redes.intro': 'Escolha um serviço ou um médico e montamos a imagem com nome, preço e detalhe em 3 estilos e 3 tamanhos (post, vertical e story). Você pode enviar uma foto e baixar ou compartilhar direto.', 'redes.servicios': 'Serviços', 'redes.doctores': 'Médicos', 'redes.libre': '+ Imagem com outro texto', 'redes.crear': 'Criar imagem', 'redes.sinServicios': 'Ainda não há serviços. Adicione em Faturamento → Serviços.', 'redes.sinDoctores': 'Ainda não há médicos cadastrados.', 'redes.consulta': 'Consulta',
         'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
@@ -4384,6 +4451,12 @@ const translations = {
         'login.password': 'Senha', 'login.passwordPh': 'Mín. 10: maiúscula, minúscula e número', 'login.confirmPassword': 'Confirmar senha',
         'login.confirmPasswordPh': 'Repita a senha', 'login.clinicName': 'Nome da clínica', 'login.clinicNamePh': 'Clínica São José',
         'login.tipoNegocio': 'Tipo de negócio',
+        'login.esDoctor': 'Além de ser o dono, também atendo pacientes (sou médico/a)',
+        'login.esDoctorHint': 'Isso só é definido ao criar a conta. Você verá sua agenda e prontuários como os outros médicos.',
+        'login.doctorNombre': 'Seu nome como médico/a',
+        'login.doctorNombrePh': 'Dra. Ana Rodríguez',
+        'login.especialidad': 'Especialidade',
+        'login.especialidadPh': 'Clínica geral',
         'tipoNegocio.clinica_general': 'Clínica Geral / Consultório Médico', 'tipoNegocio.dental': 'Consultório Odontológico',
         'tipoNegocio.fisioterapia': 'Fisioterapia / Reabilitação', 'tipoNegocio.psicologia': 'Psicologia / Saúde Mental',
         'tipoNegocio.nutricion': 'Nutrição', 'tipoNegocio.spa_estetica': 'Spa / Centro de Estética',
@@ -4475,7 +4548,7 @@ const translations = {
         'set.clinicaTitle': 'Sua Clínica', 'set.direccion': 'Endereço', 'set.horario': 'Horário', 'set.plan': 'Plano',
         'set.agendarTitle': 'Link para agendar online', 'set.agendarDesc': 'Compartilhe onde quiser — bio do Instagram, grupos de WhatsApp, anúncios. O paciente escolhe médico, dia e horário reais e fica agendado sozinho, sem falar com você antes.', 'set.agendarLinkLabel': 'Nome do link', 'set.agendarGuardar': 'Salvar link',
         'set.terminosTitle': 'Condições do Serviço', 'set.terminosAceptadoEl': 'Você aceitou as Condições do Serviço em {fecha}.',
-        'terms.title': 'Condições do Serviço', 'terms.intro': 'Antes de continuar, precisamos que leia e aceite nossas Condições do Serviço.',
+        'terms.publicadoEl': 'Versão vigente publicada em {fecha}.', 'terms.title': 'Condições do Serviço', 'terms.intro': 'Antes de continuar, precisamos que leia e aceite nossas Condições do Serviço.',
         'terms.p1': 'AutoCita é um serviço de agendamento por WhatsApp operado pela 3102964957 S.R.L. — você é responsável pelos dados dos seus pacientes que carrega na plataforma.',
         'terms.p2': 'O assistente automatizado pode cometer erros: sempre revise as informações críticas de consultas e saúde.',
         'terms.p3': 'Você pode cancelar o serviço quando quiser escrevendo para hola@automatiaai.com.',
@@ -4490,9 +4563,6 @@ const translations = {
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Médico associado (se a função for Médico)', 'set.btnInvitar': 'Enviar convite',
         'set.miembrosTitle': 'Membros da equipe', 'set.colEmail': 'Email', 'set.sinMiembros': 'Nenhum membro ainda',
         'set.errEmail': 'Digite um email', 'set.msgInvitado': 'Convite enviado para {email} ✓', 'set.confirmEliminarMiembro': 'Remover este membro da equipe?',
-        'set.soyDoctorTitle': 'Você também é um dos médicos?',
-        'set.soyDoctorDesc': 'Se além de dono você também atende pacientes, vincule sua conta ao seu registro de médico para ver seu próprio prontuário como os demais médicos.',
-        'set.noSoyDoctor': 'Não sou médico', 'set.vinculoOk': 'Conta vinculada a esse médico', 'set.vinculoQuitado': 'Vínculo removido',
         'badge.pendiente': 'Pendente', 'badge.confirmada': 'Confirmada', 'badge.cancelada': 'Cancelada', 'badge.atendida': 'Atendida',
         'citas.btnLlego': '✋ Chegou', 'citas.btnAtendida': '✓ Finalizar', 'citas.atendida': 'Atendida',
         'citas.pedirExpediente': 'Consulta encerrada. Ainda não tem nota no prontuário. Quer escrevê-la agora?',
