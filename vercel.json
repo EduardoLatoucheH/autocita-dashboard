@@ -1,5 +1,7 @@
 {
   "routes": [
+    { "src": "/(manifest\\.webmanifest|icon-[a-z0-9-]+\\.png)", "dest": "/$1" },
+    { "src": "/sw\\.js", "dest": "/sw.js", "headers": { "Cache-Control": "no-cache" } },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
