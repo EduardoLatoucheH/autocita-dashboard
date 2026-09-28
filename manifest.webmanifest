@@ -1,14 +1,14 @@
 {
-  "name": "AutoVentas",
-  "short_name": "AutoVentas",
-  "description": "Pedidos, catálogo y WhatsApp de tu negocio.",
+  "name": "AutoCita",
+  "short_name": "AutoCita",
+  "description": "Agenda, pacientes y WhatsApp de tu clínica.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#F7F6F3",
-  "theme_color": "#2D6A4F",
+  "theme_color": "#2F6B4F",
   "lang": "es-CR",
   "icons": [
     {
