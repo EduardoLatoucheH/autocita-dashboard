@@ -229,6 +229,28 @@
             .sidebar { padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
             .content { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
         }
+
+        /* ─── Imagen para redes de producto/servicio (27/09/2026) ─── */
+        .pieza-fondo { position: fixed; inset: 0; background: rgba(15,23,20,0.55); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .pieza-fondo.abierto { display: flex; }
+        .pieza-caja { background: var(--white, #fff); border-radius: 14px; width: min(980px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        .pieza-cab { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--gray-200, #e5e7eb); font-size: 15px; }
+        .pieza-x { border: none; background: none; font-size: 18px; cursor: pointer; color: var(--gray-500, #6b7280); }
+        .pieza-cuerpo { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; padding: 18px; }
+        @media (max-width: 760px) { .pieza-cuerpo { grid-template-columns: 1fr; } }
+        .pieza-vista { background: var(--gray-100, #f3f4f6); border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: center; }
+        .pieza-vista canvas { max-width: 100%; max-height: 62vh; width: auto; height: auto; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .pieza-ctrl { display: flex; flex-direction: column; gap: 10px; }
+        .pieza-ctrl label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--gray-500, #6b7280); }
+        .pieza-ctrl input, .pieza-ctrl select, .pieza-ctrl textarea { font: inherit; font-size: 14px; font-weight: 400; color: inherit; padding: 8px 10px; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; background: #fff; }
+        .pieza-ctrl input[type=color] { padding: 2px; height: 38px; width: 70px; }
+        .pieza-ctrl textarea { resize: vertical; }
+        .pieza-subir { cursor: pointer; flex-direction: row !important; align-items: center; justify-content: center; border: 1px dashed var(--gray-300, #d1d5db); border-radius: 8px; padding: 9px; color: var(--primary-dark, #1f5c40) !important; }
+        .pieza-subir input { display: none; }
+        .pieza-aviso { font-size: 12px; color: var(--danger, #b91c1c); min-height: 14px; }
+        .pieza-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pieza-acciones .btn { flex: 1; }
+        
         .sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
         @media (max-width: 900px) { .sop-grid { grid-template-columns: 1fr; } }
         .sop-item { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
@@ -1991,7 +2013,7 @@ async function loadServicios() {
                     <tr>
                         <td><strong>${escapeHtmlPanel(s.nombre)}</strong></td>
                         <td>₡${Number(s.precio).toLocaleString(getLocale())}</td>
-                        <td><button class="btn btn-danger btn-sm" onclick="eliminarServicio('${s.id}')">${t('common.eliminar')}</button></td>
+                        <td style="white-space:nowrap"><button class="btn btn-sm btn-ghost" onclick="abrirPiezaDeServicio('${s.id}')" title="${escapeHtmlPanel(t('pieza.titulo'))}">🖼 ${escapeHtmlPanel(t('pieza.btn'))}</button> <button class="btn btn-danger btn-sm" onclick="eliminarServicio('${s.id}')">${t('common.eliminar')}</button></td>
                     </tr>`).join('');
             }
         }
@@ -3726,13 +3748,377 @@ async function cargarSoporte() {
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
+
+// ─── Imagen para redes de un producto / servicio (27/09/2026) ────────────────
+// Pedido de Eduardo: que cada producto (AutoVentas) o servicio (AutoCita)
+// tenga su pieza lista para publicar en redes — foto, nombre, precio y
+// detalle — con 3 plantillas profesionales. Sin IA: se dibuja en el
+// navegador (canvas), es instantáneo y no cuesta nada. El detalle se achica
+// solo si es largo para que entre completo. La foto puede ser la del producto
+// o una que suba el cliente desde el celular/compu (se queda en el navegador,
+// no se sube a ningún servidor).
+const PIEZA_PLANTILLAS = [
+  { id: 'vitrina', es: 'Vitrina (foto arriba, ficha abajo)' },
+  { id: 'etiqueta', es: 'Etiqueta de precio (foto completa)' },
+  { id: 'editorial', es: 'Editorial (elegante)' },
+];
+const PIEZA_TAMANOS = [
+  { id: 'cuadrado', es: 'Post cuadrado (1080×1080)', w: 1080, h: 1080 },
+  { id: 'vertical', es: 'Post vertical (1080×1350)', w: 1080, h: 1350 },
+  { id: 'story', es: 'Historia / Story (1080×1920)', w: 1080, h: 1920 },
+];
+let piezaEstado = null; // { nombre, precio, detalle, img, imgProducto, color }
+const piezaT = (k, es) => (PIEZA_CFG.t ? PIEZA_CFG.t(k, es) : es);
+function piezaEnvolver(ctx, texto, maxAncho){
+  const palabras = String(texto || '').split(/\s+/).filter(Boolean);
+  const lineas = []; let actual = '';
+  for (const p of palabras){
+    const prueba = actual ? actual + ' ' + p : p;
+    if (actual && ctx.measureText(prueba).width > maxAncho){ lineas.push(actual); actual = p; } else actual = prueba;
+  }
+  if (actual) lineas.push(actual);
+  return lineas;
+}
+// Achica la letra hasta que el texto entre en maxLineas y en el ancho; solo si
+// ni al mínimo entra, corta con "…". Sirve para nombre y para detalle.
+function piezaEncajar(ctx, texto, { maxAncho, maxAlto, tam, min, peso, familia, lh }){
+  let t = tam, lineas;
+  for (;;){
+    ctx.font = `${peso || 400} ${Math.round(t)}px ${familia || '-apple-system, system-ui, sans-serif'}`;
+    lineas = piezaEnvolver(ctx, texto, maxAncho);
+    const cabe = lineas.length * t * (lh || 1.3) <= maxAlto && lineas.every(l => ctx.measureText(l).width <= maxAncho);
+    if (cabe || t <= tam * (min || 0.5)) break;
+    t = Math.max(t * 0.93, tam * (min || 0.5));
+  }
+  const alto = t * (lh || 1.3);
+  const entran = Math.max(1, Math.floor(maxAlto / alto));
+  if (lineas.length > entran){
+    lineas = lineas.slice(0, entran);
+    let u = lineas[entran - 1];
+    while (u.includes(' ') && ctx.measureText(u + '…').width > maxAncho) u = u.replace(/\s+\S+$/, '');
+    lineas[entran - 1] = u + '…';
+  }
+  return { lineas, tam: t, lh: alto, font: ctx.font, alto: lineas.length * alto };
+}
+function piezaPintar(ctx, b, x, y, alinear){
+  ctx.font = b.font; ctx.textAlign = alinear || 'left';
+  b.lineas.forEach((l) => { ctx.fillText(l, x, y); y += b.lh; });
+  ctx.textAlign = 'left';
+  return y;
+}
+function piezaOscurecer(hex, f){
+  const n = String(hex || '#2f6b4f').replace('#', '');
+  const v = n.length === 3 ? n.split('').map(c => c + c).join('') : n;
+  const r = parseInt(v.slice(0, 2), 16) || 0, g = parseInt(v.slice(2, 4), 16) || 0, b = parseInt(v.slice(4, 6), 16) || 0;
+  const k = (x) => Math.max(0, Math.min(255, Math.round(x * f)));
+  return `rgb(${k(r)},${k(g)},${k(b)})`;
+}
+function piezaRedondeado(ctx, x, y, w, h, r){
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+// Foto "cover" dentro de un rectángulo; sin foto, degradado de marca con la
+// inicial del producto grande y suave (para que no quede un hueco vacío).
+function piezaFoto(ctx, img, x, y, w, h, color, nombre, radio){
+  ctx.save();
+  if (radio){ piezaRedondeado(ctx, x, y, w, h, radio); ctx.clip(); }
+  else { ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); }
+  if (img){
+    const esc = Math.max(w / img.width, h / img.height);
+    const iw = img.width * esc, ih = img.height * esc;
+    ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) * 0.4, iw, ih);
+  } else {
+    const g = ctx.createLinearGradient(x, y, x + w, y + h);
+    g.addColorStop(0, color); g.addColorStop(1, piezaOscurecer(color, 0.55));
+    ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.16)';
+    ctx.font = `800 ${Math.round(Math.min(w, h) * 0.55)}px -apple-system, system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(nombre || '•').trim().charAt(0).toUpperCase(), x + w / 2, y + h / 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  }
+  ctx.restore();
+}
+function dibujarPiezaProducto(canvas, d){
+  const W = canvas.width, H = canvas.height, e = W / 1080, alto = H / W > 1.5, medio = H / W > 1.2;
+  const ctx = canvas.getContext('2d');
+  const color = d.color || '#2f6b4f', oscuro = piezaOscurecer(color, 0.45), acento = '#E08A5F';
+  const pad = W * 0.07;
+  const negocio = String(d.negocio || '').toUpperCase();
+  ctx.clearRect(0, 0, W, H);
+  if (d.plantilla === 'etiqueta'){
+    piezaFoto(ctx, d.img, 0, 0, W, H, color, d.nombre);
+    const g = ctx.createLinearGradient(0, H * 0.35, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.55, 'rgba(0,0,0,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = g; ctx.fillRect(0, H * 0.35, W, H * 0.65);
+    // de abajo hacia arriba: negocio → detalle → nombre
+    let yBase = H - pad;
+    if (negocio){
+      ctx.font = `700 ${Math.round(24 * e)}px -apple-system, system-ui, sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.fillText(negocio, pad, yBase);
+      yBase -= 58 * e;
+    }
+    if (d.detalle){
+      const b = piezaEncajar(ctx, d.detalle, { maxAncho: W - pad * 2, maxAlto: H * (alto ? 0.26 : 0.3), tam: 34 * e, min: 0.72 });
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      const y0 = yBase - b.alto + b.tam;
+      piezaPintar(ctx, b, pad, y0);
+      yBase = y0 - b.tam - 26 * e;
+    }
+    const n = piezaEncajar(ctx, d.nombre, { maxAncho: W - pad * 2, maxAlto: 180 * e, tam: 76 * e, min: 0.55, peso: 800, lh: 1.08 });
+    ctx.fillStyle = '#fff';
+    piezaPintar(ctx, n, pad, yBase - n.alto + n.tam);
+    // precio en sello circular arriba a la derecha
+    if (d.precio){
+      const r = W * 0.15, cx = W - pad - r, cy = pad + r + (alto ? 60 * e : 0);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.12);
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 24 * e;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = acento; ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.setLineDash([7 * e, 6 * e]); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 3 * e;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.84, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      const p = piezaEncajar(ctx, d.precio, { maxAncho: r * 1.45, maxAlto: r * 0.9, tam: 64 * e, min: 0.4, peso: 800, lh: 1.05 });
+      ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+      piezaPintar(ctx, p, 0, -(p.lineas.length - 1) * p.lh / 2, 'center');
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
+  } else if (d.plantilla === 'editorial'){
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+    let y = pad + 20 * e;
+    ctx.fillStyle = color; ctx.fillRect(pad, y - 16 * e, 14 * e, 14 * e);
+    ctx.font = `700 ${Math.round(22 * e)}px -apple-system, system-ui, sans-serif`;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(3 * e)}px`;
+    ctx.fillStyle = '#15181a'; ctx.fillText(negocio || ' ', pad + 26 * e, y - 2 * e);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    y += 34 * e;
+    const off = 20 * e;
+    // La foto cede lugar si el detalle es largo (antes el texto se achicaba
+    // hasta quedar ilegible en el post cuadrado).
+    const nMed = piezaEncajar(ctx, d.nombre, { maxAncho: W - pad * 2, maxAlto: 150 * e, tam: 68 * e, min: 0.55, peso: 700, familia: 'Georgia, "Times New Roman", serif', lh: 1.1 });
+    const dMed = d.detalle ? piezaEncajar(ctx, d.detalle, { maxAncho: W - pad * 2, maxAlto: 99999, tam: 32 * e * (alto ? 1.2 : 1), lh: 1.4 }).alto : 0;
+    const fijoEd = y + off + 64 * e + nMed.alto + 64 * e + (d.precio ? 120 * e : 20 * e) + pad;
+    const fotoH = Math.max(H * 0.28, Math.min(H * (alto ? 0.5 : medio ? 0.47 : 0.44), H - fijoEd - dMed));
+    ctx.fillStyle = color; ctx.fillRect(pad + off, y + off, W - pad * 2 - off, fotoH);
+    piezaFoto(ctx, d.img, pad, y, W - pad * 2 - off, fotoH, color, d.nombre);
+    y += fotoH + off + 64 * e;
+    const n = piezaEncajar(ctx, d.nombre, { maxAncho: W - pad * 2, maxAlto: 150 * e, tam: 68 * e, min: 0.55, peso: 700, familia: 'Georgia, "Times New Roman", serif', lh: 1.1 });
+    ctx.fillStyle = '#15181a';
+    y = piezaPintar(ctx, n, pad, y) - n.lh + 30 * e;
+    ctx.fillStyle = color; ctx.fillRect(pad, y, 80 * e, 4 * e);
+    y += 34 * e;
+    const pieH = d.precio ? 120 * e : 20 * e;
+    if (d.detalle){
+      const b = piezaEncajar(ctx, d.detalle, { maxAncho: W - pad * 2, maxAlto: Math.max(H - pad - pieH - y, 40 * e), tam: 32 * e * (alto ? 1.2 : 1), min: 0.72, lh: 1.4 });
+      ctx.fillStyle = '#4b5563';
+      piezaPintar(ctx, b, pad, y + b.tam * 0.9);
+    }
+    if (d.precio){
+      const p = piezaEncajar(ctx, d.precio, { maxAncho: W - pad * 2, maxAlto: 90 * e, tam: 78 * e, min: 0.5, peso: 800, lh: 1 });
+      ctx.fillStyle = color;
+      piezaPintar(ctx, p, pad, H - pad);
+    }
+  } else {
+    // vitrina
+    ctx.fillStyle = '#F7F6F3'; ctx.fillRect(0, 0, W, H);
+    const nMed = piezaEncajar(ctx, d.nombre, { maxAncho: W - pad * 2, maxAlto: 170 * e, tam: 70 * e, min: 0.5, peso: 800, lh: 1.08 });
+    const dMed = d.detalle ? piezaEncajar(ctx, d.detalle, { maxAncho: W - pad * 2, maxAlto: 99999, tam: 33 * e * (alto ? 1.2 : 1), lh: 1.38 }).alto : 0;
+    const fijoVi = pad * 0.85 + 50 * e + nMed.alto + 30 * e + (d.precio ? 125 * e : 20 * e) + pad;
+    const fotoH = Math.max(H * 0.3, Math.min(H * (alto ? 0.52 : medio ? 0.5 : 0.48), H - fijoVi - dMed));
+    piezaFoto(ctx, d.img, 0, 0, W, fotoH, color, d.nombre);
+    if (negocio){
+      ctx.font = `700 ${Math.round(22 * e)}px -apple-system, system-ui, sans-serif`;
+      const w = ctx.measureText(negocio).width + 40 * e;
+      piezaRedondeado(ctx, pad, pad, w, 50 * e, 25 * e); ctx.fillStyle = 'rgba(255,255,255,0.92)'; ctx.fill();
+      ctx.fillStyle = oscuro; ctx.textBaseline = 'middle'; ctx.fillText(negocio, pad + 20 * e, pad + 26 * e); ctx.textBaseline = 'alphabetic';
+    }
+    let y = fotoH + pad * 0.85;
+    ctx.fillStyle = color; ctx.fillRect(pad, y - 24 * e, 90 * e, 8 * e);
+    y += 50 * e;
+    const n = piezaEncajar(ctx, d.nombre, { maxAncho: W - pad * 2, maxAlto: 170 * e, tam: 70 * e, min: 0.5, peso: 800, lh: 1.08 });
+    ctx.fillStyle = '#15181a';
+    y = piezaPintar(ctx, n, pad, y) - n.lh + 26 * e;
+    const pieH = d.precio ? 130 * e : 10 * e;
+    if (d.detalle){
+      const b = piezaEncajar(ctx, d.detalle, { maxAncho: W - pad * 2, maxAlto: Math.max(H - pad - pieH - y, 40 * e), tam: 33 * e * (alto ? 1.2 : 1), min: 0.72, lh: 1.38 });
+      ctx.fillStyle = '#4b5563';
+      piezaPintar(ctx, b, pad, y + b.tam);
+    }
+    if (d.precio){
+      ctx.font = `800 ${Math.round(48 * e)}px -apple-system, system-ui, sans-serif`;
+      let tam = 48 * e;
+      while (ctx.measureText(d.precio).width > W - pad * 2 - 80 * e && tam > 24 * e){ tam -= 2 * e; ctx.font = `800 ${Math.round(tam)}px -apple-system, system-ui, sans-serif`; }
+      const w = ctx.measureText(d.precio).width + 64 * e, h = 88 * e;
+      piezaRedondeado(ctx, pad, H - pad - h, w, h, h / 2); ctx.fillStyle = color; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.fillText(d.precio, pad + 32 * e, H - pad - h / 2 + 2 * e); ctx.textBaseline = 'alphabetic';
+    }
+  }
+}
+function piezaCrearModal(){
+  if (document.getElementById('piezaModal')) return;
+  const opP = PIEZA_PLANTILLAS.map(p => `<option value="${p.id}">${PIEZA_CFG.esc(piezaT('pieza.pl.' + p.id, p.es))}</option>`).join('');
+  const opT = PIEZA_TAMANOS.map(t => `<option value="${t.id}">${PIEZA_CFG.esc(piezaT('pieza.tam.' + t.id, t.es))}</option>`).join('');
+  const div = document.createElement('div');
+  div.id = 'piezaModal';
+  div.className = 'pieza-fondo';
+  div.innerHTML = `
+    <div class="pieza-caja" role="dialog" aria-modal="true">
+      <div class="pieza-cab">
+        <strong>${PIEZA_CFG.esc(piezaT('pieza.titulo', 'Imagen para redes'))}</strong>
+        <button class="pieza-x" onclick="cerrarPiezaProducto()" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="pieza-cuerpo">
+        <div class="pieza-vista"><canvas id="piezaCanvas" width="1080" height="1080"></canvas></div>
+        <div class="pieza-ctrl">
+          <label>${PIEZA_CFG.esc(piezaT('pieza.plantilla', 'Estilo'))}<select id="piezaPlantilla" onchange="redibujarPieza()">${opP}</select></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.tamano', 'Tamaño'))}<select id="piezaTamano" onchange="redibujarPieza()">${opT}</select></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.nombre', 'Nombre'))}<input id="piezaNombre" maxlength="120" oninput="redibujarPieza()"></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.precio', 'Precio'))}<input id="piezaPrecio" maxlength="40" oninput="redibujarPieza()"></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.detalle', 'Detalle (si es largo, se acomoda solo)'))}<textarea id="piezaDetalle" rows="4" maxlength="600" oninput="redibujarPieza()"></textarea></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.foto', 'Foto'))}
+            <select id="piezaFotoModo" onchange="redibujarPieza()">
+              <option value="producto">${PIEZA_CFG.esc(piezaT('pieza.fotoProducto', 'La foto guardada'))}</option>
+              <option value="subida">${PIEZA_CFG.esc(piezaT('pieza.fotoSubida', 'Una foto que subo ahora'))}</option>
+              <option value="no">${PIEZA_CFG.esc(piezaT('pieza.sinFoto', 'Sin foto (color de marca)'))}</option>
+            </select>
+          </label>
+          <label class="pieza-subir">⬆ ${PIEZA_CFG.esc(piezaT('pieza.subir', 'Subir foto'))}<input type="file" accept="image/*" onchange="subirFotoPieza(this)"></label>
+          <label>${PIEZA_CFG.esc(piezaT('pieza.color', 'Color de marca'))}<input type="color" id="piezaColor" oninput="redibujarPieza()"></label>
+          <div id="piezaAviso" class="pieza-aviso"></div>
+          <div class="pieza-acciones">
+            <button class="btn" onclick="descargarPieza()">⬇ ${PIEZA_CFG.esc(piezaT('pieza.descargar', 'Descargar'))}</button>
+            <button class="btn btn-ghost" id="piezaCompartir" onclick="compartirPieza()" style="display:none">↗ ${PIEZA_CFG.esc(piezaT('pieza.compartir', 'Compartir'))}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  div.addEventListener('click', (ev) => { if (ev.target === div) cerrarPiezaProducto(); });
+  document.body.appendChild(div);
+  if (navigator.canShare) document.getElementById('piezaCompartir').style.display = '';
+}
+// datos = { nombre, precio (texto ya formateado), detalle, foto (url o null) }
+function abrirPiezaProducto(datos){
+  piezaCrearModal();
+  piezaEstado = { imgProducto: null, imgSubida: null };
+  document.getElementById('piezaNombre').value = datos.nombre || '';
+  document.getElementById('piezaPrecio').value = datos.precio || '';
+  document.getElementById('piezaDetalle').value = datos.detalle || '';
+  let colorGuardado = null;
+  try { colorGuardado = localStorage.getItem(PIEZA_CFG.claveColor); } catch (e) {}
+  document.getElementById('piezaColor').value = /^#[0-9a-f]{6}$/i.test(colorGuardado || '') ? colorGuardado : PIEZA_CFG.color;
+  document.getElementById('piezaFotoModo').value = datos.foto ? 'producto' : 'no';
+  document.getElementById('piezaAviso').textContent = '';
+  document.getElementById('piezaModal').classList.add('abierto');
+  redibujarPieza();
+  if (datos.foto && /^https:\/\//.test(datos.foto)){
+    // crossOrigin: sin esto la foto "ensucia" el canvas y el navegador no deja
+    // descargarlo. El bucket público de fotos de productos manda CORS abierto.
+    const img = new Image();
+    const esteEstado = piezaEstado; // si se abre otro producto antes de que cargue, no se le cruza la foto
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { if (piezaEstado !== esteEstado) return; piezaEstado.imgProducto = img; redibujarPieza(); };
+    img.onerror = () => {
+      if (piezaEstado !== esteEstado) return;
+      document.getElementById('piezaAviso').textContent = piezaT('pieza.fotoError', 'No se pudo usar la foto guardada. Subila con "Subir foto".');
+      document.getElementById('piezaFotoModo').value = 'no'; redibujarPieza();
+    };
+    img.src = datos.foto;
+  }
+}
+function cerrarPiezaProducto(){
+  const m = document.getElementById('piezaModal');
+  if (m) m.classList.remove('abierto');
+}
+function subirFotoPieza(input){
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (!f) return;
+  if (!/^image\//.test(f.type) || f.size > 15 * 1024 * 1024){
+    document.getElementById('piezaAviso').textContent = piezaT('pieza.fotoInvalida', 'Elegí una imagen de menos de 15 MB.');
+    return;
+  }
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => {
+    piezaEstado.imgSubida = img;
+    document.getElementById('piezaFotoModo').value = 'subida';
+    document.getElementById('piezaAviso').textContent = '';
+    redibujarPieza();
+  };
+  img.onerror = () => { document.getElementById('piezaAviso').textContent = piezaT('pieza.fotoInvalida', 'Esa imagen no se pudo abrir. Probá con JPG o PNG.'); };
+  img.src = url;
+}
+function redibujarPieza(){
+  const canvas = document.getElementById('piezaCanvas');
+  if (!canvas || !piezaEstado) return;
+  const t = PIEZA_TAMANOS.find(x => x.id === document.getElementById('piezaTamano').value) || PIEZA_TAMANOS[0];
+  if (canvas.width !== t.w || canvas.height !== t.h){ canvas.width = t.w; canvas.height = t.h; }
+  const modo = document.getElementById('piezaFotoModo').value;
+  const img = modo === 'producto' ? piezaEstado.imgProducto : modo === 'subida' ? piezaEstado.imgSubida : null;
+  const color = document.getElementById('piezaColor').value;
+  try { localStorage.setItem(PIEZA_CFG.claveColor, color); } catch (e) {}
+  dibujarPiezaProducto(canvas, {
+    plantilla: document.getElementById('piezaPlantilla').value,
+    nombre: document.getElementById('piezaNombre').value.trim(),
+    precio: document.getElementById('piezaPrecio').value.trim(),
+    detalle: document.getElementById('piezaDetalle').value.trim(),
+    negocio: PIEZA_CFG.negocio(),
+    color, img,
+  });
+}
+function piezaNombreArchivo(){
+  const base = (document.getElementById('piezaNombre').value || 'producto').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'producto';
+  return base + '-' + document.getElementById('piezaTamano').value + '.png';
+}
+function descargarPieza(){
+  const canvas = document.getElementById('piezaCanvas');
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = piezaNombreArchivo();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }, 'image/png');
+}
+// En el celular (app instalada) abre el menú de compartir del teléfono:
+// Instagram, WhatsApp, Facebook… directo, sin pasar por la galería.
+function compartirPieza(){
+  const canvas = document.getElementById('piezaCanvas');
+  canvas.toBlob(async (blob) => {
+    if (!blob) return;
+    const archivo = new File([blob], piezaNombreArchivo(), { type: 'image/png' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) await navigator.share({ files: [archivo] });
+      else descargarPieza();
+    } catch (e) { /* el usuario canceló */ }
+  }, 'image/png');
+}
+
+const PIEZA_CFG = {
+    esc: escapeHtmlPanel,
+    t: (k, es) => { const v = t(k); return v === k ? es : v; },
+    color: '#2F6B4F',
+    claveColor: 'autocita_pieza_color',
+    negocio: () => (clinicaCache && clinicaCache.nombre) || (document.getElementById('headerClinica')?.textContent || '').trim(),
+};
+async function abrirPiezaDeServicio(id) {
+    const s = serviciosCache.find(x => x.id === id);
+    if (!s) return;
+    if (!clinicaCache) { try { await ensureClinicaCache(); } catch (e) {} }
+    abrirPiezaProducto({ nombre: s.nombre, precio: '₡' + Number(s.precio || 0).toLocaleString('es-CR'), detalle: s.descripcion || '', foto: null });
+}
 // ── IDIOMA DEL PANEL (traducción completa) ───────────────────────
 const translations = {
     es: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Crear Cita', 'nav.listaCitas': 'Citas', 'title.listaCitas': 'Citas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
-        'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
+        'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
@@ -3861,7 +4247,7 @@ const translations = {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment', 'nav.listaCitas': 'Appointments', 'title.listaCitas': 'Appointments',
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
-        'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
+        'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
@@ -3990,7 +4376,7 @@ const translations = {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta', 'nav.listaCitas': 'Consultas', 'title.listaCitas': 'Consultas',
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
-        'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
+        'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
