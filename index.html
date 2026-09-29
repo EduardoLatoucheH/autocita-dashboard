@@ -137,6 +137,12 @@
         .card-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.01em; }
         .card-subtitle { font-size: 13px; color: var(--gray-500); margin-top: -10px; margin-bottom: 18px; line-height: 1.5; }
 
+        /* Resumen de hoy (28/09/2026): lo primero que se ve al entrar, solo lo
+           que necesita una decisión — si no hay nada pendiente, no se muestra. */
+        .resumen-hoy { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .resumen-item { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-sm); color: var(--gray-900); }
+        .resumen-item:hover { border-color: var(--primary); }
+        .resumen-vacio { color: var(--gray-500); font-size: 13px; margin-bottom: 20px; }
         .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 28px; }
         .kpi { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
         .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary); }
@@ -520,6 +526,7 @@
             <!-- Dashboard -->
             <section class="section active" id="dashboard">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.dashboard">Dashboard</h2>
+                <div id="resumenHoy" class="resumen-hoy"></div>
                 <div class="kpis">
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.citasHoy">Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.totalCitas">Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
@@ -1372,6 +1379,7 @@ async function ensureClinicaCache() {
 async function loadAll() {
     await loadRol(); // primero el rol, luego el resto según permisos
     await loadPacientes(); // primero pacientes, así el respaldo de nombre ya está listo
+    loadConversaciones(); // para que el Resumen de hoy tenga los no leídos ya cargados
     loadDashboard();
     loadCitas();
     loadDoctores();
@@ -1487,6 +1495,8 @@ async function loadDashboard() {
         const hoy = new Date().toISOString().split('T')[0];
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
+        const citasHoySinConfirmar = citasHoy.filter(c => c.estado !== 'confirmada' && c.estado !== 'cancelada' && c.estado !== 'atendida').length;
+        renderResumenHoy(citasHoySinConfirmar);
         // Próximas citas: solo futuras (no las que ya pasaron), ordenadas por fecha ascendente.
         const proximas = citas
             .filter(c => c.estado !== 'cancelada' && c.fecha && new Date(c.fecha) >= ahora)
@@ -4209,6 +4219,46 @@ const PIEZA_CFG = {
     claveColor: 'autocita_pieza_color',
     negocio: () => (clinicaCache && clinicaCache.nombre) || (document.getElementById('headerClinica')?.textContent || '').trim(),
 };
+// ── Resumen de hoy (28/09/2026) ────────────────────────────────────
+// Pedido de Eduardo (inspirado en un "Chief" que junta lo que hizo cada bot y
+// solo entrega lo que necesita una decisión): en vez de puros números, una
+// lista de lo que de verdad necesita que alguien haga algo hoy. Si no hay
+// nada pendiente, no se muestra ningún ítem — mejor vacío que ruido.
+function renderResumenHoy(citasHoySinConfirmar) {
+    const caja = document.getElementById('resumenHoy');
+    if (!caja) return;
+    const items = [];
+    if (citasHoySinConfirmar > 0) {
+        items.push({
+            icono: '📅',
+            texto: citasHoySinConfirmar + (citasHoySinConfirmar === 1 ? piezaT('resumen.citaSinConfirmar', ' cita de hoy sin confirmar') : piezaT('resumen.citasSinConfirmar', ' citas de hoy sin confirmar')),
+            ir: 'listaCitas',
+        });
+    }
+    const sinResponder = conversacionesCache.reduce((s, c) => s + (c.no_leidos || 0), 0);
+    if (sinResponder > 0) {
+        items.push({
+            icono: '💬',
+            texto: sinResponder + (sinResponder === 1 ? piezaT('resumen.msjSinResponder', ' mensaje esperando respuesta') : piezaT('resumen.msjsSinResponder', ' mensajes esperando respuesta')),
+            ir: 'inbox',
+        });
+    }
+    if (!items.length) {
+        caja.innerHTML = `<div class="resumen-vacio">✅ ${escapeHtmlPanel(piezaT('resumen.vacio', 'Nada pendiente por ahora.'))}</div>`;
+        return;
+    }
+    caja.innerHTML = '';
+    items.forEach((it) => {
+        const div = document.createElement('div');
+        div.className = 'resumen-item';
+        div.innerHTML = `<span>${it.icono}</span><span>${escapeHtmlPanel(it.texto)}</span>`;
+        div.addEventListener('click', () => {
+            const btn = document.querySelector(`.nav-link[data-section="${it.ir}"]`);
+            showSection(it.ir, btn);
+        });
+        caja.appendChild(div);
+    });
+}
 // ── Sección Redes ──────────────────────────────────────────────────
 function tarjetaRedes(nombre, meta, onclick, claveCheck) {
     return `<div class="redes-item"><input type="checkbox" class="redes-check" value="${escapeHtmlPanel(claveCheck)}" onchange="actualizarBarraCatalogo()" aria-label="${escapeHtmlPanel(nombre)}"><div class="redes-item-nombre">${escapeHtmlPanel(nombre)}</div><div class="redes-item-meta">${escapeHtmlPanel(meta)}</div><button class="btn btn-sm" onclick="${onclick}">🖼 ${escapeHtmlPanel(t('redes.crear'))}</button></div>`;
@@ -4408,6 +4458,7 @@ const translations = {
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'nav.redes': 'Redes', 'title.redes': 'Imágenes para redes', 'redes.intro': 'Elegí un servicio o un doctor y te armamos la imagen con nombre, precio y detalle en 3 estilos y 3 tamaños (post, vertical e historia). Podés subir una foto y descargarla o compartirla directo.', 'redes.servicios': 'Servicios', 'redes.doctores': 'Doctores', 'redes.libre': '+ Imagen con otro texto', 'redes.crear': 'Crear imagen', 'redes.sinServicios': 'Todavía no hay servicios. Agregalos en Facturación → Servicios.', 'redes.sinDoctores': 'Todavía no hay doctores cargados.', 'redes.consulta': 'Consulta',
         'redes.catalogoBtn': '🖼 Catálogo (1 imagen)', 'redes.reelBtn': '🎞 Reel (varias imágenes)', 'redes.seleccionados': ' seleccionados', 'redes.seleccionado': ' seleccionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarcá algunos.',
+        'resumen.citaSinConfirmar': ' cita de hoy sin confirmar', 'resumen.citasSinConfirmar': ' citas de hoy sin confirmar', 'resumen.msjSinResponder': ' mensaje esperando respuesta', 'resumen.msjsSinResponder': ' mensajes esperando respuesta', 'resumen.vacio': 'Nada pendiente por ahora.',
         'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
@@ -4542,6 +4593,7 @@ const translations = {
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'nav.redes': 'Social', 'title.redes': 'Social media images', 'redes.intro': 'Pick a service or a doctor and we build the image with name, price and details in 3 styles and 3 sizes (post, portrait and story). You can upload a photo and download or share it right away.', 'redes.servicios': 'Services', 'redes.doctores': 'Doctors', 'redes.libre': '+ Image with custom text', 'redes.crear': 'Create image', 'redes.sinServicios': 'No services yet. Add them in Billing → Services.', 'redes.sinDoctores': 'No doctors yet.', 'redes.consulta': 'Consultation',
         'redes.catalogoBtn': '🖼 Catalog (1 image)', 'redes.reelBtn': '🎞 Reel (several images)', 'redes.seleccionados': ' selected', 'redes.seleccionado': ' selected', 'redes.maxCatalogo': 'Max 9 per catalog — deselect some.',
+        'resumen.citaSinConfirmar': ' unconfirmed appointment today', 'resumen.citasSinConfirmar': ' unconfirmed appointments today', 'resumen.msjSinResponder': ' message waiting for a reply', 'resumen.msjsSinResponder': ' messages waiting for a reply', 'resumen.vacio': 'Nothing pending right now.',
         'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
@@ -4676,6 +4728,7 @@ const translations = {
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
         'nav.redes': 'Redes', 'title.redes': 'Imagens para redes', 'redes.intro': 'Escolha um serviço ou um médico e montamos a imagem com nome, preço e detalhe em 3 estilos e 3 tamanhos (post, vertical e story). Você pode enviar uma foto e baixar ou compartilhar direto.', 'redes.servicios': 'Serviços', 'redes.doctores': 'Médicos', 'redes.libre': '+ Imagem com outro texto', 'redes.crear': 'Criar imagem', 'redes.sinServicios': 'Ainda não há serviços. Adicione em Faturamento → Serviços.', 'redes.sinDoctores': 'Ainda não há médicos cadastrados.', 'redes.consulta': 'Consulta',
         'redes.catalogoBtn': '🖼 Catálogo (1 imagem)', 'redes.reelBtn': '🎞 Reel (várias imagens)', 'redes.seleccionados': ' selecionados', 'redes.seleccionado': ' selecionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarque alguns.',
+        'resumen.citaSinConfirmar': ' consulta de hoje sem confirmar', 'resumen.citasSinConfirmar': ' consultas de hoje sem confirmar', 'resumen.msjSinResponder': ' mensagem esperando resposta', 'resumen.msjsSinResponder': ' mensagens esperando resposta', 'resumen.vacio': 'Nada pendente por enquanto.',
         'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
