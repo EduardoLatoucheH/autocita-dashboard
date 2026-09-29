@@ -290,11 +290,16 @@
         
         .sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
         .redes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-        .redes-item { border: 1px solid var(--gray-200, #e5e7eb); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
-        .redes-item-nombre { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+        .redes-item { position: relative; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
+        .redes-item-nombre { font-weight: 700; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; padding-left: 26px; }
         .redes-item-meta { font-size: 13px; color: var(--gray-500); min-height: 18px; }
         .redes-item .btn { margin-top: 6px; align-self: flex-start; }
         .redes-vacio { color: var(--gray-500); font-size: 14px; padding: 6px 0; }
+        /* Catálogo/reel de varios servicios o doctores en una sola pieza (28/09/2026) */
+        .redes-check { position: absolute; top: 14px; left: 14px; width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .redes-barra { display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 12px 16px; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); position: sticky; bottom: 10px; }
+        .redes-barra-txt { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+        .redes-barra-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
         @media (max-width: 900px) { .sop-grid { grid-template-columns: 1fr; } }
         .sop-item { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
         .sop-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
@@ -938,6 +943,13 @@
                 <div class="card" style="margin-top:20px">
                     <div class="card-title" data-i18n="redes.doctores">Doctores</div>
                     <div id="redesDoctores" class="redes-grid"></div>
+                </div>
+                <div id="redesBarra" class="redes-barra">
+                    <span id="redesBarraTexto" class="redes-barra-txt"></span>
+                    <div class="redes-barra-acciones">
+                        <button class="btn btn-sm" onclick="crearCatalogoSeleccion('post')" data-i18n="redes.catalogoBtn">🖼 Catálogo (1 imagen)</button>
+                        <button class="btn btn-sm btn-ghost" onclick="crearCatalogoSeleccion('reel')" data-i18n="redes.reelBtn">🎞 Reel (varias imágenes)</button>
+                    </div>
                 </div>
             </section>
             <!-- Ayuda y sugerencias (27/09/2026) -->
@@ -4198,8 +4210,8 @@ const PIEZA_CFG = {
     negocio: () => (clinicaCache && clinicaCache.nombre) || (document.getElementById('headerClinica')?.textContent || '').trim(),
 };
 // ── Sección Redes ──────────────────────────────────────────────────
-function tarjetaRedes(nombre, meta, onclick) {
-    return `<div class="redes-item"><div class="redes-item-nombre">${escapeHtmlPanel(nombre)}</div><div class="redes-item-meta">${escapeHtmlPanel(meta)}</div><button class="btn btn-sm" onclick="${onclick}">🖼 ${escapeHtmlPanel(t('redes.crear'))}</button></div>`;
+function tarjetaRedes(nombre, meta, onclick, claveCheck) {
+    return `<div class="redes-item"><input type="checkbox" class="redes-check" value="${escapeHtmlPanel(claveCheck)}" onchange="actualizarBarraCatalogo()" aria-label="${escapeHtmlPanel(nombre)}"><div class="redes-item-nombre">${escapeHtmlPanel(nombre)}</div><div class="redes-item-meta">${escapeHtmlPanel(meta)}</div><button class="btn btn-sm" onclick="${onclick}">🖼 ${escapeHtmlPanel(t('redes.crear'))}</button></div>`;
 }
 async function renderRedes() {
     const cajaS = document.getElementById('redesServicios');
@@ -4209,12 +4221,166 @@ async function renderRedes() {
     const uuid = /^[0-9a-f-]{36}$/i;
     const servicios = serviciosCache.filter(s => uuid.test(String(s.id)));
     cajaS.innerHTML = servicios.length
-        ? servicios.map(s => tarjetaRedes(s.nombre, '₡' + Number(s.precio || 0).toLocaleString(getLocale()), `abrirPiezaDeServicio('${s.id}')`)).join('')
+        ? servicios.map(s => tarjetaRedes(s.nombre, '₡' + Number(s.precio || 0).toLocaleString(getLocale()), `abrirPiezaDeServicio('${s.id}')`, 's:' + s.id)).join('')
         : `<div class="redes-vacio">${escapeHtmlPanel(t('redes.sinServicios'))}</div>`;
     const doctores = doctoresCache.filter(d => uuid.test(String(d.id)));
     cajaD.innerHTML = doctores.length
-        ? doctores.map(d => tarjetaRedes(d.nombre, [d.especialidad, Number(d.precio) ? '₡' + Number(d.precio).toLocaleString(getLocale()) : ''].filter(Boolean).join(' · '), `abrirPiezaDeDoctor('${d.id}')`)).join('')
+        ? doctores.map(d => tarjetaRedes(d.nombre, [d.especialidad, Number(d.precio) ? '₡' + Number(d.precio).toLocaleString(getLocale()) : ''].filter(Boolean).join(' · '), `abrirPiezaDeDoctor('${d.id}')`, 'd:' + d.id)).join('')
         : `<div class="redes-vacio">${escapeHtmlPanel(t('redes.sinDoctores'))}</div>`;
+    actualizarBarraCatalogo();
+}
+
+// ── Catálogo (grilla de varios servicios/doctores) y Reel (una diapositiva
+// por ítem) — 28/09/2026. Mismo motor sin IA de arriba (piezaFoto,
+// piezaEncajar, piezaPintar): no llama al backend ni a OpenAI, solo dibuja
+// en el navegador con los datos que ya están cargados en el dashboard.
+function actualizarBarraCatalogo() {
+    const barra = document.getElementById('redesBarra');
+    if (!barra) return;
+    const n = document.querySelectorAll('.redes-check:checked').length;
+    barra.style.display = n >= 2 ? 'flex' : 'none';
+    const txt = document.getElementById('redesBarraTexto');
+    if (txt) txt.textContent = n + (n === 1 ? piezaT('redes.seleccionado', ' seleccionado') : piezaT('redes.seleccionados', ' seleccionados'));
+}
+async function crearCatalogoSeleccion(modo) {
+    const claves = Array.from(document.querySelectorAll('.redes-check:checked')).map(c => c.value);
+    if (claves.length < 2) return;
+    if (modo === 'post' && claves.length > 9) {
+        document.getElementById('redesBarraTexto').textContent = piezaT('redes.maxCatalogo', 'Máximo 9 por catálogo — desmarcá algunos.');
+        return;
+    }
+    if (!clinicaCache) { try { await ensureClinicaCache(); } catch (e) {} }
+    const items = claves.map((clave) => {
+        const [tipo, id] = clave.split(':');
+        if (tipo === 's') {
+            const s = serviciosCache.find(x => x.id === id);
+            if (!s) return null;
+            return { nombre: s.nombre, precio: '₡' + Number(s.precio || 0).toLocaleString('es-CR'), img: null };
+        }
+        const d = doctoresCache.find(x => x.id === id);
+        if (!d) return null;
+        const precio = Number(d.precio) ? '₡' + Number(d.precio).toLocaleString('es-CR') : '';
+        return { nombre: d.nombre, precio, img: null };
+    }).filter(Boolean);
+    if (items.length < 2) return;
+    catalogoAbrirModal(modo, items);
+}
+function dibujarCatalogoGrilla(canvas, d) {
+    const W = canvas.width, H = canvas.height, e = W / 1080;
+    const ctx = canvas.getContext('2d');
+    const color = d.color || '#2f6b4f';
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#F7F6F3'; ctx.fillRect(0, 0, W, H);
+    const pad = W * 0.06;
+    let y = pad;
+    const negocio = String(d.negocio || '').toUpperCase();
+    if (negocio) {
+        ctx.font = `800 ${Math.round(38 * e)}px -apple-system, system-ui, sans-serif`;
+        ctx.fillStyle = color;
+        ctx.fillText(negocio, pad, y + 38 * e);
+        y += 60 * e;
+    }
+    ctx.fillStyle = color; ctx.fillRect(pad, y, 80 * e, 6 * e);
+    y += 36 * e;
+    const items = d.items.slice(0, 9);
+    const cols = items.length <= 4 ? 2 : 3;
+    const rows = Math.ceil(items.length / cols);
+    const gap = 20 * e;
+    const cellW = (W - pad * 2 - gap * (cols - 1)) / cols;
+    const cellH = (H - y - pad - gap * (rows - 1)) / rows;
+    items.forEach((it, i) => {
+        const cx = pad + (i % cols) * (cellW + gap);
+        const cy = y + Math.floor(i / cols) * (cellH + gap);
+        const fotoH = cellH * 0.6;
+        piezaFoto(ctx, it.img, cx, cy, cellW, fotoH, color, it.nombre, 14 * e);
+        let ty = cy + fotoH + 32 * e;
+        const n = piezaEncajar(ctx, it.nombre, { maxAncho: cellW, maxAlto: 38 * e, tam: 24 * e, min: 0.6, peso: 700, lh: 1.1 });
+        ctx.fillStyle = '#15181a';
+        piezaPintar(ctx, n, cx, ty);
+        if (it.precio) {
+            const p = piezaEncajar(ctx, it.precio, { maxAncho: cellW, maxAlto: 32 * e, tam: 22 * e, min: 0.6, peso: 800, lh: 1 });
+            ctx.fillStyle = color;
+            piezaPintar(ctx, p, cx, ty + n.alto + 26 * e);
+        }
+    });
+}
+function catalogoCrearModal() {
+    if (document.getElementById('catalogoModal')) return;
+    const opT = PIEZA_TAMANOS.map(t2 => `<option value="${t2.id}">${PIEZA_CFG.esc(piezaT('pieza.tam.' + t2.id, t2.es))}</option>`).join('');
+    const div = document.createElement('div');
+    div.id = 'catalogoModal';
+    div.className = 'pieza-fondo';
+    div.innerHTML = `
+    <div class="pieza-caja" role="dialog" aria-modal="true">
+      <div class="pieza-cab">
+        <strong id="catalogoTitulo">Catálogo</strong>
+        <button class="pieza-x" onclick="cerrarCatalogo()" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="pieza-cuerpo">
+        <div class="pieza-vista"><canvas id="catalogoCanvas" width="1080" height="1080"></canvas></div>
+        <div class="pieza-ctrl">
+          <label>${PIEZA_CFG.esc(piezaT('pieza.tamano', 'Tamaño'))}<select id="catalogoTamano" onchange="catalogoRedibujar()">${opT}</select></label>
+          <div id="catalogoNav" style="display:none;align-items:center;gap:10px;justify-content:center">
+            <button class="btn btn-sm btn-ghost" onclick="catalogoMover(-1)">◀</button>
+            <span id="catalogoIndicador"></span>
+            <button class="btn btn-sm btn-ghost" onclick="catalogoMover(1)">▶</button>
+          </div>
+          <div class="pieza-acciones">
+            <button class="btn" onclick="catalogoDescargar()">⬇ ${PIEZA_CFG.esc(piezaT('pieza.descargar', 'Descargar'))}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+    div.addEventListener('click', (ev) => { if (ev.target === div) cerrarCatalogo(); });
+    document.body.appendChild(div);
+}
+let catalogoEstado = null;
+function catalogoAbrirModal(modo, items) {
+    catalogoCrearModal();
+    catalogoEstado = { modo, items, indice: 0 };
+    document.getElementById('catalogoTitulo').textContent = modo === 'post' ? piezaT('redes.catalogoBtn', '🖼 Catálogo (1 imagen)').replace('🖼 ', '') : items.length + ' — ' + piezaT('redes.reelBtn', '🎞 Reel (varias imágenes)').replace('🎞 ', '');
+    document.getElementById('catalogoNav').style.display = modo === 'reel' ? 'flex' : 'none';
+    document.getElementById('catalogoModal').classList.add('abierto');
+    catalogoRedibujar();
+}
+function cerrarCatalogo() {
+    const m = document.getElementById('catalogoModal');
+    if (m) m.classList.remove('abierto');
+}
+function catalogoMover(dir) {
+    if (!catalogoEstado) return;
+    const n = catalogoEstado.items.length;
+    catalogoEstado.indice = (catalogoEstado.indice + dir + n) % n;
+    catalogoRedibujar();
+}
+function catalogoRedibujar() {
+    if (!catalogoEstado) return;
+    const canvas = document.getElementById('catalogoCanvas');
+    const t2 = PIEZA_TAMANOS.find(x => x.id === document.getElementById('catalogoTamano').value) || PIEZA_TAMANOS[0];
+    if (canvas.width !== t2.w || canvas.height !== t2.h) { canvas.width = t2.w; canvas.height = t2.h; }
+    let color = PIEZA_CFG.color;
+    try { color = localStorage.getItem(PIEZA_CFG.claveColor) || color; } catch (e) {}
+    if (catalogoEstado.modo === 'post') {
+        dibujarCatalogoGrilla(canvas, { items: catalogoEstado.items, negocio: PIEZA_CFG.negocio(), color });
+        document.getElementById('catalogoIndicador').textContent = '';
+    } else {
+        const it = catalogoEstado.items[catalogoEstado.indice];
+        dibujarPiezaProducto(canvas, { plantilla: 'vitrina', nombre: it.nombre, precio: it.precio, detalle: '', negocio: PIEZA_CFG.negocio(), color, img: it.img });
+        document.getElementById('catalogoIndicador').textContent = (catalogoEstado.indice + 1) + ' / ' + catalogoEstado.items.length;
+    }
+}
+function catalogoDescargar() {
+    if (!catalogoEstado) return;
+    const canvas = document.getElementById('catalogoCanvas');
+    canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const sufijo = catalogoEstado.modo === 'reel' ? '-' + (catalogoEstado.indice + 1) : '';
+        a.href = url; a.download = 'catalogo' + sufijo + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
 }
 async function abrirPiezaDeDoctor(id) {
     const d = doctoresCache.find(x => x.id === id);
@@ -4241,6 +4407,7 @@ const translations = {
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendario', 'nav.doctores': 'Doctores',
         'nav.facturacion': 'Facturación', 'nav.expedientes': 'Expedientes', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'nav.redes': 'Redes', 'title.redes': 'Imágenes para redes', 'redes.intro': 'Elegí un servicio o un doctor y te armamos la imagen con nombre, precio y detalle en 3 estilos y 3 tamaños (post, vertical e historia). Podés subir una foto y descargarla o compartirla directo.', 'redes.servicios': 'Servicios', 'redes.doctores': 'Doctores', 'redes.libre': '+ Imagen con otro texto', 'redes.crear': 'Crear imagen', 'redes.sinServicios': 'Todavía no hay servicios. Agregalos en Facturación → Servicios.', 'redes.sinDoctores': 'Todavía no hay doctores cargados.', 'redes.consulta': 'Consulta',
+        'redes.catalogoBtn': '🖼 Catálogo (1 imagen)', 'redes.reelBtn': '🎞 Reel (varias imágenes)', 'redes.seleccionados': ' seleccionados', 'redes.seleccionado': ' seleccionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarcá algunos.',
         'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
@@ -4374,6 +4541,7 @@ const translations = {
         'nav.listaEspera': 'Waiting list', 'nav.calendario': 'Calendar', 'nav.doctores': 'Doctors',
         'nav.facturacion': 'Billing', 'nav.expedientes': 'Records', 'nav.settings': 'Settings', 'nav.logout': 'Logout',
         'nav.redes': 'Social', 'title.redes': 'Social media images', 'redes.intro': 'Pick a service or a doctor and we build the image with name, price and details in 3 styles and 3 sizes (post, portrait and story). You can upload a photo and download or share it right away.', 'redes.servicios': 'Services', 'redes.doctores': 'Doctors', 'redes.libre': '+ Image with custom text', 'redes.crear': 'Create image', 'redes.sinServicios': 'No services yet. Add them in Billing → Services.', 'redes.sinDoctores': 'No doctors yet.', 'redes.consulta': 'Consultation',
+        'redes.catalogoBtn': '🖼 Catalog (1 image)', 'redes.reelBtn': '🎞 Reel (several images)', 'redes.seleccionados': ' selected', 'redes.seleccionado': ' selected', 'redes.maxCatalogo': 'Max 9 per catalog — deselect some.',
         'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
@@ -4507,6 +4675,7 @@ const translations = {
         'nav.listaEspera': 'Lista de espera', 'nav.calendario': 'Calendário', 'nav.doctores': 'Médicos',
         'nav.facturacion': 'Faturamento', 'nav.expedientes': 'Prontuários', 'nav.settings': 'Configurações', 'nav.logout': 'Sair',
         'nav.redes': 'Redes', 'title.redes': 'Imagens para redes', 'redes.intro': 'Escolha um serviço ou um médico e montamos a imagem com nome, preço e detalhe em 3 estilos e 3 tamanhos (post, vertical e story). Você pode enviar uma foto e baixar ou compartilhar direto.', 'redes.servicios': 'Serviços', 'redes.doctores': 'Médicos', 'redes.libre': '+ Imagem com outro texto', 'redes.crear': 'Criar imagem', 'redes.sinServicios': 'Ainda não há serviços. Adicione em Faturamento → Serviços.', 'redes.sinDoctores': 'Ainda não há médicos cadastrados.', 'redes.consulta': 'Consulta',
+        'redes.catalogoBtn': '🖼 Catálogo (1 imagem)', 'redes.reelBtn': '🎞 Reel (várias imagens)', 'redes.seleccionados': ' selecionados', 'redes.seleccionado': ' selecionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarque alguns.',
         'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
