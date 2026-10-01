@@ -1625,7 +1625,7 @@ async function abrirConversacion(id) {
         const burbujas = msgs.map(m => `
           <div class="msg ${m.direccion === 'entrante' ? 'ent' : 'sal'}">
             ${m.texto ? escapeHtmlPanel(m.texto) : `<em>[${escapeHtmlPanel(m.tipo)}]</em>`}
-            <div class="meta">${m.quien === 'humano' ? escapeHtmlPanel(m.enviado_por || 'vos') : m.quien} · ${new Date(m.created_at).toLocaleString('es-CR')}${m.error ? ` · <span style="color:var(--danger)">${escapeHtmlPanel(m.error)}</span>` : ''}</div>
+            <div class="meta">${m.quien === 'humano' ? escapeHtmlPanel(m.enviado_por || 'vos') : escapeHtmlPanel(m.quien || '')} · ${new Date(m.created_at).toLocaleString('es-CR')}${m.error ? ` · <span style="color:var(--danger)">${escapeHtmlPanel(m.error)}</span>` : ''}</div>
           </div>`).join('');
 
         // El reloj de las 24 horas. Pasado ese plazo Meta no deja responder
@@ -1785,7 +1785,7 @@ function renderTablaPacientes() {
         return `
         <tr>
             <td><strong>${escapeHtmlPanel(p.nombre || '—')}</strong></td>
-            <td>${tels[0] || '—'}${extra}</td>
+            <td>${escapeHtmlPanel(tels[0] || '—')}${extra}</td>
             <td>${escapeHtmlPanel(p.cedula || '—')}</td>
             <td>${p.created_at ? new Date(p.created_at).toLocaleDateString(getLocale()) : '—'}</td>
         </tr>`;
@@ -2022,7 +2022,11 @@ function renderTablaCitas() {
     }).join('');
 }
 function csvEscape(val) {
-    const s = (val === null || val === undefined) ? '' : String(val);
+    let s = (val === null || val === undefined) ? '' : String(val);
+    // Fix seguridad 01/10/2026: un nombre cargado desde el formulario público
+    // como "=HYPERLINK(...)" se ejecutaba como fórmula al abrir el CSV en
+    // Excel. Un apóstrofo adelante lo deja como texto.
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
     if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
     return s;
 }
