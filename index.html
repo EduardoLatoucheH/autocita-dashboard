@@ -2210,7 +2210,8 @@ async function correrAgendaDia() {
             method: 'POST',
             body: JSON.stringify({ fecha, doctor_id, minutos })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. ${t('citas.avisaManual')}</div>`;
+        // Fix seguridad (02/10/2026): data.message del servidor se escapa igual que todo lo demás que va a innerHTML.
+        alertEl.innerHTML = `<div class="alert alert-success">${escapeHtmlPanel(data.message)}. ${t('citas.avisaManual')}</div>`;
         loadCitas();
         loadDashboard();
     } catch (e) {
@@ -2231,7 +2232,8 @@ async function cancelarDiaCompleto() {
             method: 'POST',
             body: JSON.stringify({ fecha, doctor_id })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">${data.message}. ${t('citas.avisaManual')}</div>`;
+        // Fix seguridad (02/10/2026): data.message del servidor se escapa igual que todo lo demás que va a innerHTML.
+        alertEl.innerHTML = `<div class="alert alert-success">${escapeHtmlPanel(data.message)}. ${t('citas.avisaManual')}</div>`;
         loadCitas();
         loadDashboard();
     } catch (e) {
@@ -3029,7 +3031,7 @@ function actualizarAgendarPreview() {
     if (!preview) return;
     if (!limpio) {
         preview.innerHTML = clinicaCache?.slug
-            ? `Tu link activo: <a href="${URL_AGENDAR}/agendar/${clinicaCache.slug}" target="_blank">${URL_AGENDAR}/agendar/${clinicaCache.slug}</a>`
+            ? `Tu link activo: <a href="${URL_AGENDAR}/agendar/${escapeHtmlPanel(clinicaCache.slug)}" target="_blank" rel="noopener">${URL_AGENDAR}/agendar/${escapeHtmlPanel(clinicaCache.slug)}</a>`
             : 'Todavía no tenés un link — escribí un nombre y guardá.';
         return;
     }
@@ -3045,7 +3047,7 @@ async function guardarSlugClinica() {
         await apiFetch('/clinica/setup', { method: 'PATCH', body: JSON.stringify({ slug: valor }) });
         await loadSettings();
         alertEl.innerHTML = clinicaCache?.slug
-            ? `<div class="alert alert-success">Link guardado: <a href="${URL_AGENDAR}/agendar/${clinicaCache.slug}" target="_blank">${URL_AGENDAR}/agendar/${clinicaCache.slug}</a></div>`
+            ? `<div class="alert alert-success">Link guardado: <a href="${URL_AGENDAR}/agendar/${escapeHtmlPanel(clinicaCache.slug)}" target="_blank" rel="noopener">${URL_AGENDAR}/agendar/${escapeHtmlPanel(clinicaCache.slug)}</a></div>`
             : `<div class="alert alert-success">Link quitado</div>`;
         setTimeout(() => alertEl.innerHTML = '', 6000);
     } catch (e) {
@@ -3544,7 +3546,7 @@ async function loadEquipo() {
                 <tr>
                     <td>${escapeHtmlPanel(m.email)}</td>
                     <td><span class="badge badge-success">${m.rol === 'dueno' ? t('set.rolAdmin') : m.rol === 'recepcionista' ? t('set.rolRecepcionista') : t('set.rolDoctor')}</span></td>
-                    <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
+                    <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${escapeHtmlPanel(m.status)}</span></td>
                     <td><button class="btn btn-danger btn-sm" onclick="eliminarMiembro('${m.id}')">${t('common.eliminar')}</button></td>
                 </tr>
             `).join('');
@@ -3573,7 +3575,7 @@ async function invitarMiembro() {
             method: 'POST',
             body: JSON.stringify({ email, rol, doctor_id: rol === 'doctor' ? doctor_id : null })
         });
-        alertEl.innerHTML = `<div class="alert alert-success">${t('set.msgInvitado', { email })}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-success">${t('set.msgInvitado', { email: escapeHtmlPanel(email) })}</div>`;
         document.getElementById('equipoEmail').value = '';
         loadEquipo();
         setTimeout(() => alertEl.innerHTML = '', 4000);
@@ -3608,7 +3610,7 @@ function estadoBadge(estado) {
 function botonesCicloCita(c) {
     if (c.estado === 'cancelada') return '';
     if (c.atendida_at) {
-        return `<span style="color:var(--primary);font-size:12px;margin-right:6px" title="${c.atendida_at}">✓ ${t('citas.atendida')}</span>`;
+        return `<span style="color:var(--primary);font-size:12px;margin-right:6px" title="${escapeHtmlPanel(c.atendida_at)}">✓ ${t('citas.atendida')}</span>`;
     }
     if (c.llego_at) {
         return `<button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>`;
@@ -3710,8 +3712,8 @@ async function loadBloqueos() {
             const rango = b.fecha_inicio === b.fecha_fin ? b.fecha_inicio : `${b.fecha_inicio} → ${b.fecha_fin}`;
             const horas = b.hora_inicio ? `${String(b.hora_inicio).slice(0,5)} a ${String(b.hora_fin).slice(0,5)}` : t('bloq.diaCompleto');
             return `<div class="fila-bloqueo">
-                <div><strong>${escapeHtmlPanel(b.doctores?.nombre || '')}</strong> — ${rango}<br>
-                <span style="color:var(--gray-500);font-size:12px">${horas}${b.motivo ? ' · ' + escapeHtmlPanel(b.motivo) : ''}</span></div>
+                <div><strong>${escapeHtmlPanel(b.doctores?.nombre || '')}</strong> — ${escapeHtmlPanel(rango)}<br>
+                <span style="color:var(--gray-500);font-size:12px">${escapeHtmlPanel(horas)}${b.motivo ? ' · ' + escapeHtmlPanel(b.motivo) : ''}</span></div>
                 <button class="btn-sm btn-danger" onclick="borrarBloqueo('${b.id}')">${t('common.eliminar')}</button>
             </div>`;
         }).join('');
