@@ -398,6 +398,33 @@
     .nav-link[data-section="ayuda"]::before       { -webkit-mask-image: var(--ico-help);  mask-image: var(--ico-help); }
     .nav-link[data-section="redes"]::before       { -webkit-mask-image: var(--ico-img);   mask-image: var(--ico-img); }
     .terms-fecha{font-size:13px;color:var(--gris,var(--gray-500));margin:-4px 0 12px}
+/* <<II_CSS */
+/* Imágenes en el inbox (05/10/2026). Fuente única: build-inbox-imagenes.py la inserta en los dos dashboards. */
+.ii-adj{margin-top:6px}
+.ii-mini{display:block;padding:0;border:1px solid var(--gray-200,#e4e2dc);border-radius:10px;overflow:hidden;background:var(--gray-100,#f1efe8);cursor:zoom-in;min-width:120px;min-height:80px;max-width:240px}
+.ii-mini img{display:block;width:100%;max-height:260px;object-fit:cover}
+.ii-mini-carga{display:block;padding:26px 14px;font-size:12px;color:inherit;opacity:.85}   /* sobre fondo gris: texto normal (el gris de ayuda daba ~3:1) */
+.ii-acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ii-aviso{font-size:12px;color:inherit;background:var(--gray-100,#f1efe8);border-radius:8px;padding:8px 10px;line-height:1.45}
+.ii-fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.ii-ayuda{font-size:11px;color:var(--gray-500,#6b6862);line-height:1.4}
+.ii-off{opacity:.5;cursor:not-allowed}
+.ii-msg{font-size:12px;min-height:16px;margin-top:6px}
+.ii-previa .ii-ayuda{color:inherit;opacity:.85}
+.ii-previa{display:flex;gap:12px;align-items:flex-start;margin-top:8px;padding:10px;border:1px solid var(--gray-200,#e4e2dc);border-radius:10px;background:var(--gray-100,#f1efe8)}
+.ii-previa img{width:120px;height:120px;object-fit:cover;border-radius:8px;flex:none}
+.ii-previa-der{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ii-previa-der textarea{width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--gray-200,#d8d5cc);border-radius:8px;resize:vertical}
+.ii-capa{position:fixed;inset:0;z-index:1000;background:rgba(20,18,15,.78);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:16px}
+.ii-capa>img{max-width:min(92vw,900px);max-height:78vh;border-radius:10px;background:#fff}
+.ii-capa-barra{display:flex;gap:8px}
+.ii-modal{background:var(--card,#fff);color:inherit;border-radius:12px;padding:18px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:12px;max-height:80vh;overflow:auto}
+.ii-lista{display:flex;flex-direction:column;gap:8px}
+.ii-opcion{display:flex;gap:6px;align-items:flex-start;font-size:13px;line-height:1.4;cursor:pointer}
+.ii-mini:focus-visible,.ii-adj button:focus-visible,.ii-previa button:focus-visible,.ii-fila label:focus-within{outline:2px solid var(--primary,#2f6b4f);outline-offset:2px}
+@media(max-width:520px){.ii-previa{flex-direction:column}.ii-previa img{width:100%;height:auto;max-height:200px}}
+
+/* II_CSS>> */
 </style>
 </head>
 <body>
@@ -1630,9 +1657,10 @@ async function abrirConversacion(id) {
     hilo.innerHTML = '<div class="loading">Cargando...</div>';
     try {
         const msgs = await apiFetch(`/conversaciones/${id}/mensajes`);
-        const burbujas = msgs.map(m => `
+        const burbujas = msgs.map((m, i) => `
           <div class="msg ${m.direccion === 'entrante' ? 'ent' : 'sal'}">
-            ${m.texto ? escapeHtmlPanel(m.texto) : `<em>[${escapeHtmlPanel(m.tipo)}]</em>`}
+            ${m.texto ? escapeHtmlPanel(m.texto) : (m.media_url ? '' : `<em>[${escapeHtmlPanel(m.tipo)}]</em>`)}
+            ${(m.media_url || m.tipo === 'document') ? `<div class="adj-ph" data-i="${i}"></div>` : ''}
             <div class="meta">${m.quien === 'humano' ? escapeHtmlPanel(m.enviado_por || 'vos') : escapeHtmlPanel(m.quien || '')} · ${new Date(m.created_at).toLocaleString('es-CR')}${m.error ? ` · <span style="color:var(--danger)">${escapeHtmlPanel(m.error)}</span>` : ''}</div>
           </div>`).join('');
 
@@ -1659,7 +1687,10 @@ async function abrirConversacion(id) {
           <div style="display:flex;gap:8px;margin-top:8px">
             <input id="respTexto" placeholder="Escribí tu respuesta" style="flex:1" ${c?.ventana_abierta ? '' : 'disabled'}>
             <button class="btn btn-sm" onclick="responderConv('${id}')" ${c?.ventana_abierta ? '' : 'disabled'}>Enviar</button>
-          </div>`;
+          </div>
+          <div id="iiHost"></div>`;
+        iiHidratar(hilo, msgs, id);
+        iiMontar(id, !!c?.ventana_abierta);
         const cont = hilo.querySelector('.msgs');
         if (cont) cont.scrollTop = cont.scrollHeight;
         loadConversaciones();
@@ -1672,6 +1703,268 @@ async function alternarBot(id, pausar) {
         abrirConversacion(id);
     } catch (e) { alert('Error: ' + e.message); }
 }
+// <<II_JS
+// ─── Imágenes en el inbox · interfaz compartida (05/10/2026) ─────────────────
+// FUENTE ÚNICA: build-inbox-imagenes.py la inserta en autocita-dashboard.html y autoventas-dashboard.html.
+// No editar la copia dentro de los HTML.
+//
+// Uso del equipo: mandar una imagen de SERVICIO (mapa, lista de precios, instrucciones, foto de un
+// producto, comprobante) dentro de la ventana de 24 h, y ver/descargar las imágenes de la conversación.
+// En AutoVentas además: "Marcar comprobante recibido" ligado al pedido.
+//
+// Seguridad: todo se construye con createElement/textContent (nada de innerHTML con datos del cliente:
+// nombres de archivo, pies de foto, nombres de productos). Las URLs de las imágenes son URLs firmadas
+// de corta duración que devuelve /media/firmar (solo de la clínica/negocio del usuario).
+//
+// El host (cada dashboard) ya trae: API, getToken(), apiFetch(), sessionExpired(), loadConversaciones(),
+// abrirConversacion(id).
+
+var II_COMPROBANTES = false;      // true solo en AutoVentas
+var II_MAX_BYTES = 5 * 1024 * 1024;
+var iiEstado = { archivo: null, url: null, enviando: false, firmas: {} };
+
+function iiEl(tag, props, texto) {
+  var e = document.createElement(tag);
+  if (props) for (var k in props) { if (k === 'class') e.className = props[k]; else if (k.slice(0, 2) === 'on') e[k] = props[k]; else e.setAttribute(k, props[k]); }
+  if (texto != null) e.textContent = texto;
+  return e;
+}
+function iiBoton(texto, onclick, clases) { var b = iiEl('button', { type: 'button', class: clases || 'btn btn-ghost btn-sm' }, texto); b.onclick = onclick; return b; }
+function iiEsImagen(m) { return !!m.media_url && /^image\/(jpeg|png|webp)$/i.test(String(m.media_mime || '')); }
+function iiEsDocumento(m) { return m.tipo === 'document' || /^application\/pdf/i.test(String(m.media_mime || '')); }
+function iiNombreArchivo(m) { return 'imagen-' + new Date(m.created_at || Date.now()).toISOString().slice(0, 10); }
+
+// URL firmada (1 h en el servidor; acá se reusa 50 min). descargar=true fuerza "Guardar como" con nombre seguro.
+async function iiFirmar(ruta, descargar, nombre) {
+  var clave = ruta + '|' + (descargar ? '1' : '0') + '|' + (nombre || '');
+  var c = iiEstado.firmas[clave];
+  if (c && c.vence > Date.now()) return c.url;
+  var q = '/media/firmar?ruta=' + encodeURIComponent(ruta) + (descargar ? '&descargar=1&nombre=' + encodeURIComponent(nombre || 'imagen') : '');
+  var d = await apiFetch(q);
+  iiEstado.firmas[clave] = { url: d.url, vence: Date.now() + 50 * 60000 };
+  return d.url;
+}
+async function iiDescargar(m) {
+  try {
+    var url = await iiFirmar(m.media_url, true, iiNombreArchivo(m));
+    var a = document.createElement('a'); a.href = url; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { alert('No se pudo descargar la imagen, probá de nuevo.'); }
+}
+// Ver en grande: capa encima de todo; se cierra con clic fuera, con la X o con Escape.
+async function iiVerGrande(m) {
+  try {
+    var url = await iiFirmar(m.media_url, false);
+    var capa = iiEl('div', { class: 'ii-capa', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Imagen' });
+    var cerrar = function () { capa.remove(); document.removeEventListener('keydown', esc); };
+    var esc = function (ev) { if (ev.key === 'Escape') cerrar(); };
+    document.addEventListener('keydown', esc);
+    capa.onclick = function (ev) { if (ev.target === capa) cerrar(); };
+    var img = iiEl('img', { src: url, alt: 'Imagen de la conversación' });
+    var barra = iiEl('div', { class: 'ii-capa-barra' });
+    barra.appendChild(iiBoton('⬇ Descargar', function () { iiDescargar(m); }, 'btn btn-sm'));
+    barra.appendChild(iiBoton('Cerrar', cerrar, 'btn btn-ghost btn-sm'));
+    capa.appendChild(img); capa.appendChild(barra);
+    document.body.appendChild(capa);
+  } catch (e) { alert('No se pudo abrir la imagen.'); }
+}
+
+// ── Burbujas: miniatura + Descargar (+ Marcar comprobante en AutoVentas) ─────
+function iiHidratar(hilo, msgs, convId) {
+  var hs = hilo.querySelectorAll('.adj-ph');
+  for (var i = 0; i < hs.length; i++) {
+    var m = msgs[Number(hs[i].getAttribute('data-i'))];
+    if (!m) continue;
+    hs[i].appendChild(iiNodoAdjunto(m, convId));
+  }
+}
+function iiNodoAdjunto(m, convId) {
+  var caja = iiEl('div', { class: 'ii-adj' });
+  if (iiEsImagen(m)) {
+    var miniatura = iiEl('button', { type: 'button', class: 'ii-mini', 'aria-label': 'Ver la imagen en grande' });
+    miniatura.appendChild(iiEl('span', { class: 'ii-mini-carga' }, 'Cargando imagen…'));
+    miniatura.onclick = function () { iiVerGrande(m); };
+    caja.appendChild(miniatura);
+    // La URL firmada se pide SOLO cuando la miniatura entra en pantalla (code-review: un hilo de 200 mensajes disparaba
+    // decenas de firmas aunque nadie hiciera scroll hasta esas fotos). Sin IntersectionObserver se pide de inmediato.
+    var cargar = function () {
+      iiFirmar(m.media_url, false).then(function (url) {
+        var img = iiEl('img', { src: url, alt: 'Imagen', loading: 'lazy' });
+        img.onerror = function () { miniatura.textContent = 'No se pudo cargar la imagen'; };
+        miniatura.textContent = ''; miniatura.appendChild(img);
+      }).catch(function () { miniatura.textContent = 'No se pudo cargar la imagen'; });
+    };
+    if (typeof IntersectionObserver === 'function') {
+      var obs = new IntersectionObserver(function (es) { if (es[0] && es[0].isIntersecting) { obs.disconnect(); cargar(); } }, { rootMargin: '200px' });
+      obs.observe(miniatura);
+    } else cargar();
+    var acc = iiEl('div', { class: 'ii-acc' });
+    acc.appendChild(iiBoton('⬇ Descargar', function () { iiDescargar(m); }));
+    // convId nulo = vista de solo lectura (detalle del pedido, donde el comprobante YA está marcado): sin botón de marcar.
+    if (II_COMPROBANTES && convId && m.direccion === 'entrante' && m.quien === 'cliente') {
+      acc.appendChild(iiBoton('✔ Marcar comprobante recibido', function () { iiMarcarComprobante(m, convId); }, 'btn btn-sm'));
+    }
+    caja.appendChild(acc);
+  } else if (iiEsDocumento(m)) {
+    caja.appendChild(iiEl('div', { class: 'ii-aviso' }, 'El cliente mandó un documento (PDF). Todavía no se muestra acá: abrilo desde WhatsApp Business.'));
+  } else if (m.media_url) {
+    var b = iiBoton('Ver adjunto', async function () { try { window.open(await iiFirmar(m.media_url, false), '_blank', 'noopener'); } catch (e) { alert('No se pudo abrir el archivo.'); } });
+    caja.appendChild(b);
+  }
+  return caja;
+}
+
+// ── Compositor: adjuntar imagen, vista previa, pie de foto, enviar ───────────
+function iiMontar(convId, ventanaAbierta) {
+  var host = document.getElementById('iiHost');
+  if (!host) return;
+  iiLimpiarSeleccion();
+  while (host.firstChild) host.removeChild(host.firstChild);
+  var fila = iiEl('div', { class: 'ii-fila' });
+  var etiqueta = iiEl('label', { class: 'btn btn-ghost btn-sm' + (ventanaAbierta ? '' : ' ii-off') }, '📎 Adjuntar imagen');
+  var input = iiEl('input', { type: 'file', accept: 'image/jpeg,image/png', style: 'display:none' });
+  if (!ventanaAbierta) { input.disabled = true; etiqueta.setAttribute('aria-disabled', 'true'); etiqueta.title = 'Pasaron las 24 horas: hace falta una plantilla aprobada'; }
+  input.onchange = function () { iiElegir(input, convId); };
+  etiqueta.appendChild(input); fila.appendChild(etiqueta);
+  fila.appendChild(iiEl('span', { class: 'ii-ayuda' }, 'Para mensajes de servicio (mapa, precios, instrucciones, comprobantes). JPG o PNG, hasta 5 MB.'));
+  host.appendChild(fila);
+  host.appendChild(iiEl('div', { id: 'iiPrevia' }));
+  host.appendChild(iiEl('div', { id: 'iiMsg', class: 'ii-msg', role: 'status' }));
+}
+function iiMensaje(texto, error) { var e = document.getElementById('iiMsg'); if (e) { e.textContent = texto || ''; e.style.color = error ? 'var(--danger, #a32d2d)' : ''; } }
+function iiLimpiarSeleccion() {
+  if (iiEstado.url) { try { URL.revokeObjectURL(iiEstado.url); } catch (e) {} }
+  iiEstado.archivo = null; iiEstado.url = null;
+  var p = document.getElementById('iiPrevia'); if (p) while (p.firstChild) p.removeChild(p.firstChild);
+}
+// Tipo por los primeros bytes (el servidor lo vuelve a validar): evita subir un .exe renombrado a .jpg.
+async function iiTipoReal(archivo) {
+  try {
+    var b = new Uint8Array(await archivo.slice(0, 16).arrayBuffer());
+    if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'image/jpeg';
+    if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return 'image/png';
+  } catch (e) {}
+  return null;
+}
+async function iiElegir(input, convId) {
+  var archivo = input.files && input.files[0]; input.value = '';
+  if (!archivo) return;
+  iiMensaje('');
+  if (archivo.size > II_MAX_BYTES) { iiMensaje('La imagen pesa más de 5 MB (el tope de WhatsApp). Probá con una más liviana.', true); return; }
+  var tipo = await iiTipoReal(archivo);
+  if (!tipo) { iiMensaje('Solo se pueden mandar imágenes JPG o PNG.', true); return; }
+  iiLimpiarSeleccion();
+  iiEstado.archivo = archivo; iiEstado.tipo = tipo; iiEstado.url = URL.createObjectURL(archivo);
+  var prev = document.getElementById('iiPrevia');
+  var caja = iiEl('div', { class: 'ii-previa' });
+  caja.appendChild(iiEl('img', { src: iiEstado.url, alt: 'Vista previa de la imagen a enviar' }));
+  var der = iiEl('div', { class: 'ii-previa-der' });
+  var pie = iiEl('textarea', { id: 'iiPie', rows: '2', maxlength: '1024', placeholder: 'Texto que acompaña la imagen (opcional)', 'aria-label': 'Texto que acompaña la imagen' });
+  var cuenta = iiEl('div', { class: 'ii-ayuda' }, '0 / 1024');
+  pie.oninput = function () { cuenta.textContent = pie.value.length + ' / 1024'; };
+  var acc = iiEl('div', { class: 'ii-acc' });
+  var enviar = iiBoton('Enviar imagen', function () { iiEnviar(convId, enviar); }, 'btn btn-sm');
+  acc.appendChild(enviar); acc.appendChild(iiBoton('Cancelar', function () { iiLimpiarSeleccion(); iiMensaje(''); }));
+  [pie, cuenta, acc].forEach(function (n) { der.appendChild(n); });
+  caja.appendChild(der); prev.appendChild(caja);
+}
+async function iiEnviar(convId, boton) {
+  if (iiEstado.enviando || !iiEstado.archivo) return;
+  iiEstado.enviando = true; boton.disabled = true; boton.textContent = 'Enviando…';
+  iiMensaje('Subiendo la imagen…');
+  var pie = (document.getElementById('iiPie') || {}).value || '';
+  try {
+    // El pie va en un ENCABEZADO (URL-encoded): en la URL quedaría en los logs de acceso y podría chocar con el límite de largo.
+    var resp = await fetch(API + '/conversaciones/' + encodeURIComponent(convId) + '/responder-imagen', {
+      method: 'POST', headers: { 'Content-Type': iiEstado.tipo, Authorization: 'Bearer ' + getToken(), 'X-Pie': encodeURIComponent(pie.trim()) }, body: iiEstado.archivo,
+    });
+    if (resp.status === 401) { sessionExpired(); return; }
+    var data = await resp.json().catch(function () { return {}; });
+    if (!resp.ok) {
+      iiMensaje((data.error || 'No se pudo enviar la imagen, probá de nuevo.'), true);
+      if (data.guardado || data.ventana_cerrada) { await loadConversaciones(); }
+      boton.disabled = false; boton.textContent = 'Enviar imagen';
+      return;
+    }
+    iiLimpiarSeleccion();
+    await loadConversaciones();
+    abrirConversacion(convId);
+  } catch (e) {
+    iiMensaje('No se pudo enviar la imagen, probá de nuevo.', true);
+    boton.disabled = false; boton.textContent = 'Enviar imagen';
+  } finally { iiEstado.enviando = false; }
+}
+
+// ── AutoVentas: marcar el comprobante y ligarlo al pedido ────────────────────
+async function iiMarcarComprobante(m, convId) {
+  try {
+    var pedidos = await apiFetch('/conversaciones/' + encodeURIComponent(convId) + '/pedidos-apartados');
+    if (!pedidos.length) { alert('Este cliente no tiene pedidos apartados esperando pago.'); return; }
+    var elegido = pedidos.length === 1 ? pedidos[0] : await iiElegirPedido(pedidos);
+    if (!elegido) return;
+    await iiConfirmarComprobante(m, convId, elegido, false);
+  } catch (e) { alert('No se pudo marcar el comprobante: ' + e.message); }
+}
+function iiDinero(n) { try { return '₡' + Number(n).toLocaleString('es-CR'); } catch (e) { return String(n); } }
+function iiElegirPedido(pedidos) {
+  return new Promise(function (ok) {
+    var capa = iiEl('div', { class: 'ii-capa', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Elegir pedido' });
+    var caja = iiEl('div', { class: 'ii-modal' });
+    caja.appendChild(iiEl('strong', null, '¿A cuál pedido corresponde este comprobante?'));
+    var lista = iiEl('div', { class: 'ii-lista' });
+    var elegido = pedidos[0].id;
+    pedidos.forEach(function (p, i) {
+      var etq = iiEl('label', { class: 'ii-opcion' });
+      var r = iiEl('input', { type: 'radio', name: 'iiPedido' }); if (i === 0) r.checked = true;
+      r.onchange = function () { elegido = p.id; };
+      etq.appendChild(r);
+      etq.appendChild(iiEl('span', null, ' ' + iiDinero(p.total) + ' · ' + new Date(p.created_at).toLocaleDateString('es-CR') + (p.resumen ? ' · ' + p.resumen : '')));
+      lista.appendChild(etq);
+    });
+    caja.appendChild(lista);
+    var acc = iiEl('div', { class: 'ii-acc' });
+    var fin = function (v) { capa.remove(); ok(v); };
+    acc.appendChild(iiBoton('Marcar este pedido', function () { fin(pedidos.filter(function (p) { return p.id === elegido; })[0]); }, 'btn btn-sm'));
+    acc.appendChild(iiBoton('Cancelar', function () { fin(null); }));
+    caja.appendChild(acc); capa.appendChild(caja); document.body.appendChild(capa);
+  });
+}
+async function iiConfirmarComprobante(m, convId, pedido, forzar) {
+  if (!forzar && !confirm('¿Marcar el comprobante como recibido para el pedido de ' + iiDinero(pedido.total) + '?\n\nEsto NO verifica el pago: queda pendiente de verificación.')) return;
+  var resp = await fetch(API + '/pedidos/' + encodeURIComponent(pedido.id) + '/comprobante', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() }, body: JSON.stringify({ mensaje_id: m.id, forzar: !!forzar }),
+  });
+  if (resp.status === 401) { sessionExpired(); return; }
+  var data = await resp.json().catch(function () { return {}; });
+  if (resp.status === 409 && data.duplicado) {
+    if (confirm('Esa misma imagen ya está ligada a otro pedido. ¿Marcarla igual en este?')) return iiConfirmarComprobante(m, convId, pedido, true);
+    return;
+  }
+  if (!resp.ok) { alert(data.error || 'No se pudo marcar el comprobante.'); return; }
+  iiMensaje('Comprobante marcado: el pedido quedó pendiente de verificación.');
+  if (typeof loadPedidos === 'function') { try { await loadPedidos(); } catch (e) {} }
+  abrirConversacion(convId);
+}
+// Detalle del pedido: miniatura del comprobante, quién lo marcó y cuándo, y "Deshacer".
+function iiPedidoComprobante(p) {
+  var host = document.getElementById('comprobanteWrap');
+  if (!host) return;
+  while (host.firstChild) host.removeChild(host.firstChild);
+  if (!p.comprobante_ruta) return;
+  host.appendChild(iiEl('div', { class: 'card-subtitle', style: 'margin-bottom:8px' }, 'Comprobante de pago'));
+  var m = { media_url: p.comprobante_ruta, media_mime: p.comprobante_mime || 'image/jpeg', created_at: p.comprobante_at, direccion: 'entrante', quien: 'cliente', tipo: 'image' };
+  var nodo = iiNodoAdjunto(m, null);
+  host.appendChild(nodo);
+  host.appendChild(iiEl('div', { class: 'ii-ayuda' }, 'Marcado por ' + (p.comprobante_por || '—') + (p.comprobante_at ? ' · ' + new Date(p.comprobante_at).toLocaleString('es-CR') : '')));
+  if (p.estado_pago === 'comprobante') {
+    host.appendChild(iiBoton('↩ Deshacer', async function () {
+      if (!confirm('¿Deshacer el comprobante? El pedido vuelve a "apartado" y vuelve a correr su plazo para pagar.')) return;
+      try { await apiFetch('/pedidos/' + encodeURIComponent(p.id) + '/comprobante', { method: 'DELETE' }); await loadPedidos(); abrirPedido(p.id); }
+      catch (e) { alert(e.message); }
+    }));
+  }
+}
+
+// II_JS>>
 async function responderConv(id) {
     const input = document.getElementById('respTexto');
     const texto = input.value.trim();
