@@ -20,28 +20,28 @@
   var ESTILOS = {
     sitcom: {
       nombre: 'Sitcom plano', ayuda: 'Contorno grueso, caras muy expresivas, humor cotidiano.',
-      reparto: { a: { tipo: 'duena', nombre: 'La dueña' }, b: { tipo: 'cliente', nombre: 'El cliente' } },
+      reparto: { a: { tipo: 'duena', nombre: 'La dueña', equipo: true }, b: { tipo: 'cliente', nombre: 'El cliente' } },
       contorno: '#1f1b2d', grosor: 9, sombra: false, textura: 'ninguna',
       fondos: { oficina: ['#fde7c8', '#f5c98f'], taller: ['#d9e8f5', '#a9c7e3'], calle: ['#cfeaf7', '#9fd0ea'], casa: ['#f8dcdc', '#eeb6b6'], exterior: ['#c9eefc', '#f6f1c1'] },
       suelo: '#c9a27a', globo: '#ffffff', texto: '#1f1b2d', acento: '#ff6b57', fuente: '"Trebuchet MS","Arial Rounded MT Bold","Helvetica Neue",Arial,sans-serif',
     },
     fabula: {
       nombre: 'Fábula con animalitos', ayuda: 'Suave, tipo cuento ilustrado, con moraleja.',
-      reparto: { a: { tipo: 'buho', nombre: 'El búho' }, b: { tipo: 'zorro', nombre: 'El zorro' } },
+      reparto: { a: { tipo: 'buho', nombre: 'El búho', equipo: true }, b: { tipo: 'zorro', nombre: 'El zorro' } },
       contorno: '#5b3d2a', grosor: 4, sombra: false, textura: 'granulo',
       fondos: { oficina: ['#f6ead3', '#e8d3a8'], taller: ['#e9dfc7', '#cdb98f'], calle: ['#dff0e0', '#b8d8b4'], casa: ['#f7e1d3', '#ebc3a8'], exterior: ['#cfe8f3', '#bfe2b0'] },
       suelo: '#a9c98d', globo: '#fffaf0', texto: '#4a3222', acento: '#d9822b', fuente: 'Georgia,"Palatino Linotype","Times New Roman",serif',
     },
     recortes: {
       nombre: 'Recortes de papel', ayuda: 'Capas con sombra, colores cálidos, aire artesanal.',
-      reparto: { a: { tipo: 'duena', nombre: 'La dueña' }, b: { tipo: 'robot', nombre: 'El robot asistente' } },
+      reparto: { a: { tipo: 'duena', nombre: 'La dueña', equipo: true }, b: { tipo: 'robot', nombre: 'El robot asistente', equipo: true } },
       contorno: null, grosor: 0, sombra: true, textura: 'papel',
       fondos: { oficina: ['#ffd9a8', '#ffb877'], taller: ['#ffe3a3', '#f4b45a'], calle: ['#ffd2b0', '#f08f6c'], casa: ['#ffd6d0', '#f2a39a'], exterior: ['#ffe8b5', '#9fd6c0'] },
       suelo: '#d98f5c', globo: '#fffdf6', texto: '#4a2c1b', acento: '#2f8f83', fuente: '"Avenir Next","Trebuchet MS",Arial,sans-serif',
     },
     comic: {
       nombre: 'Cómic pop con mascota', ayuda: 'Color fuerte, puntos de imprenta, mascota propia.',
-      reparto: { a: { tipo: 'calendario', nombre: 'La mascota' }, b: { tipo: 'duena', nombre: 'La dueña' } },
+      reparto: { a: { tipo: 'calendario', nombre: 'La mascota', equipo: true }, b: { tipo: 'duena', nombre: 'La dueña', equipo: true } },
       contorno: '#111111', grosor: 10, sombra: false, textura: 'puntos',
       fondos: { oficina: ['#ffe14d', '#ffb800'], taller: ['#5cd0ff', '#2c8bff'], calle: ['#ff6fb5', '#ff3d8b'], casa: ['#b58cff', '#7a4dff'], exterior: ['#6ee7c8', '#16b7a0'] },
       suelo: '#222222', globo: '#ffffff', texto: '#111111', acento: '#ff2d55', fuente: '"Impact","Arial Black","Helvetica Neue",Arial,sans-serif',
@@ -253,7 +253,56 @@
     else if (tipo === 'zorro') zorro(ctx, est, e, S);
     else if (tipo === 'robot') robot(ctx, est, e, S);
     else if (tipo === 'calendario') calendario(ctx, est, e, S);
+    if (e.uniforme) vestir(ctx, est, tipo, S, e.uniforme);
     ctx.restore(); return d;
+  }
+
+
+  // ── Uniformes por especialidad: capa de ropa que se dibuja sobre el personaje del negocio ──────────────
+  var UNIFORMES = {
+    ninguno: { nombre: 'Sin uniforme' },
+    electricista: { nombre: 'Electricista · casco y chaleco reflectivo', chaleco: '#ff8a1f', casco: '#ffcf24' },
+    incendios: { nombre: 'Contra incendios · casco y chaleco rojos', chaleco: '#e03131', casco: '#e03131' },
+    salud: { nombre: 'Salud · bata blanca y estetoscopio', bata: '#fdfdff', estetoscopio: true },
+    tienda: { nombre: 'Tienda · delantal', delantal: '#2f8f83' },
+    taller: { nombre: 'Taller · gorra y chaleco azul', chaleco: '#3a78d4', gorra: '#3a78d4' },
+  };
+  // Dónde está el torso y la cabeza de cada personaje (en fracciones de S, origen en los pies).
+  var ANCLAS = {
+    duena: { t: [-0.2, -0.55, 0.2, -0.2, 0.12], h: [0, -0.8, 0.21] }, cliente: { t: [-0.2, -0.55, 0.2, -0.2, 0.12], h: [0, -0.8, 0.21] }, tecnico: { t: [-0.2, -0.55, 0.2, -0.2, 0.12], h: [0, -0.8, 0.21] },
+    buho: { t: [-0.26, -0.5, 0.26, -0.16, 0.18], h: [0, -0.78, 0.26] }, zorro: { t: [-0.22, -0.52, 0.22, -0.2, 0.12], h: [0, -0.8, 0.25] },
+    robot: { t: [-0.22, -0.6, 0.22, -0.2, 0.07], h: [0, -0.82, 0.23] }, calendario: { t: null, h: [0, -0.72, 0.27] },
+  };
+  function vestir(ctx, est, tipo, S, uni) {
+    var u = UNIFORMES[uni]; if (!u || uni === 'ninguno') return;
+    var a = ANCLAS[tipo]; if (!a) return;
+    ctx.save(); ctx.lineJoin = 'round';
+    if (a.t) {
+      var x0 = a.t[0] * S, y0 = a.t[1] * S, w = (a.t[2] - a.t[0]) * S, h = (a.t[3] - a.t[1]) * S, r = a.t[4] * S;
+      if (u.bata) { ctx.beginPath(); rr(ctx, x0 - 4, y0, w + 8, h * 1.12, r); pintar(ctx, est, u.bata); ctx.strokeStyle = 'rgba(80,90,110,0.55)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, y0 + h * 0.18); ctx.lineTo(0, y0 + h * 1.1); ctx.moveTo(-w * 0.2, y0); ctx.lineTo(0, y0 + h * 0.3); ctx.lineTo(w * 0.2, y0); ctx.stroke(); }
+      if (u.chaleco) {
+        ctx.beginPath(); rr(ctx, x0 + w * 0.02, y0 + h * 0.02, w * 0.96, h * 0.96, r * 0.8); pintar(ctx, est, u.chaleco);
+        ctx.fillStyle = 'rgba(255,248,170,0.95)'; [0.4, 0.66].forEach(function (f) { ctx.fillRect(x0 + w * 0.06, y0 + h * f, w * 0.88, h * 0.1); });
+        ctx.strokeStyle = est.contorno || 'rgba(0,0,0,0.3)'; ctx.lineWidth = Math.max(3, est.grosor * 0.5); ctx.beginPath(); ctx.moveTo(0, y0 + h * 0.02); ctx.lineTo(0, y0 + h * 0.98); ctx.stroke();
+      }
+      if (u.delantal) {
+        ctx.beginPath(); rr(ctx, x0 + w * 0.12, y0 + h * 0.34, w * 0.76, h * 0.66, r * 0.6); pintar(ctx, est, u.delantal);
+        ctx.strokeStyle = u.delantal; ctx.lineWidth = Math.max(4, S * 0.02); ctx.beginPath(); ctx.moveTo(x0 + w * 0.3, y0 + h * 0.36); ctx.lineTo(-w * 0.04, y0 + h * 0.02); ctx.moveTo(x0 + w * 0.7, y0 + h * 0.36); ctx.lineTo(w * 0.04, y0 + h * 0.02); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(x0 + w * 0.3, y0 + h * 0.62, w * 0.4, h * 0.2);
+      }
+      if (u.estetoscopio) { ctx.strokeStyle = '#3b3f4a'; ctx.lineWidth = Math.max(4, S * 0.014); ctx.beginPath(); ctx.moveTo(-w * 0.2, y0 + h * 0.02); ctx.quadraticCurveTo(-w * 0.28, y0 + h * 0.8, 0, y0 + h * 0.78); ctx.quadraticCurveTo(w * 0.28, y0 + h * 0.8, w * 0.2, y0 + h * 0.02); ctx.stroke(); ctx.beginPath(); ctx.arc(0, y0 + h * 0.8, S * 0.026, 0, Math.PI * 2); ctx.fillStyle = '#c9ced6'; ctx.fill(); ctx.stroke(); }
+    }
+    var cx = a.h[0] * S, cy = a.h[1] * S, hr = a.h[2] * S;
+    if (u.casco) {
+      ctx.beginPath(); ctx.arc(cx, cy - hr * 0.5, hr * 1.14, Math.PI, 0); ctx.closePath(); pintar(ctx, est, u.casco);
+      ctx.beginPath(); rr(ctx, cx - hr * 1.32, cy - hr * 0.52, hr * 2.64, hr * 0.2, hr * 0.1); pintar(ctx, est, mezcla(u.casco, '#000000', 0.12));
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(cx - hr * 0.1, cy - hr * 1.6, hr * 0.2, hr * 0.8);
+    }
+    if (u.gorra) {
+      ctx.beginPath(); ctx.arc(cx, cy - hr * 0.48, hr * 1.1, Math.PI, 0); ctx.closePath(); pintar(ctx, est, u.gorra);
+      ctx.beginPath(); ctx.ellipse(cx + hr * 0.85, cy - hr * 0.44, hr * 0.7, hr * 0.17, 0, 0, Math.PI * 2); pintar(ctx, est, mezcla(u.gorra, '#000000', 0.2));
+    }
+    ctx.restore();
   }
 
   // ── Fondos ───────────────────────────────────────────────────────────────────────────────────────────
@@ -339,6 +388,7 @@
     var est = ESTILOS[guion.estilo] || ESTILOS.sitcom, esc = (guion.escenas || []).slice(0, 30);
     if (!esc.length) esc = [{ personaje: 'a', texto: '', expresion: 'neutral', accion: 'quieto', fondo: 'oficina', dur: 3 }];      // un guion vacío no rompe el dibujo
     var tel = String(cfg.telefono || '').replace(/[^0-9+() \-]/g, '').trim().slice(0, 20), marca = String(cfg.marca || guion.negocio || '').slice(0, 40);
+    var uni = UNIFORMES[cfg.uniforme] ? cfg.uniforme : (UNIFORMES[guion.uniforme] ? guion.uniforme : 'ninguno');
     var ini = [], acc = 0; esc.forEach(function (e) { ini.push(acc); acc += Math.max(1.8, Number(e.dur) || 3.4); });
     var total = acc + 0.6;
     function idxEn(t) { for (var i = esc.length - 1; i >= 0; i--) if (t >= ini[i]) return i; return 0; }
@@ -358,14 +408,14 @@
         var orden = id === otro ? 0 : 1; if (orden !== 0) return;
         var p = pos[id], S = 560, ex = (ultima ? 'feliz' : (expr === 'enojado' ? 'sorprendido' : (expr === 'triste' ? 'preocupado' : 'neutral')));
         if (ex === 'preocupado') ex = 'triste';
-        var est2 = { expr: ex, boca: 0.08, accion: 'quieto', t: t, mira: pos[quien].x < p.x ? -1 : 1, lado: p.lado, hablando: false, parpadeo: (t * 1.0 + (id === 'a' ? 0 : 0.37)) % 3.2 < 0.12 };
+        var est2 = { uniforme: reparto[id].equipo ? uni : null, expr: ex, boca: 0.08, accion: 'quieto', t: t, mira: pos[quien].x < p.x ? -1 : 1, lado: p.lado, hablando: false, parpadeo: (t * 1.0 + (id === 'a' ? 0 : 0.37)) % 3.2 < 0.12 };
         if (ultima) est2.accion = 'celebrar';
         dibujarPersonaje(ctx, est, reparto[id].tipo, p.x, 1540, S, est2);
       });
       var pq = pos[quien], Sq = 650, salto = 0, dx = 0;
       if (accion === 'saltar') salto = -Math.abs(Math.sin(tl * 7)) * 90; else if (accion === 'celebrar') salto = -Math.abs(Math.sin(tl * 8)) * 60; else if (accion === 'caminar') dx = Math.sin(tl * 3) * 30; else if (accion === 'temblar') dx = Math.sin(tl * 40) * 6;
       var respira = Math.sin(t * 3) * 6, boca = hablando ? Math.abs(Math.sin(tl * 15 + i)) * 0.95 : 0.08;
-      var eq = { expr: expr, boca: boca, accion: accion, t: tl, mira: quien === 'a' ? 1 : -1, lado: pq.lado, hablando: hablando && accion === 'quieto', parpadeo: (t % 3.1) < 0.12 };
+      var eq = { uniforme: reparto[quien].equipo ? uni : null, expr: expr, boca: boca, accion: accion, t: tl, mira: quien === 'a' ? 1 : -1, lado: pq.lado, hablando: hablando && accion === 'quieto', parpadeo: (t % 3.1) < 0.12 };
       dibujarPersonaje(ctx, est, reparto[quien].tipo, pq.x + dx, 1560 + salto + respira * 0.3, Sq, eq);
       if (accion === 'celebrar') confeti(ctx, tl, est.acento);
       // globo (arriba, sobre el que habla)
@@ -396,6 +446,6 @@
     m.dibujar(ctx, 1.4, k); return est;
   }
 
-  var api = { crear: crear, miniatura: miniatura, ESTILOS: ESTILOS, EXPRESIONES: EXPRESIONES, ACCIONES: ACCIONES, FONDOS: FONDOS, ancho: W, alto: H };
+  var api = { crear: crear, miniatura: miniatura, ESTILOS: ESTILOS, UNIFORMES: UNIFORMES, EXPRESIONES: EXPRESIONES, ACCIONES: ACCIONES, FONDOS: FONDOS, ancho: W, alto: H };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else global.CartoonMotor = api;
 })(typeof window !== 'undefined' ? window : globalThis);
