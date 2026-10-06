@@ -382,12 +382,61 @@
     }
   }
 
+
+  // ── Sonido: música vacilona generada en el navegador (original, sin derechos) ────────────────────────
+  // Cumbia/tropical sencilla en La menor (Am G F E): bombo, palmada, güira, cowbell, bajo, acordes cortos y una marimba.
+  // ventanas = [[desde, hasta], ...] en segundos: mientras alguien habla la música baja de volumen (ducking).
+  function musica(ac, out, t0, total, ventanas) {
+    var bpm = 104, beat = 60 / bpm, master = ac.createGain();
+    var comp = ac.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 12; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.12;      // parejo: el bombo no se come lo demás
+    var nivel = ac.createGain(); nivel.gain.value = 0.85; master.connect(comp); comp.connect(nivel); nivel.connect(out);
+    master.gain.setValueAtTime(0.0001, t0); master.gain.linearRampToValueAtTime(0.9, t0 + 0.6);
+    // Ducking: la música baja mientras alguien habla y sube después; al final se desvanece. Todo en una sola línea de tiempo ordenada.
+    var nivel0 = 0.9, bajo = 0.2, f0 = Math.max(0.7, total - 1.3), g = master.gain, actual = nivel0, tcur = 0.6;
+    var ws = (ventanas || []).map(function (w) { return [Math.max(0.65, w[0]), w[1]]; }).filter(function (w) { return w[1] > w[0] && w[0] < f0; }).sort(function (x, y) { return x[0] - y[0]; }), unidas = [];
+    ws.forEach(function (w) { var u = unidas[unidas.length - 1]; if (u && w[0] - u[1] < 0.5) u[1] = Math.max(u[1], w[1]); else unidas.push([w[0], w[1]]); });
+    unidas.forEach(function (w) {
+      var ds = Math.max(w[0] - 0.1, tcur), fin = Math.max(w[0], ds + 0.05);
+      g.setValueAtTime(actual, t0 + ds); g.linearRampToValueAtTime(bajo, t0 + fin); actual = bajo; tcur = fin;
+      if (w[1] + 0.25 >= f0) { tcur = Math.max(tcur, w[1]); }
+      else { g.setValueAtTime(bajo, t0 + Math.max(tcur, w[1])); g.linearRampToValueAtTime(nivel0, t0 + Math.max(tcur, w[1]) + 0.25); actual = nivel0; tcur = Math.max(tcur, w[1]) + 0.25; }
+    });
+    g.setValueAtTime(actual, t0 + Math.max(f0, tcur)); g.linearRampToValueAtTime(0.0001, t0 + total);
+    var ruidoBuf = ac.createBuffer(1, Math.round(ac.sampleRate * 0.25), ac.sampleRate), d = ruidoBuf.getChannelData(0);
+    for (var q = 0; q < d.length; q++) d[q] = hash(q * 0.37 + 1) * 2 - 1;
+    function tono(f, t, dur, tipo, vol, lp) {
+      var o = ac.createOscillator(), g = ac.createGain(), nodo = g; o.type = tipo; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); if (lp) { var fl = ac.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = lp; g.connect(fl); nodo = fl; } nodo.connect(master); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function ruido(t, dur, vol, tipo, f) {
+      var sr = ac.createBufferSource(), g = ac.createGain(), fl = ac.createBiquadFilter(); sr.buffer = ruidoBuf; fl.type = tipo; fl.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); sr.connect(fl); fl.connect(g); g.connect(master); sr.start(t); sr.stop(t + dur + 0.02);
+    }
+    function bombo(t) { var o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.13); g.gain.setValueAtTime(0.95, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.25); }
+    var raices = [110, 98, 87.31, 82.41], acordes = [[220, 261.63, 329.63], [196, 246.94, 293.66], [174.61, 220, 261.63], [164.81, 207.65, 246.94]], escala = [440, 523.25, 587.33, 659.25, 783.99];
+    var compases = Math.ceil(total / (beat * 4)) + 1;
+    for (var b = 0; b < compases; b++) {
+      var c = b % 4, T = t0 + b * beat * 4; if (T - t0 > total) break;
+      bombo(T); bombo(T + beat * 2); ruido(T + beat, 0.09, 0.32, 'bandpass', 1600); ruido(T + beat * 3, 0.09, 0.32, 'bandpass', 1600);
+      for (var k = 0; k < 8; k++) ruido(T + k * beat / 2, 0.035, k % 2 ? 0.2 : 0.11, 'highpass', 7000);
+      [1.5, 3.5].forEach(function (x) { tono(587, T + x * beat, 0.11, 'square', 0.05, 2600); tono(845, T + x * beat, 0.11, 'square', 0.04, 2600); acordes[c].forEach(function (f) { tono(f, T + x * beat, 0.13, 'square', 0.028, 1700); }); });
+      tono(raices[c], T, 0.38, 'triangle', 0.5); tono(raices[c] * 1.5, T + 1.5 * beat, 0.26, 'triangle', 0.4); tono(raices[c], T + 2 * beat, 0.38, 'triangle', 0.5); tono(raices[c] * 2, T + 3.5 * beat, 0.2, 'triangle', 0.36);
+      if (b >= 1) for (var m = 0; m < 8; m++) {
+        var h = hash(((b % 2) * 8 + m) * 3.1 + 5.7); if (h < 0.34) continue;
+        var f = escala[Math.floor(hash(((b % 2) * 8 + m) * 7.7 + 2.1) * 5)], tm = T + m * beat / 2;
+        tono(f, tm, 0.3, 'sine', 0.2); tono(f * 2, tm, 0.14, 'triangle', 0.05);
+      }
+    }
+  }
+
   // ── Motor ────────────────────────────────────────────────────────────────────────────────────────────
   function crear(guion, cfg) {
     cfg = cfg || {};
     var est = ESTILOS[guion.estilo] || ESTILOS.sitcom, esc = (guion.escenas || []).slice(0, 30);
     if (!esc.length) esc = [{ personaje: 'a', texto: '', expresion: 'neutral', accion: 'quieto', fondo: 'oficina', dur: 3 }];      // un guion vacío no rompe el dibujo
     var tel = String(cfg.telefono || '').replace(/[^0-9+() \-]/g, '').trim().slice(0, 20), marca = String(cfg.marca || guion.negocio || '').slice(0, 40);
+    var aud = cfg.audio || {};      // { musica:bool, voz:'ninguna'|'charla'|'reales', buffers:[AudioBuffer|null] }
     var uni = UNIFORMES[cfg.uniforme] ? cfg.uniforme : (UNIFORMES[guion.uniforme] ? guion.uniforme : 'ninguno');
     var ini = [], acc = 0; esc.forEach(function (e) { ini.push(acc); acc += Math.max(1.8, Number(e.dur) || 3.4); });
     var total = acc + 0.6;
@@ -401,7 +450,8 @@
       fondo(ctx, est, FONDOS.indexOf(e.fondo) >= 0 ? e.fondo : 'oficina', t, est.acento);
       var reparto = est.reparto, quien = e.personaje === 'b' ? 'b' : 'a', otro = quien === 'a' ? 'b' : 'a';
       var pos = { a: { x: 290, lado: -1 }, b: { x: 790, lado: 1 } };
-      var hablando = tl > 0.22 && tl < dur - 0.25, frac = clamp((tl - 0.3) / Math.max(0.8, dur * 0.52), 0, 1);
+      var hab = Number(e.habla) > 0 ? Number(e.habla) : Math.max(0.8, dur * 0.52);        // con voz real, el texto y la boca siguen el audio
+      var hablando = tl > 0.22 && tl < Math.min(dur - 0.15, 0.3 + hab + 0.15), frac = clamp((tl - 0.3) / hab, 0, 1);
       var expr = EXPRESIONES.indexOf(e.expresion) >= 0 ? e.expresion : 'neutral', accion = ACCIONES.indexOf(e.accion) >= 0 ? e.accion : 'quieto';
       if (ultima) accion = 'celebrar';
       ['b', 'a'].forEach(function (id) {       // primero el que escucha (queda atrás) y al final el que habla
@@ -436,7 +486,26 @@
       if (tl < 0.12 && i > 0) { ctx.globalAlpha = (0.12 - tl) / 0.12 * 0.5; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
       ctx.restore();
     }
-    return { duracion: total, cortes: ini.slice(1), inicios: ini, durs: esc.map(function (e) { return Math.max(1.8, Number(e.dur) || 3.4); }), dibujar: dibujar, escenas: esc.length };
+    function audio(ac, dest, base) {
+      var ventanas = [];
+      esc.forEach(function (e, i) {
+        var dur = Math.max(1.8, Number(e.dur) || 3.4), hab = Number(e.habla) > 0 ? Number(e.habla) : Math.max(0.8, dur * 0.52), inicio = ini[i] + 0.3;
+        if (aud.voz === 'reales' && aud.buffers && aud.buffers[i]) {
+          var src = ac.createBufferSource(); src.buffer = aud.buffers[i]; src.connect(dest); src.start(base + inicio); ventanas.push([inicio, inicio + aud.buffers[i].duration]);
+        } else if (aud.voz === 'charla' && e.texto) {
+          var pal = String(e.texto).split(/\s+/).filter(Boolean), basef = e.personaje === 'b' ? 215 : 310, mult = e.expresion === 'sorprendido' ? 1.28 : (e.expresion === 'enojado' ? 0.82 : (e.expresion === 'feliz' ? 1.12 : 1));
+          pal.forEach(function (w, k) {
+            var t = base + inicio + (k / pal.length) * hab, f = basef * mult * (0.78 + 0.55 * hash(i * 31 + k * 1.7)), largo = Math.min(0.2, 0.05 + w.length * 0.014);
+            var o = ac.createOscillator(), g = ac.createGain(), lp = ac.createBiquadFilter(); o.type = 'square'; o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * (e.texto.slice(-1) === '?' && k === pal.length - 1 ? 1.35 : 1.06), t + largo);
+            lp.type = 'lowpass'; lp.frequency.value = 2000; g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.11, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + largo);
+            o.connect(lp); lp.connect(g); g.connect(dest); o.start(t); o.stop(t + largo + 0.03);
+          });
+          ventanas.push([inicio, inicio + hab]);
+        }
+      });
+      if (aud.musica) musica(ac, dest, base, total, ventanas);
+    }
+    return { audio: audio, duracion: total, cortes: ini.slice(1), inicios: ini, durs: esc.map(function (e) { return Math.max(1.8, Number(e.dur) || 3.4); }), dibujar: dibujar, escenas: esc.length };
   }
 
   // Un cuadro de muestra de un estilo (para elegirlo con la vista): las dos figuras y un globo.
@@ -446,6 +515,6 @@
     m.dibujar(ctx, 1.4, k); return est;
   }
 
-  var api = { crear: crear, miniatura: miniatura, ESTILOS: ESTILOS, UNIFORMES: UNIFORMES, EXPRESIONES: EXPRESIONES, ACCIONES: ACCIONES, FONDOS: FONDOS, ancho: W, alto: H };
+  var api = { musica: musica, crear: crear, miniatura: miniatura, ESTILOS: ESTILOS, UNIFORMES: UNIFORMES, EXPRESIONES: EXPRESIONES, ACCIONES: ACCIONES, FONDOS: FONDOS, ancho: W, alto: H };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else global.CartoonMotor = api;
 })(typeof window !== 'undefined' ? window : globalThis);
