@@ -57,7 +57,13 @@
     if (vertical) { zt = { x: 70, y: 330, w: 860, h: 210 }; zb = { x: 70, y: 590, w: 860, h: 850 }; }
     else if (apaisado) { zt = { x: 70, y: 40, w: 1000, h: 110 }; zb = { x: 70, y: 185, w: 1140, h: 490 }; }
     else { zt = { x: 90, y: 80, w: 900, h: 170 }; zb = { x: 90, y: 290, w: 900, h: 710 }; }
-    var t0 = 0.9, cola = bucle ? 1.1 : 1.3, paso = N ? Math.max(0.55, (DUR - t0 - cola) / N) : 1;
+    // Cierre con llamada a la acción (y teléfono): ocupa el último tramo y le quita lugar al cuerpo.
+    var cta = guion.cta && guion.cta.texto ? guion.cta : null;
+    if (cta) {
+      if (vertical) { zt = { x: 70, y: 326, w: 860, h: 184 }; zb = { x: 70, y: 526, w: 860, h: 714 }; }      // título más arriba y cuerpo hasta 1240; el cierre ocupa de 1270 a 1440 (zona segura)
+      else zb.h -= apaisado ? 112 : 140;
+    }
+    var t0 = 0.9, cola = (bucle ? 1.1 : 1.3) + (cta ? 1.8 : 0), paso = N ? Math.max(0.55, (DUR - t0 - cola) / N) : 1;
     function entra(i) { return t0 + i * paso; }
     // Las piezas "apagadas" aparecen de a poco al inicio: así el cuadro 0 y el último (todo en cero) son iguales y el bucle no da salto.
     function fantasma(t) { return eOut(prog(t, 0.3, 0.6)); }
@@ -80,9 +86,9 @@
 
     // ── Disposición en cuadrícula (flujo y esquema) ──────────────────────────────────────────────────────────
     function rejilla(n) {
-      var ar = zb.w / zb.h, cols = ar < 0.9 ? 1 : (ar < 1.35 ? (n <= 3 ? 1 : 2) : (n <= 4 ? n : 3)), filas = Math.ceil(n / cols);
-      var gx = (cols > 1 ? 60 : 0) * u, gy = (vertical ? 84 : apaisado ? 70 : 64) * u;
-      var cw = (zb.w - gx * (cols - 1)) / cols, ch = Math.min((zb.h - gy * (filas - 1)) / filas, vertical ? 190 : 440 * u), out = [];
+      var ar = zb.w / zb.h, cols = vertical ? (n <= 5 ? 1 : 2) : (ar < 0.9 ? 1 : (ar < 1.35 ? (n <= 3 ? 1 : 2) : (n <= 4 ? n : 3))), filas = Math.ceil(n / cols);
+      var gx = (cols > 1 ? 60 : 0) * u, gy = (vertical ? (cta ? 52 : 84) : apaisado ? 70 : 64) * u;
+      var cw = (zb.w - gx * (cols - 1)) / cols, ch = Math.min((zb.h - gy * (filas - 1)) / filas, vertical ? (cols === 1 ? 200 : 260) : 440 * u), out = [];
       var altoTot = ch * filas + gy * (filas - 1), y0 = zb.y + Math.max(0, (zb.h - altoTot) / 2) * (vertical ? 0.55 : 1);
       for (var i = 0; i < n; i++) { var r = Math.floor(i / cols), c = i % cols; out.push({ x: zb.x + c * (cw + gx), y: y0 + r * (ch + gy), w: cw, h: ch, r: r, c: c }); }
       return out;
@@ -238,6 +244,15 @@
         und.style.opacity = eOut(prog(t, 0.9 + 1.2, 0.5)) * s; ex.style.opacity = eOut(prog(t, 1.4 + 1.2, 0.6)) * s; ex.style.transform = 'translateY(' + (1 - eOut(prog(t, 2.6, 0.6))) * 24 + 'px)';
         ln.style.opacity = eOut(prog(t, 2.0, 0.5)) * s;
       });
+    }
+    if (cta) {
+      var ch = vertical ? 170 : (apaisado ? 96 : 120), cyy = vertical ? 1440 - ch : (apaisado ? 674 - ch : 990 - ch), cxx = vertical ? 70 : (apaisado ? 70 : 90), cww = vertical ? 860 : (apaisado ? 1140 : 900);
+      var cb = caja(cxx, cyy, cww, ch, 'border-radius:' + 28 * u + 'px;background:' + P.acento + ';color:' + (P.claro ? '#FFFFFF' : P.fondo) + ';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:' + 2 * u + 'px;padding:0 ' + 24 * u + 'px;text-align:center;box-shadow:0 ' + 10 * u + 'px ' + 40 * u + 'px ' + a(P.acento, 0.35));
+      var c1 = texto(cb, cta.texto, 'font-weight:800;line-height:1.1;font-size:' + (cta.telefono ? 40 : 52) * u + 'px;max-height:' + ch * 0.5 + 'px;overflow:hidden');
+      if (cta.telefono) texto(cb, cta.telefono, 'font-weight:900;letter-spacing:1px;line-height:1.1;font-size:' + 64 * u + 'px;font-variant-numeric:tabular-nums');
+      fitLater(cb, 14);
+      var tc = DUR - (bucle ? 1.1 : 1.3) - 1.7;
+      fns.push(function (t) { var k = eBack(prog(t, tc, 0.55)); cb.style.opacity = eOut(prog(t, tc, 0.4)) * salida(t); cb.style.transform = 'translateY(' + (1 - k) * 40 + 'px) scale(' + (0.94 + 0.06 * k) + ')'; });
     }
     fit.forEach(function (f) { ajustar(f[0], f[1]); });
     function dibujar(t) { t = clamp(t, 0, DUR); for (var i = 0; i < fns.length; i++) fns[i](t); }
