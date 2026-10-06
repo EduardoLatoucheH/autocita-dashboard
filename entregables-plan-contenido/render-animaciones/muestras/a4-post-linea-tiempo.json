@@ -1,0 +1,45 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "a4",
+ "plantilla": "linea_tiempo",
+ "destino": "post",
+ "titulo": "Qué incluye una visita de mantenimiento",
+ "resumen": "Línea de tiempo con las cuatro etapas de una visita de mantenimiento preventivo.",
+ "paleta": "noche",
+ "bloques": [
+  {
+   "titulo": "Revisión",
+   "detalle": "Estado general del equipo y sus conexiones"
+  },
+  {
+   "titulo": "Prueba",
+   "detalle": "Arranque del generador y toma de carga"
+  },
+  {
+   "titulo": "Informe",
+   "detalle": "Lo que se encontró, explicado claro"
+  },
+  {
+   "titulo": "Seguimiento",
+   "detalle": "Qué atender primero y cuándo volver"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1080,
+  "fps": 30
+ },
+ "duracion": 9.2,
+ "zona_segura": null,
+ "etiqueta": "",
+ "bucle": false,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4"
+ ],
+ "peso_objetivo_mb": null
+}

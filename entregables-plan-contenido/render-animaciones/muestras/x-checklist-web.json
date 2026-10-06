@@ -1,0 +1,56 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "x5",
+ "plantilla": "checklist",
+ "destino": "web",
+ "titulo": "Qué incluye un mantenimiento preventivo",
+ "resumen": "Checklist de seis puntos.",
+ "paleta": "crema",
+ "bloques": [
+  {
+   "titulo": "Revisión visual",
+   "detalle": "Estado general y conexiones"
+  },
+  {
+   "titulo": "Batería",
+   "detalle": "Bornes y carga"
+  },
+  {
+   "titulo": "Combustible",
+   "detalle": "Nivel y estado"
+  },
+  {
+   "titulo": "Prueba de arranque",
+   "detalle": "En vacío y con carga"
+  },
+  {
+   "titulo": "Filtros y fluidos",
+   "detalle": "Revisión y cambio si hace falta"
+  },
+  {
+   "titulo": "Informe",
+   "detalle": "Resultados claros"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1280,
+  "alto": 720,
+  "fps": 30
+ },
+ "duracion": 12.0,
+ "zona_segura": null,
+ "etiqueta": "",
+ "bucle": true,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4",
+  "webm",
+  "html_video",
+  "html_svg"
+ ],
+ "peso_objetivo_mb": 1.5
+}

@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "a2",
+ "plantilla": "checklist",
+ "destino": "historia",
+ "titulo": "5 señales de que tu planta no va a arrancar",
+ "resumen": "Lista animada con cinco señales de que una planta eléctrica puede fallar al arrancar.",
+ "paleta": "azul",
+ "bloques": [
+  {
+   "titulo": "Tarda en encender",
+   "detalle": "Gira varias veces antes de arrancar"
+  },
+  {
+   "titulo": "Batería sin revisar",
+   "detalle": "Los bornes se ven sucios o flojos"
+  },
+  {
+   "titulo": "Combustible viejo",
+   "detalle": "Lleva meses en el tanque sin moverse"
+  },
+  {
+   "titulo": "Ruidos o humo raros",
+   "detalle": "Algo cambió desde la última prueba"
+  },
+  {
+   "titulo": "Nadie la prueba",
+   "detalle": "Sin prueba periódica no sabés si arranca"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1920,
+  "fps": 30
+ },
+ "duracion": 14.0,
+ "zona_segura": {
+  "izq": 70,
+  "der": 930,
+  "arriba": 270,
+  "abajo": 1440
+ },
+ "etiqueta": "",
+ "bucle": false,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4"
+ ],
+ "peso_objetivo_mb": null
+}

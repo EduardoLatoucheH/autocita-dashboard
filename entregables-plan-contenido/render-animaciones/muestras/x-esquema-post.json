@@ -1,0 +1,45 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "x1",
+ "plantilla": "esquema",
+ "destino": "post",
+ "titulo": "Partes de un sistema de respaldo eléctrico",
+ "resumen": "Esquema con cuatro partes del sistema de respaldo.",
+ "paleta": "noche",
+ "bloques": [
+  {
+   "titulo": "Red eléctrica",
+   "detalle": "La fuente normal de energía"
+  },
+  {
+   "titulo": "Tablero de transferencia",
+   "detalle": "Cambia entre red y generador"
+  },
+  {
+   "titulo": "Generador",
+   "detalle": "Entrega energía durante el corte"
+  },
+  {
+   "titulo": "Carga del edificio",
+   "detalle": "Lo que se mantiene encendido"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1080,
+  "fps": 30
+ },
+ "duracion": 9.2,
+ "zona_segura": null,
+ "etiqueta": "Ilustración",
+ "bucle": false,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4"
+ ],
+ "peso_objetivo_mb": null
+}

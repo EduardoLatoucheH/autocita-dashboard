@@ -1,0 +1,28 @@
+{
+  "id": "a1",
+  "destino": "web",
+  "plantilla": "flujo",
+  "medidas": "1280x720",
+  "duracion_s": 9.2,
+  "cuadros": 276,
+  "archivos": {
+    "mp4": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a1-como-arranca-la-planta-cuando-se-va-la-l.mp4",
+      "mb": 0.21,
+      "crf": 27
+    },
+    "webm": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a1-como-arranca-la-planta-cuando-se-va-la-l.webm",
+      "mb": 0.28,
+      "crf": 36
+    },
+    "html_video": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a1-como-arranca-la-planta-cuando-se-va-la-l-video.html",
+    "html_autocontenido": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a1-como-arranca-la-planta-cuando-se-va-la-l-autocontenido.html",
+      "kb": 29.4
+    }
+  },
+  "tiempo_render_s": 31.7,
+  "tiempo_cuadros_s": 11.9,
+  "duracion_video_s": 9.2
+}

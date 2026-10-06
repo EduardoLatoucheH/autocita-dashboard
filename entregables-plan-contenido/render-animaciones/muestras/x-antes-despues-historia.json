@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "x2",
+ "plantilla": "antes_despues",
+ "destino": "historia",
+ "titulo": "Revisar a tiempo cambia el resultado",
+ "resumen": "Comparación de antes y después de un mantenimiento.",
+ "paleta": "vino",
+ "bloques": [
+  {
+   "titulo": "Sin mantenimiento",
+   "detalle": "La planta falla justo cuando se necesita"
+  },
+  {
+   "titulo": "Con mantenimiento",
+   "detalle": "Arranca y el negocio sigue funcionando"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1920,
+  "fps": 30
+ },
+ "duracion": 8.0,
+ "zona_segura": {
+  "izq": 70,
+  "der": 930,
+  "arriba": 270,
+  "abajo": 1440
+ },
+ "etiqueta": "",
+ "bucle": false,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4"
+ ],
+ "peso_objetivo_mb": null
+}

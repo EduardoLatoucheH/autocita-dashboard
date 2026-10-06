@@ -1,0 +1,46 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "x4",
+ "plantilla": "flujo",
+ "destino": "historia",
+ "titulo": "Cómo funciona un sistema contra incendios",
+ "resumen": "Flujo de detección, alarma y rociadores.",
+ "paleta": "vino",
+ "bloques": [
+  {
+   "titulo": "Detección",
+   "detalle": "Los sensores notan humo o calor"
+  },
+  {
+   "titulo": "Alarma",
+   "detalle": "Suena y avisa a todo el edificio"
+  },
+  {
+   "titulo": "Rociadores",
+   "detalle": "El agua se activa en la zona afectada"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1080,
+  "alto": 1920,
+  "fps": 30
+ },
+ "duracion": 9.0,
+ "zona_segura": {
+  "izq": 70,
+  "der": 930,
+  "arriba": 270,
+  "abajo": 1440
+ },
+ "etiqueta": "Ilustración",
+ "bucle": false,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4"
+ ],
+ "peso_objetivo_mb": null
+}

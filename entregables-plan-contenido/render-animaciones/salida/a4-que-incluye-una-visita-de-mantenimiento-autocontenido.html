@@ -1,0 +1,267 @@
+<!-- Animación "Qué incluye una visita de mantenimiento": HTML/CSS/SVG autocontenido, sin librerías. Pegalo donde quieras que aparezca. -->
+<div id="cc-anim-a4" role="img" aria-label="Línea de tiempo con las cuatro etapas de una visita de mantenimiento preventivo." style="width:100%;max-width:1080px"></div>
+<script>
+/* Motor de animaciones explicativas (06/10/2026). Un solo archivo, sin librerías externas.
+ * Dibuja el guion de animación del Plan de contenido (version 1, tipo "animacion") con HTML + SVG y es DETERMINISTA:
+ * dibujar(t) pinta el cuadro exacto del segundo t, así que el mismo código sirve para
+ *   (a) renderizar MP4/WebM cuadro por cuadro (render-animacion.js, local, sin costo por render), y
+ *   (b) el HTML autocontenido para pegar en una landing (generar-html.js, con requestAnimationFrame).
+ * Todo texto del guion entra con textContent. Plantillas: flujo, esquema, antes_despues, checklist, linea_tiempo, numero_grande.
+ * Zona segura de Reels/Historias (1080×1920): 70 px a los lados, 270 px arriba, 480 px abajo, carril derecho de botones. */
+(function (root) {
+  'use strict';
+  var PALETAS = {
+    automatia: { fondo: '#10261C', fondo2: '#1B4332', texto: '#FFFFFF', apoyo: '#CFE5D8', acento: '#F2A66B', claro: false },
+    autocita: { fondo: '#0F2A22', fondo2: '#2F6B4F', texto: '#FFFFFF', apoyo: '#D5F3E4', acento: '#4ADE9B', claro: false },
+    autoventas: { fondo: '#14301F', fondo2: '#2D6A4F', texto: '#FFFFFF', apoyo: '#D8EBDD', acento: '#F7BE96', claro: false },
+    noche: { fondo: '#101418', fondo2: '#1E2A36', texto: '#FFFFFF', apoyo: '#C8D2DC', acento: '#FFD23F', claro: false },
+    vino: { fondo: '#2A0F1A', fondo2: '#4A1B2E', texto: '#FFFFFF', apoyo: '#F1D5DC', acento: '#FF9F6B', claro: false },
+    azul: { fondo: '#0E1F3A', fondo2: '#173A6B', texto: '#FFFFFF', apoyo: '#D2E4F7', acento: '#5CD0FF', claro: false },
+    crema: { fondo: '#F7F3EA', fondo2: '#E9E2D0', texto: '#1D2B24', apoyo: '#4A5A52', acento: '#B4531F', claro: true },
+    sol: { fondo: '#FFF4D6', fondo2: '#FFE29A', texto: '#2B2110', apoyo: '#5C4A22', acento: '#C2410C', claro: true },
+  };
+  var FUENTE = '"Inter","Segoe UI","Helvetica Neue",Roboto,"Liberation Sans","DejaVu Sans",Arial,sans-serif';
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function prog(t, t0, d) { return clamp((t - t0) / d, 0, 1); }
+  function eOut(x) { return 1 - Math.pow(1 - x, 3); }
+  function eIO(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function eBack(x) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); }
+  function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function a(h, al) { var c = rgb(h); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + al + ')'; }
+  function mezcla(h1, h2, k) { var x = rgb(h1), y = rgb(h2); return 'rgb(' + Math.round(x[0] + (y[0] - x[0]) * k) + ',' + Math.round(x[1] + (y[1] - x[1]) * k) + ',' + Math.round(x[2] + (y[2] - x[2]) * k) + ')'; }
+
+  function iniciar(contenedor, guion, opciones) {
+    opciones = opciones || {};
+    var P = PALETAS[guion.paleta] || PALETAS.noche, L = guion.lienzo, W = L.ancho, H = L.alto, bucle = guion.bucle === true, DUR = guion.duracion;
+    var vertical = H > W * 1.2, apaisado = W > H * 1.2, u = Math.min(W, H) / 1080;
+    var bloques = (guion.bloques || []).slice(), N = bloques.length, fns = [];
+    contenedor.textContent = '';
+    var stage = document.createElement('div');
+    stage.style.cssText = 'position:relative;overflow:hidden;width:' + W + 'px;height:' + H + 'px;font-family:' + FUENTE + ';color:' + P.texto + ';background:linear-gradient(160deg,' + P.fondo + ' 0%,' + P.fondo2 + ' 100%);transform-origin:0 0';
+    contenedor.appendChild(stage);
+    // Brillo suave de acento (le da profundidad sin competir con el texto)
+    var brillo = document.createElement('div');
+    brillo.style.cssText = 'position:absolute;left:' + (W * 0.45) + 'px;top:' + (-H * 0.25) + 'px;width:' + (W * 0.9) + 'px;height:' + (W * 0.9) + 'px;border-radius:50%;background:radial-gradient(circle,' + a(P.acento, P.claro ? 0.18 : 0.16) + ' 0%,rgba(0,0,0,0) 65%)';
+    stage.appendChild(brillo);
+
+    function caja(x, y, w, h, css) { var d = document.createElement('div'); d.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;box-sizing:border-box;' + (css || ''); stage.appendChild(d); return d; }
+    function texto(padre, t, css) { var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'overflow-wrap:normal;word-break:normal;' + (css || ''); padre.appendChild(d); return d; }
+    function svg() { var s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('width', W); s.setAttribute('height', H); s.setAttribute('viewBox', '0 0 ' + W + ' ' + H); s.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;pointer-events:none'; stage.appendChild(s); return s; }
+    function sv(padre, tag, at) { var e = document.createElementNS(SVGNS, tag); for (var k in at) e.setAttribute(k, at[k]); padre.appendChild(e); return e; }
+    // Ajusta el tamaño de letra (una sola vez, al construir) para que el texto nunca se salga de su caja.
+    // +8 px de tolerancia: scrollHeight siempre pasa unos px a clientHeight por el interlineado.
+    function ajustar(d, minimo) { var fs = parseFloat(d.style.fontSize), n = 0; while ((d.scrollHeight > d.clientHeight + 8 || d.scrollWidth > d.clientWidth + 1) && fs > minimo && n < 16) { fs *= 0.93; d.style.fontSize = fs + 'px'; n++; } }
+    var fit = [];
+    function fitLater(d, minimo) { fit.push([d, minimo]); }
+
+    // ── Zonas ─────────────────────────────────────────────────────────────────────────────────────────────
+    var zt, zb;       // zona del título y del cuerpo
+    if (vertical) { zt = { x: 70, y: 330, w: 860, h: 210 }; zb = { x: 70, y: 590, w: 860, h: 850 }; }
+    else if (apaisado) { zt = { x: 70, y: 40, w: 1000, h: 110 }; zb = { x: 70, y: 185, w: 1140, h: 490 }; }
+    else { zt = { x: 90, y: 80, w: 900, h: 170 }; zb = { x: 90, y: 290, w: 900, h: 710 }; }
+    var t0 = 0.9, cola = bucle ? 1.1 : 1.3, paso = N ? Math.max(0.55, (DUR - t0 - cola) / N) : 1;
+    function entra(i) { return t0 + i * paso; }
+    // Las piezas "apagadas" aparecen de a poco al inicio: así el cuadro 0 y el último (todo en cero) son iguales y el bucle no da salto.
+    function fantasma(t) { return eOut(prog(t, 0.3, 0.6)); }
+    var salida = bucle ? function (t) { return clamp((DUR - t) / 0.45, 0, 1); } : function () { return 1; };
+
+    // Etiqueta "Ilustración" / "Ejemplo": los esquemas son genéricos y no deben confundirse con un trabajo real.
+    var yTitulo = zt.y;
+    if (guion.etiqueta) {
+      var et = caja(zt.x, vertical ? 270 : (apaisado ? 8 : 40), 300 * u, 46 * u, 'display:flex;align-items:center;justify-content:center;border:2px solid ' + a(P.acento, 0.9) + ';border-radius:999px;font-weight:800;letter-spacing:2px;font-size:' + 24 * u + 'px;text-transform:uppercase;color:' + P.acento);
+      et.textContent = guion.etiqueta;
+      if (apaisado) et.style.top = '6px';
+      fns.push(function (t) { et.style.opacity = eOut(prog(t, 0.2, 0.5)) * salida(t); });
+    }
+    // Título
+    var tit = caja(zt.x, yTitulo, zt.w, zt.h, 'display:flex;flex-direction:column;justify-content:' + (vertical ? 'flex-start' : 'center') + ';');
+    var tx = texto(tit, guion.titulo || '', 'flex:none;font-weight:800;line-height:1.08;letter-spacing:-0.5px;font-size:' + (vertical ? 80 : apaisado ? 54 : 70) * (vertical ? 1 : (apaisado ? 1 : 1)) + 'px;max-height:' + (zt.h - 28) + 'px;overflow:hidden');
+    var barra = document.createElement('div'); barra.style.cssText = 'flex:none;height:' + Math.max(6, 8 * u) + 'px;width:' + 160 * u + 'px;margin-top:' + 18 * u + 'px;border-radius:6px;background:' + P.acento + ';transform-origin:0 0'; tit.appendChild(barra);
+    tx.style.maxHeight = (zt.h - 40 * u) + 'px'; fitLater(tx, 28);
+    fns.push(function (t) { var k = eOut(prog(t, 0.05, 0.7)); tit.style.opacity = k * salida(t); tit.style.transform = 'translateY(' + (1 - k) * 30 + 'px)'; barra.style.transform = 'scaleX(' + eOut(prog(t, 0.45, 0.6)) + ')'; });
+
+    // ── Disposición en cuadrícula (flujo y esquema) ──────────────────────────────────────────────────────────
+    function rejilla(n) {
+      var ar = zb.w / zb.h, cols = ar < 0.9 ? 1 : (ar < 1.35 ? (n <= 3 ? 1 : 2) : (n <= 4 ? n : 3)), filas = Math.ceil(n / cols);
+      var gx = (cols > 1 ? 60 : 0) * u, gy = (vertical ? 84 : apaisado ? 70 : 64) * u;
+      var cw = (zb.w - gx * (cols - 1)) / cols, ch = Math.min((zb.h - gy * (filas - 1)) / filas, vertical ? 190 : 440 * u), out = [];
+      var altoTot = ch * filas + gy * (filas - 1), y0 = zb.y + Math.max(0, (zb.h - altoTot) / 2) * (vertical ? 0.55 : 1);
+      for (var i = 0; i < n; i++) { var r = Math.floor(i / cols), c = i % cols; out.push({ x: zb.x + c * (cw + gx), y: y0 + r * (ch + gy), w: cw, h: ch, r: r, c: c }); }
+      return out;
+    }
+    function tarjeta(g, b, i, opc) {
+      opc = opc || {};
+      var estrecha = g.w < 400 * u * 1.4;          // tarjetas angostas (varias columnas): el círculo va arriba y el texto debajo, sin cortar palabras
+      var d = caja(g.x, g.y, g.w, g.h, 'border-radius:' + 30 * u + 'px;border:2px solid ' + a(P.texto, 0.2) + ';background:' + a(P.texto, 0.07) + ';display:flex;' + (estrecha ? 'flex-direction:column;align-items:flex-start;justify-content:center;' : 'align-items:center;') + 'gap:' + (estrecha ? 14 : 22) * u + 'px;padding:' + 18 * u + 'px ' + 24 * u + 'px;');
+      var ins = document.createElement('div'); ins.style.cssText = 'flex:none;width:' + 66 * u + 'px;height:' + 66 * u + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:' + 34 * u + 'px;background:' + a(P.acento, 0.95) + ';color:' + (P.claro ? '#FFFFFF' : P.fondo);
+      if (opc.icono) { var s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('width', 38 * u); s.setAttribute('height', 38 * u); s.setAttribute('viewBox', '0 0 24 24'); sv(s, 'path', { d: opc.icono, fill: 'none', stroke: P.claro ? '#FFFFFF' : P.fondo, 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }); ins.appendChild(s); } else ins.textContent = String(i + 1);
+      d.appendChild(ins);
+      var col = document.createElement('div'); col.style.cssText = (estrecha ? 'width:100%;' : 'flex:1;') + 'min-width:0;max-height:100%;display:flex;flex-direction:column;justify-content:center;gap:' + 6 * u + 'px;overflow:hidden';
+      var h = texto(col, b.titulo, 'font-weight:800;line-height:1.1;font-size:' + (vertical ? 44 : apaisado ? 36 : 42) * (g.w < 400 ? 0.8 : 1) + 'px');
+      var dt = b.detalle ? texto(col, b.detalle, 'line-height:1.22;color:' + P.apoyo + ';font-size:' + (vertical ? 31 : apaisado ? 27 : 30) * (g.w < 400 ? 0.8 : 1) + 'px') : null;
+      d.appendChild(col); fitLater(col, 14);
+      return { d: d, ins: ins, h: h, dt: dt, col: col };
+    }
+    function conector(sv0, A, B, color) {
+      var x1, y1, x2, y2, ruta;
+      if (A.r === B.r) { x1 = A.x + A.w; y1 = A.y + A.h / 2; x2 = B.x; y2 = B.y + B.h / 2; ruta = 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2; }
+      else if (A.c === B.c) { x1 = A.x + A.w / 2; y1 = A.y + A.h; x2 = B.x + B.w / 2; y2 = B.y; ruta = 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2; }
+      else { x1 = A.x + A.w / 2; y1 = A.y + A.h; x2 = B.x + B.w / 2; y2 = B.y; var ym = (y1 + B.y) / 2; ruta = 'M' + x1 + ' ' + y1 + ' L' + x1 + ' ' + ym + ' L' + x2 + ' ' + ym + ' L' + x2 + ' ' + y2; }
+      var p = sv(sv0, 'path', { d: ruta, fill: 'none', stroke: color, 'stroke-width': 7 * u, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      var len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      // punta de flecha según la dirección final
+      var dx = x2 - (A.r === B.r ? x1 : (A.c === B.c ? x1 : x2)), dy = y2 - (A.r === B.r ? y1 : ym0(A, B, y1));
+      function ym0(A_, B_, yy) { return A_.r === B_.r ? yy : (A_.c === B_.c ? yy : (yy + B_.y) / 2); }
+      var ang = A.r === B.r ? Math.atan2(y2 - y1, x2 - x1) : Math.PI / 2, tam = 20 * u;
+      var cab = sv(sv0, 'path', { d: 'M0 0 L' + (-tam) + ' ' + (-tam * 0.62) + ' L' + (-tam) + ' ' + (tam * 0.62) + ' Z', fill: color, transform: 'translate(' + x2 + ',' + y2 + ') rotate(' + (ang * 180 / Math.PI) + ')' });
+      cab.style.opacity = 0;
+      return { p: p, len: len, cab: cab };
+    }
+
+    // ── Plantillas ────────────────────────────────────────────────────────────────────────────────────────────
+    var plantilla = guion.plantilla;
+    if (plantilla === 'flujo') {
+      var gs = rejilla(N), cap = svg(), tj = [], cx = [];
+      bloques.forEach(function (b, i) { tj.push(tarjeta(gs[i], b, i)); });
+      for (var i = 0; i < N - 1; i++) cx.push(conector(cap, gs[i], gs[i + 1], P.acento));
+      fns.push(function (t) {
+        var s = salida(t);
+        tj.forEach(function (c, i) {
+          var k = eBack(prog(t, entra(i), 0.5)), on = prog(t, entra(i), 0.35), fin = prog(t, entra(i), 0.45);
+          c.d.style.opacity = (0.25 * fantasma(t) + 0.75 * on) * s; c.d.style.transform = 'scale(' + (0.9 + 0.1 * k) + ')';
+          c.d.style.borderColor = mezcla(P.texto, P.acento, on).replace('rgb', 'rgba').replace(')', ',' + (0.2 + 0.7 * on) + ')');
+          c.d.style.background = mezcla(P.claro ? '#FFFFFF' : P.fondo2, P.acento, on * 0.2);
+          c.d.style.boxShadow = on > 0 ? '0 0 ' + (50 * u * (1 - Math.abs(fin * 2 - 1))) + 'px ' + a(P.acento, 0.5 * s) : 'none';
+        });
+        cx.forEach(function (c, i) { var k = eIO(prog(t, entra(i) + 0.3, Math.min(0.6, paso * 0.8))); c.p.style.strokeDashoffset = c.len * (1 - k); c.p.style.opacity = s; c.cab.style.opacity = (k > 0.97 ? 1 : 0) * s; });
+      });
+    } else if (plantilla === 'esquema') {
+      var ge = rejilla(N), cs = svg(), tp = [];
+      // "Bus" de fondo que une las partes: le da aspecto de esquema y no de lista
+      // "Bus" de fondo: conectores punteados entre los bordes de las tarjetas (no atraviesan el texto)
+      var buses = [];
+      for (var bi = 0; bi < N - 1; bi++) { var cb = conector(cs, ge[bi], ge[bi + 1], a(P.texto, 0.3)); cb.p.style.strokeDasharray = (14 * u) + ' ' + (12 * u); cb.p.style.strokeDashoffset = 0; cb.cab.style.display = 'none'; buses.push(cb.p); }
+      var ICONOS = ['M13 2 L4 14 h7 l-1 8 l9 -12 h-7 z', 'M12 8 a4 4 0 1 0 0.01 0 M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3 M5 5 l2 2 M17 17 l2 2 M19 5 l-2 2 M7 17 l-2 2', 'M12 3 l8 3 v6 c0 5 -3.5 8 -8 9 c-4.5 -1 -8 -4 -8 -9 V6 z', 'M4 4 h16 v16 h-16 z M4 10 h16 M10 4 v16', 'M12 2 a7 7 0 0 1 7 7 c0 4 -4 5 -4 9 h-6 c0 -4 -4 -5 -4 -9 a7 7 0 0 1 7 -7 z M9 21 h6'];
+      bloques.forEach(function (b, i) { tp.push(tarjeta(ge[i], b, i, { icono: ICONOS[i % ICONOS.length] })); });
+      fns.push(function (t) {
+        var s = salida(t); buses.forEach(function (b) { b.style.opacity = eOut(prog(t, 0.5, 0.8)) * s; });
+        // foco: la parte "activa" va a todo color y las demás bajan; al final todas quedan visibles
+        var activa = clamp(Math.floor((t - t0) / paso), -1, N - 1), cierre = prog(t, DUR - cola + 0.1, 0.5);
+        tp.forEach(function (c, i) {
+          var ap = eBack(prog(t, 0.6 + i * 0.1, 0.5)), foco = (i === activa ? 1 : 0), dim = activa < 0 ? 1 : (i === activa ? 1 : 0.42 + 0.58 * cierre);
+          var f2 = i === activa ? eOut(prog(t, entra(i), 0.35)) : 0;
+          c.d.style.opacity = ap * s; c.col.style.opacity = dim; c.ins.style.opacity = dim; c.d.style.transform = 'scale(' + (0.92 + 0.08 * ap + 0.03 * f2) + ')';       // el fondo de la tarjeta queda opaco: solo se atenúa su contenido
+          c.d.style.background = mezcla(P.claro ? '#FFFFFF' : P.fondo2, P.acento, f2 * 0.22);
+          c.d.style.borderColor = f2 > 0 ? P.acento : a(P.texto, 0.2); c.d.style.boxShadow = f2 > 0 ? '0 0 ' + 46 * u + 'px ' + a(P.acento, 0.45 * f2 * s) : 'none';
+        });
+      });
+    } else if (plantilla === 'antes_despues') {
+      var side = !vertical && zb.w / zb.h > 1.1, gap = 36 * u, pw = side ? (zb.w - gap) / 2 : zb.w, ph = side ? zb.h : (zb.h - gap) / 2, bA = bloques[0] || { titulo: '', detalle: '' }, bD = bloques[1] || { titulo: '', detalle: '' };
+      function panel(b, x, y, etiqueta, acento) {
+        var d = caja(x, y, pw, ph, 'border-radius:' + 36 * u + 'px;padding:' + 34 * u + 'px;display:flex;flex-direction:column;justify-content:center;gap:' + 14 * u + 'px;border:3px solid ' + (acento ? P.acento : a(P.texto, 0.25)) + ';background:' + (acento ? a(P.acento, P.claro ? 0.16 : 0.14) : a(P.texto, 0.06)));
+        var p = texto(d, etiqueta, 'font-weight:800;letter-spacing:3px;font-size:' + 28 * u + 'px;text-transform:uppercase;color:' + (acento ? P.acento : P.apoyo));
+        var h = texto(d, b.titulo, 'font-weight:800;line-height:1.1;font-size:' + (vertical ? 64 : 54) * (side ? 0.8 : 1) + 'px;max-height:' + ph * 0.5 + 'px;overflow:hidden');
+        var dt = texto(d, b.detalle, 'line-height:1.25;color:' + P.apoyo + ';font-size:' + (vertical ? 38 : 32) * (side ? 0.8 : 1) + 'px;max-height:' + ph * 0.34 + 'px;overflow:hidden');
+        fitLater(h, 22); fitLater(dt, 16); return d;
+      }
+      var pa = panel(bA, zb.x, zb.y, 'Antes', false), pd = panel(bD, side ? zb.x + pw + gap : zb.x, side ? zb.y : zb.y + ph + gap, 'Después', true);
+      var fl = svg(), flecha = sv(fl, 'path', { d: side ? 'M' + (zb.x + pw - 6) + ' ' + (zb.y + ph / 2) + ' l' + (gap + 12) + ' 0 m-' + 18 * u + ' -' + 18 * u + ' l' + 18 * u + ' ' + 18 * u + ' l-' + 18 * u + ' ' + 18 * u : 'M' + (zb.x + pw / 2) + ' ' + (zb.y + ph - 6) + ' l0 ' + (gap + 12) + ' m-' + 18 * u + ' -' + 18 * u + ' l' + 18 * u + ' ' + 18 * u + ' l' + 18 * u + ' -' + 18 * u, fill: 'none', stroke: P.acento, 'stroke-width': 8 * u, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      var ta = t0, td = t0 + Math.max(1.4, paso * 0.9);
+      fns.push(function (t) {
+        var s = salida(t), k1 = eOut(prog(t, ta, 0.6)), k2 = eBack(prog(t, td, 0.6));
+        pa.style.opacity = k1 * s * (t > td ? 0.7 + 0.3 * (1 - prog(t, td, 0.6)) : 1); pa.style.transform = 'translate' + (side ? 'X' : 'Y') + '(' + (1 - k1) * -60 + 'px)';
+        pd.style.opacity = prog(t, td, 0.4) * s; pd.style.transform = 'translate' + (side ? 'X' : 'Y') + '(' + (1 - k2) * 60 + 'px) scale(' + (0.96 + 0.04 * k2) + ')';
+        flecha.style.opacity = eOut(prog(t, td - 0.2, 0.4)) * s;
+      });
+    } else if (plantilla === 'checklist') {
+      var dosCol = apaisado && N > 4, cols2 = dosCol ? 2 : 1, filasC = Math.ceil(N / cols2), gyc = 22 * u, rh = Math.min((zb.h - gyc * (filasC - 1)) / filasC, vertical ? 150 : 120 * 1), cwc = (zb.w - (cols2 - 1) * 50 * u) / cols2, sc = svg(), filas = [];
+      var y00 = zb.y + Math.max(0, (zb.h - (rh * filasC + gyc * (filasC - 1))) / 2) * (vertical ? 0.55 : 1);
+      bloques.forEach(function (b, i) {
+        var r = i % filasC, c = Math.floor(i / filasC), x = zb.x + c * (cwc + 50 * u), y = y00 + r * (rh + gyc);
+        var d = caja(x, y, cwc, rh, 'border-radius:' + 24 * u + 'px;background:' + a(P.texto, 0.07) + ';border:2px solid ' + a(P.texto, 0.16) + ';display:flex;align-items:center;gap:' + 24 * u + 'px;padding:0 ' + 26 * u + 'px 0 ' + (rh * 0.9) + 'px');
+        var col = document.createElement('div'); col.style.cssText = 'flex:1;min-width:0;max-height:' + (rh - 14) + 'px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:' + 4 * u + 'px';
+        texto(col, b.titulo, 'font-weight:800;line-height:1.1;font-size:' + (vertical ? 42 : 34) * (cwc < 600 ? 0.85 : 1) + 'px'); if (b.detalle) texto(col, b.detalle, 'line-height:1.2;color:' + P.apoyo + ';font-size:' + (vertical ? 30 : 24) * (cwc < 600 ? 0.85 : 1) + 'px'); d.appendChild(col); fitLater(col, 13);
+        var cxk = x + rh * 0.45, cyk = y + rh / 2, r0 = rh * 0.27;
+        var caj = sv(sc, 'rect', { x: cxk - r0, y: cyk - r0, width: r0 * 2, height: r0 * 2, rx: r0 * 0.3, fill: 'none', stroke: a(P.texto, 0.55), 'stroke-width': 5 * u });
+        var rel = sv(sc, 'rect', { x: cxk - r0, y: cyk - r0, width: r0 * 2, height: r0 * 2, rx: r0 * 0.3, fill: P.acento });
+        var chk = sv(sc, 'path', { d: 'M' + (cxk - r0 * 0.5) + ' ' + cyk + ' L' + (cxk - r0 * 0.1) + ' ' + (cyk + r0 * 0.42) + ' L' + (cxk + r0 * 0.55) + ' ' + (cyk - r0 * 0.4), fill: 'none', stroke: P.claro ? '#FFFFFF' : P.fondo, 'stroke-width': 8 * u, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+        var len = chk.getTotalLength(); chk.style.strokeDasharray = len; chk.style.strokeDashoffset = len; rel.style.opacity = 0;
+        filas.push({ d: d, caj: caj, rel: rel, chk: chk, len: len });
+      });
+      fns.push(function (t) {
+        var s = salida(t);
+        filas.forEach(function (f, i) {
+          var e = entra(i), k = eOut(prog(t, e - 0.25, 0.45)), ck = eIO(prog(t, e + 0.1, 0.4));
+          f.d.style.opacity = (0.3 * fantasma(t) + 0.7 * k) * s; f.d.style.transform = 'translateX(' + (1 - k) * -40 + 'px)'; f.caj.style.opacity = (0.3 * fantasma(t) + 0.7 * k) * s;
+          f.rel.style.opacity = eOut(prog(t, e + 0.05, 0.25)) * s; f.chk.style.strokeDashoffset = f.len * (1 - ck); f.chk.style.opacity = s;
+          f.d.style.borderColor = ck > 0.05 ? a(P.acento, 0.7) : a(P.texto, 0.16);
+        });
+      });
+    } else if (plantilla === 'linea_tiempo') {
+      var vert = !apaisado, sl = svg(), hitos = [], lx = zb.x + 54 * u, base = vert ? zb.y + 20 * u : zb.y + zb.h / 2, fin = vert ? zb.y + zb.h - 20 * u : zb.x + zb.w;
+      var eje = vert ? sv(sl, 'line', { x1: lx, y1: base, x2: lx, y2: fin, stroke: a(P.texto, 0.28), 'stroke-width': 8 * u, 'stroke-linecap': 'round' }) : sv(sl, 'line', { x1: zb.x, y1: base, x2: fin, y2: base, stroke: a(P.texto, 0.28), 'stroke-width': 8 * u, 'stroke-linecap': 'round' });
+      var elen = vert ? fin - base : fin - zb.x; eje.style.strokeDasharray = elen; eje.style.strokeDashoffset = elen;
+      var relleno = vert ? sv(sl, 'line', { x1: lx, y1: base, x2: lx, y2: fin, stroke: P.acento, 'stroke-width': 8 * u, 'stroke-linecap': 'round' }) : sv(sl, 'line', { x1: zb.x, y1: base, x2: fin, y2: base, stroke: P.acento, 'stroke-width': 8 * u, 'stroke-linecap': 'round' });
+      relleno.style.strokeDasharray = elen; relleno.style.strokeDashoffset = elen;
+      bloques.forEach(function (b, i) {
+        var pos = N > 1 ? i / (N - 1) : 0.5, px = vert ? lx : zb.x + 90 * u + pos * (zb.w - 180 * u), py = vert ? base + 60 * u + pos * (zb.h - 140 * u) : base;
+        var dot = sv(sl, 'circle', { cx: px, cy: py, r: 22 * u, fill: P.acento, stroke: P.claro ? '#FFFFFF' : P.fondo, 'stroke-width': 8 * u });
+        var d, cw2 = vert ? zb.w - 130 * u : (zb.w - 180 * u) / Math.max(N - 1, 1) * 1.55, ch2 = vert ? Math.min(150 * 1, (zb.h - 140 * u) / Math.max(N, 1) * 0.92) : 170;
+        var arriba = !vert && i % 2 === 0;
+        var bx0 = vert ? lx + 54 * u : clamp(px - cw2 / 2, zb.x, zb.x + zb.w - cw2), by0 = vert ? py - ch2 / 2 : (arriba ? py - 44 * u - ch2 : py + 44 * u);
+        d = caja(bx0, by0, cw2, ch2, 'display:flex;flex-direction:column;justify-content:center;gap:' + 4 * u + 'px;' + (vert ? '' : 'text-align:center;align-items:center;') + 'overflow:hidden;max-height:' + ch2 + 'px');
+        texto(d, b.titulo, 'font-weight:800;color:' + P.acento + ';line-height:1.1;font-size:' + (vert ? 44 : 32) + 'px'); if (b.detalle) texto(d, b.detalle, 'line-height:1.22;color:' + P.texto + ';font-size:' + (vert ? 32 : 24) + 'px'); fitLater(d, 13);
+        hitos.push({ dot: dot, d: d, vert: vert, arriba: arriba });
+      });
+      fns.push(function (t) {
+        var s = salida(t); eje.style.strokeDashoffset = elen * (1 - eOut(prog(t, 0.3, 0.8))); eje.style.opacity = s;
+        relleno.style.strokeDashoffset = elen * (1 - clamp((t - t0) / Math.max(0.01, paso * (N - 1) + 0.4), 0, 1)); relleno.style.opacity = s;
+        hitos.forEach(function (h, i) {
+          var k = eBack(prog(t, entra(i), 0.5)), op = eOut(prog(t, entra(i), 0.35));
+          h.dot.style.transformBox = 'fill-box'; h.dot.style.transformOrigin = 'center'; h.dot.style.transform = 'scale(' + k + ')'; h.dot.style.opacity = op * s;
+          h.d.style.opacity = op * s; h.d.style.transform = h.vert ? 'translateX(' + (1 - op) * 40 + 'px)' : 'translateY(' + (1 - op) * (h.arriba ? 30 : -30) + 'px)';
+        });
+      });
+    } else if (plantilla === 'numero_grande') {
+      var b0 = bloques[0] || { titulo: '', detalle: '' }, num = String(guion.numero || ''), cifras = parseFloat(num.replace(/[^\d.,]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.')), tieneNum = isFinite(cifras);
+      var fz = Math.min(vertical ? 360 : (apaisado ? 250 : 330), (zb.w * 0.98) / Math.max(num.length, 1) * 1.5);
+      var grande = caja(zb.x, zb.y + (vertical ? 40 : 0), zb.w, zb.h * (vertical ? 0.42 : 0.5), 'display:flex;align-items:flex-end;justify-content:center;font-weight:900;line-height:0.95;letter-spacing:-4px;font-size:' + fz + 'px;color:' + P.acento + ';font-variant-numeric:tabular-nums;overflow:hidden');
+      var und = caja(zb.x, zb.y + (vertical ? 40 : 0) + zb.h * (vertical ? 0.42 : 0.5) + 10, zb.w, 70 * u, 'text-align:center;font-weight:800;font-size:' + 50 * u + 'px;color:' + P.texto);
+      und.textContent = guion.unidad || '';
+      var ex = caja(zb.x + (apaisado ? 140 * u : 0), zb.y + (vertical ? 40 : 0) + zb.h * (vertical ? 0.42 : 0.5) + 100 * u, zb.w - (apaisado ? 280 * u : 0), zb.h * (vertical ? 0.4 : 0.38) - 100 * u, 'text-align:center;overflow:hidden;display:flex;flex-direction:column;gap:' + 8 * u + 'px;align-items:center');
+      texto(ex, b0.titulo, 'font-weight:800;line-height:1.12;font-size:' + (vertical ? 52 : 40) + 'px'); if (b0.detalle) texto(ex, b0.detalle, 'line-height:1.25;color:' + P.apoyo + ';font-size:' + (vertical ? 36 : 28) + 'px'); fitLater(ex, 16);
+      var deco = svg(), ln = sv(deco, 'line', { x1: zb.x + zb.w * 0.3, x2: zb.x + zb.w * 0.7, y1: zb.y + (vertical ? 40 : 0) + zb.h * (vertical ? 0.42 : 0.5) + 86 * u, y2: zb.y + (vertical ? 40 : 0) + zb.h * (vertical ? 0.42 : 0.5) + 86 * u, stroke: a(P.acento, 0.8), 'stroke-width': 6 * u, 'stroke-linecap': 'round' });
+      fns.push(function (t) {
+        var s = salida(t), k = eOut(prog(t, 0.7, Math.max(1.2, DUR * 0.25))), ap = eOut(prog(t, 0.6, 0.5));
+        grande.style.opacity = ap * s; grande.style.transform = 'scale(' + (0.9 + 0.1 * ap) + ')';
+        var v = tieneNum ? Math.round(cifras * k * 100) / 100 : 0, txt;
+        if (tieneNum) { var dec = /[.,]\d{1,2}$/.test(num.replace(/[^\d.,]/g, '')) && !/[.,]\d{3}$/.test(num); txt = (dec ? v.toFixed(2) : String(Math.round(v))).replace(/\B(?=(\d{3})+(?!\d))/g, /\./.test(num) && !/,/.test(num) ? '.' : (/,/.test(num) && !dec ? ',' : ' ')); if (num.charAt(0) === '+' || /^[^\d]/.test(num)) txt = num.charAt(0) + txt; var suf = num.replace(/^[^\d]*[\d.,]*/, ''); txt += suf; } else txt = num;
+        grande.textContent = k >= 0.999 ? num : txt;
+        und.style.opacity = eOut(prog(t, 0.9 + 1.2, 0.5)) * s; ex.style.opacity = eOut(prog(t, 1.4 + 1.2, 0.6)) * s; ex.style.transform = 'translateY(' + (1 - eOut(prog(t, 2.6, 0.6))) * 24 + 'px)';
+        ln.style.opacity = eOut(prog(t, 2.0, 0.5)) * s;
+      });
+    }
+    fit.forEach(function (f) { ajustar(f[0], f[1]); });
+    function dibujar(t) { t = clamp(t, 0, DUR); for (var i = 0; i < fns.length; i++) fns[i](t); }
+    function escalar(ancho) { stage.style.transform = 'scale(' + (ancho / W) + ')'; contenedor.style.width = ancho + 'px'; contenedor.style.height = (H * ancho / W) + 'px'; contenedor.style.overflow = 'hidden'; contenedor.style.position = 'relative'; }
+    if (opciones.reducirMovimiento) dibujar(DUR - (bucle ? 1.15 : 1.0) * 1.0);
+    else dibujar(0);
+    return { dibujar: dibujar, escalar: escalar, duracion: DUR, ancho: W, alto: H, escenario: stage };
+  }
+  root.AnimMotor = { iniciar: iniciar, PALETAS: PALETAS };
+})(typeof window !== 'undefined' ? window : this);
+
+(function () {
+  var g = {"version":1,"tipo":"animacion","id":"a4","plantilla":"linea_tiempo","destino":"post","titulo":"Qué incluye una visita de mantenimiento","resumen":"Línea de tiempo con las cuatro etapas de una visita de mantenimiento preventivo.","paleta":"noche","bloques":[{"titulo":"Revisión","detalle":"Estado general del equipo y sus conexiones"},{"titulo":"Prueba","detalle":"Arranque del generador y toma de carga"},{"titulo":"Informe","detalle":"Lo que se encontró, explicado claro"},{"titulo":"Seguimiento","detalle":"Qué atender primero y cuándo volver"}],"numero":"","unidad":"","lienzo":{"ancho":1080,"alto":1080,"fps":30},"duracion":9.2,"zona_segura":null,"etiqueta":"","bucle":false,"audio":false,"material_real":[],"entregables":["mp4"],"peso_objetivo_mb":null}, cont = document.getElementById('cc-anim-a4');
+  var quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var m = AnimMotor.iniciar(cont, g, { reducirMovimiento: quieto });
+  function ajustar() { m.escalar(Math.min(cont.parentNode.clientWidth || g.lienzo.ancho, g.lienzo.ancho)); }
+  ajustar(); window.addEventListener('resize', ajustar);
+  if (quieto) return;
+  var visible = true, t0 = null;
+  if (window.IntersectionObserver) new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }).observe(cont);
+  function marco(ahora) { if (t0 === null) t0 = ahora; if (visible) m.dibujar(((ahora - t0) / 1000) % g.duracion); requestAnimationFrame(marco); }
+  requestAnimationFrame(marco);
+})();
+</script>

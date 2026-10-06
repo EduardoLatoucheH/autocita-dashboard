@@ -1,0 +1,22 @@
+{
+  "id": "a2",
+  "destino": "historia",
+  "plantilla": "checklist",
+  "medidas": "1080x1920",
+  "duracion_s": 14,
+  "cuadros": 420,
+  "archivos": {
+    "mp4": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a2-5-senales-de-que-tu-planta-no-va-a-arran.mp4",
+      "mb": 0.7,
+      "crf": 18
+    },
+    "html_autocontenido": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a2-5-senales-de-que-tu-planta-no-va-a-arran-autocontenido.html",
+      "kb": 29.4
+    }
+  },
+  "tiempo_render_s": 42.5,
+  "tiempo_cuadros_s": 31.5,
+  "duracion_video_s": 14
+}

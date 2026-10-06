@@ -1,0 +1,4043 @@
+{
+ "entrada": {
+  "negocio": "Clínica Dental Sonrisa",
+  "marca": null,
+  "tipo_negocio": "Clínica dental",
+  "publico_objetivo": "Familias de Heredia",
+  "propuesta_valor": "Limpieza dental, ortodoncia y blanqueamiento",
+  "tono": "directo, cercano, sin tecnicismos",
+  "objetivo": "conseguir citas y mensajes de WhatsApp",
+  "datos_reales": "Atendemos de lunes a sábado. Los pacientes preguntan si duele la limpieza y cuánto dura la cita.",
+  "duracion": null,
+  "pauta_monto": 100000,
+  "pauta_moneda": "CRC",
+  "pauta_objetivo": "whatsapp",
+  "reel_principal": ""
+ },
+ "decisiones": {
+  "semanas": 4,
+  "resumen": "Cuatro semanas porque hay datos reales suficientes. Tres reels por semana para alcance, tres publicaciones para educar y confianza, y historias casi todos los días para mantener cercanía. Los horarios son propuestas basadas en rutinas comunes, no en estadísticas. Ninguna semana repite el mismo ángulo.",
+  "horarios_nota": "Probá estos horarios dos semanas y ajustalos con tus estadísticas.",
+  "fechas_cr": [
+   {
+    "fecha": "15 de agosto",
+    "nota": "Día de la Madre, si cae dentro del plan"
+   }
+  ],
+  "ajustes": [
+   "Se descartó r13: el tope de reels para 4 semana(s) es 12."
+  ],
+  "ritmo": {
+   "reels": 12,
+   "publicaciones": 12,
+   "dias_con_historias": 24,
+   "animaciones": 5
+  },
+  "topes": {
+   "reels": 12,
+   "publicaciones": 16,
+   "dias_con_historias": 28,
+   "animaciones": 6
+  },
+  "sugerencias": {
+   "caricaturas": {
+    "activo": false,
+    "texto": "Animación estilo caricatura o con personajes: queda apagada. Si la querés más adelante, pediría cotizar el costo por pieza con el proveedor elegido antes de activarla; no hay una cifra confiable para estimarlo hoy."
+   },
+   "meta_business_suite": {
+    "activo": false,
+    "texto": "Se podría exportar el calendario a un CSV con el formato de importación masiva de Meta Business Suite. No está construido ni conectado: hoy se copia y se descarga desde el panel."
+   }
+  }
+ },
+ "calendario": [
+  {
+   "id": "p1",
+   "tipo": "publicacion",
+   "semana": 1,
+   "dia": "lunes",
+   "hora": "12:00",
+   "etapa": "confianza",
+   "pilar": "educación",
+   "angulo": "error",
+   "tema": "Cuándo toca la limpieza dental",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "r1",
+   "formato": "carrusel",
+   "laminas": 8
+  },
+  {
+   "id": "h1",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "lunes",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Pregunta del día sobre limpiezas",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "a1",
+   "tipo": "animacion",
+   "semana": 1,
+   "dia": "martes",
+   "hora": "17:00",
+   "etapa": "educar",
+   "pilar": "explicativo",
+   "angulo": "paso",
+   "tema": "Cinco señales de que necesitás una limpieza",
+   "por_que": "Explica lo que se ve poco en una foto.",
+   "relacionada_con": "",
+   "destino": "reel",
+   "plantilla": "checklist"
+  },
+  {
+   "id": "h2",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "martes",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Detrás de cámaras del consultorio",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": "r1"
+  },
+  {
+   "id": "r1",
+   "tipo": "reel",
+   "semana": 1,
+   "dia": "martes",
+   "hora": "19:00",
+   "etapa": "educar",
+   "pilar": "cuidado preventivo",
+   "angulo": "dolor",
+   "tema": "Cuánto dura una limpieza dental",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p2",
+   "tipo": "publicacion",
+   "semana": 1,
+   "dia": "miercoles",
+   "hora": "12:00",
+   "etapa": "venta",
+   "pilar": "educación",
+   "angulo": "paso",
+   "tema": "Mitos del blanqueamiento dental",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h3",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "miercoles",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Mito rápido sobre el sarro",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "a2",
+   "tipo": "animacion",
+   "semana": 1,
+   "dia": "jueves",
+   "hora": "17:00",
+   "etapa": "educar",
+   "pilar": "explicativo",
+   "angulo": "paso",
+   "tema": "Cómo es tu primera cita paso a paso",
+   "por_que": "Explica lo que se ve poco en una foto.",
+   "relacionada_con": "",
+   "destino": "web",
+   "plantilla": "flujo"
+  },
+  {
+   "id": "h4",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "jueves",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Tip de cepillado en 30 segundos",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r2",
+   "tipo": "reel",
+   "semana": 1,
+   "dia": "jueves",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "error",
+   "tema": "Miedo al dentista antes de la cita",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p3",
+   "tipo": "publicacion",
+   "semana": 1,
+   "dia": "viernes",
+   "hora": "12:00",
+   "etapa": "atraer",
+   "pilar": "educación",
+   "angulo": "dolor",
+   "tema": "Primera cita con el dentista",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h5",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "viernes",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Respondiendo dudas de pacientes",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h6",
+   "tipo": "historia",
+   "semana": 1,
+   "dia": "sabado",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Cómo se prepara el instrumental",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r3",
+   "tipo": "reel",
+   "semana": 1,
+   "dia": "sabado",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "paso",
+   "tema": "Errores al cepillarse en la noche",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p4",
+   "tipo": "publicacion",
+   "semana": 2,
+   "dia": "lunes",
+   "hora": "12:00",
+   "etapa": "educar",
+   "pilar": "educación",
+   "angulo": "pregunta",
+   "tema": "Cepillado correcto paso a paso",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "r4",
+   "formato": "carrusel",
+   "laminas": 8
+  },
+  {
+   "id": "a4",
+   "tipo": "animacion",
+   "semana": 2,
+   "dia": "lunes",
+   "hora": "17:00",
+   "etapa": "educar",
+   "pilar": "explicativo",
+   "angulo": "paso",
+   "tema": "Rutina sin plan y rutina con plan",
+   "por_que": "Explica lo que se ve poco en una foto.",
+   "relacionada_con": "",
+   "destino": "historia",
+   "plantilla": "antes_despues"
+  },
+  {
+   "id": "h7",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "lunes",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Encuesta de hábitos de higiene",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h8",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "martes",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Resumen del carrusel de la semana",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": "r4"
+  },
+  {
+   "id": "r4",
+   "tipo": "reel",
+   "semana": 2,
+   "dia": "martes",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "mito",
+   "tema": "Dolor de muelas un domingo",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p5",
+   "tipo": "publicacion",
+   "semana": 2,
+   "dia": "miercoles",
+   "hora": "12:00",
+   "etapa": "confianza",
+   "pilar": "educación",
+   "angulo": "dato",
+   "tema": "Señales de que necesitás ortodoncia",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h9",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "miercoles",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Anticipo del reel de la semana",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h10",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "jueves",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Cómo es la sala de espera",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r5",
+   "tipo": "reel",
+   "semana": 2,
+   "dia": "jueves",
+   "hora": "19:00",
+   "etapa": "atraer",
+   "pilar": "cuidado preventivo",
+   "angulo": "pregunta",
+   "tema": "Qué incluye la primera consulta",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p6",
+   "tipo": "publicacion",
+   "semana": 2,
+   "dia": "viernes",
+   "hora": "12:00",
+   "etapa": "venta",
+   "pilar": "educación",
+   "angulo": "mito",
+   "tema": "Cuidar los dientes de los niños",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h11",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "viernes",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Qué preguntar en la primera cita",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "a3",
+   "tipo": "animacion",
+   "semana": 2,
+   "dia": "sabado",
+   "hora": "17:00",
+   "etapa": "educar",
+   "pilar": "explicativo",
+   "angulo": "paso",
+   "tema": "Tu calendario de cuidado dental",
+   "por_que": "Explica lo que se ve poco en una foto.",
+   "relacionada_con": "",
+   "destino": "post",
+   "plantilla": "linea_tiempo"
+  },
+  {
+   "id": "h12",
+   "tipo": "historia",
+   "semana": 2,
+   "dia": "sabado",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Recordatorio de agendar limpieza",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r6",
+   "tipo": "reel",
+   "semana": 2,
+   "dia": "sabado",
+   "hora": "19:00",
+   "etapa": "educar",
+   "pilar": "cuidado preventivo",
+   "angulo": "dato",
+   "tema": "Blanqueamiento y dientes sensibles",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p7",
+   "tipo": "publicacion",
+   "semana": 3,
+   "dia": "lunes",
+   "hora": "12:00",
+   "etapa": "atraer",
+   "pilar": "educación",
+   "angulo": "incomoda",
+   "tema": "Qué comer después de una extracción",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "r7",
+   "formato": "carrusel",
+   "laminas": 8
+  },
+  {
+   "id": "h13",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "lunes",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Dato útil sobre encías",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h14",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "martes",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Cierre de semana con preguntas",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": "r7"
+  },
+  {
+   "id": "r7",
+   "tipo": "reel",
+   "semana": 3,
+   "dia": "martes",
+   "hora": "19:00",
+   "etapa": "atraer",
+   "pilar": "cuidado preventivo",
+   "angulo": "curiosidad",
+   "tema": "Hilo dental que casi nadie usa",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p8",
+   "tipo": "publicacion",
+   "semana": 3,
+   "dia": "miercoles",
+   "hora": "12:00",
+   "etapa": "educar",
+   "pilar": "educación",
+   "angulo": "prueba",
+   "tema": "Encías que sangran al cepillar",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "a5",
+   "tipo": "animacion",
+   "semana": 3,
+   "dia": "miercoles",
+   "hora": "17:00",
+   "etapa": "educar",
+   "pilar": "explicativo",
+   "angulo": "paso",
+   "tema": "Partes de un diente y qué cuida cada una",
+   "por_que": "Explica lo que se ve poco en una foto.",
+   "relacionada_con": "",
+   "destino": "web",
+   "plantilla": "esquema"
+  },
+  {
+   "id": "h15",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "miercoles",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Lo que más nos preguntan",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h16",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "jueves",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Mito sobre el blanqueamiento",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r8",
+   "tipo": "reel",
+   "semana": 3,
+   "dia": "jueves",
+   "hora": "19:00",
+   "etapa": "educar",
+   "pilar": "cuidado preventivo",
+   "angulo": "incomoda",
+   "tema": "Ortodoncia para adultos que dudan",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p9",
+   "tipo": "publicacion",
+   "semana": 3,
+   "dia": "viernes",
+   "hora": "12:00",
+   "etapa": "confianza",
+   "pilar": "educación",
+   "angulo": "curiosidad",
+   "tema": "Dientes sensibles al frío",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h17",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "viernes",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Rutina nocturna de cuidado",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h18",
+   "tipo": "historia",
+   "semana": 3,
+   "dia": "sabado",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Cuenta regresiva de cupos de la semana",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r9",
+   "tipo": "reel",
+   "semana": 3,
+   "dia": "sabado",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "prueba",
+   "tema": "Revisión de niños antes de clases",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p10",
+   "tipo": "publicacion",
+   "semana": 4,
+   "dia": "lunes",
+   "hora": "12:00",
+   "etapa": "venta",
+   "pilar": "educación",
+   "angulo": "dolor",
+   "tema": "Preguntas frecuentes de pacientes",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "r10",
+   "formato": "carrusel",
+   "laminas": 8
+  },
+  {
+   "id": "h19",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "lunes",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Preguntas para el próximo reel",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h20",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "martes",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Un día en la clínica",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": "r10"
+  },
+  {
+   "id": "r10",
+   "tipo": "reel",
+   "semana": 4,
+   "dia": "martes",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "beneficio",
+   "tema": "Cita de limpieza que se pospone",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p11",
+   "tipo": "publicacion",
+   "semana": 4,
+   "dia": "miercoles",
+   "hora": "12:00",
+   "etapa": "atraer",
+   "pilar": "educación",
+   "angulo": "error",
+   "tema": "Cómo agendar tu cita por WhatsApp",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h21",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "miercoles",
+   "hora": "18:30",
+   "etapa": "educar",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Hilo dental explicado",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h22",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "jueves",
+   "hora": "18:30",
+   "etapa": "confianza",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Qué hacer ante una emergencia dental",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r11",
+   "tipo": "reel",
+   "semana": 4,
+   "dia": "jueves",
+   "hora": "19:00",
+   "etapa": "confianza",
+   "pilar": "cuidado preventivo",
+   "angulo": "dolor",
+   "tema": "Sarro que no se ve en el espejo",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  },
+  {
+   "id": "p12",
+   "tipo": "publicacion",
+   "semana": 4,
+   "dia": "viernes",
+   "hora": "12:00",
+   "etapa": "educar",
+   "pilar": "educación",
+   "angulo": "beneficio",
+   "tema": "Sonrisa para el Día de la Madre",
+   "por_que": "Mediodía, pausa de almuerzo (propuesta).",
+   "relacionada_con": "",
+   "formato": "imagen",
+   "laminas": 0
+  },
+  {
+   "id": "h23",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "viernes",
+   "hora": "18:30",
+   "etapa": "venta",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Repaso de lo aprendido",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "h24",
+   "tipo": "historia",
+   "semana": 4,
+   "dia": "sabado",
+   "hora": "18:30",
+   "etapa": "atraer",
+   "pilar": "cercanía",
+   "angulo": "curiosidad",
+   "tema": "Invitación a agendar",
+   "por_que": "Historias casi diarias para mantener cercanía.",
+   "relacionada_con": ""
+  },
+  {
+   "id": "r12",
+   "tipo": "reel",
+   "semana": 4,
+   "dia": "sabado",
+   "hora": "19:00",
+   "etapa": "atraer",
+   "pilar": "cuidado preventivo",
+   "angulo": "error",
+   "tema": "Qué hacer si se rompe un diente",
+   "por_que": "Horario de noche, cuando más gente revisa Instagram (es una propuesta).",
+   "relacionada_con": "",
+   "modo_reel": "corto"
+  }
+ ],
+ "historias": [
+  {
+   "id": "h1",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Pregunta del día sobre limpiezas",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: pregunta del día sobre limpiezas",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre pregunta del día sobre limpiezas?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h2",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Detrás de cámaras del consultorio",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: detrás de cámaras del consultorio",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre detrás de cámaras del consultorio?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h3",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Mito rápido sobre el sarro",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: mito rápido sobre el sarro",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre mito rápido sobre el sarro?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h4",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Tip de cepillado en 30 segundos",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: tip de cepillado en 30 segundos",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre tip de cepillado en 30 segundos?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h5",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Respondiendo dudas de pacientes",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: respondiendo dudas de pacientes",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre respondiendo dudas de pacientes?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h6",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Cómo se prepara el instrumental",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: cómo se prepara el instrumental",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre cómo se prepara el instrumental?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h7",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Encuesta de hábitos de higiene",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: encuesta de hábitos de higiene",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre encuesta de hábitos de higiene?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h8",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Resumen del carrusel de la semana",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: resumen del carrusel de la semana",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre resumen del carrusel de la semana?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h9",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Anticipo del reel de la semana",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: anticipo del reel de la semana",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre anticipo del reel de la semana?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h10",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Cómo es la sala de espera",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: cómo es la sala de espera",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre cómo es la sala de espera?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h11",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Qué preguntar en la primera cita",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: qué preguntar en la primera cita",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre qué preguntar en la primera cita?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h12",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Recordatorio de agendar limpieza",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: recordatorio de agendar limpieza",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre recordatorio de agendar limpieza?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h13",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Dato útil sobre encías",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: dato útil sobre encías",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre dato útil sobre encías?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h14",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Cierre de semana con preguntas",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: cierre de semana con preguntas",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre cierre de semana con preguntas?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h15",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Lo que más nos preguntan",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: lo que más nos preguntan",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre lo que más nos preguntan?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h16",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Mito sobre el blanqueamiento",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: mito sobre el blanqueamiento",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre mito sobre el blanqueamiento?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h17",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Rutina nocturna de cuidado",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: rutina nocturna de cuidado",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre rutina nocturna de cuidado?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h18",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Cuenta regresiva de cupos de la semana",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: cuenta regresiva de cupos de la semana",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre cuenta regresiva de cupos de la semana?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h19",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Preguntas para el próximo reel",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: preguntas para el próximo reel",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre preguntas para el próximo reel?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h20",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Un día en la clínica",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: un día en la clínica",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre un día en la clínica?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h21",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Hilo dental explicado",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: hilo dental explicado",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre hilo dental explicado?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h22",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Qué hacer ante una emergencia dental",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: qué hacer ante una emergencia dental",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre qué hacer ante una emergencia dental?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h23",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Repaso de lo aprendido",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: repaso de lo aprendido",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre repaso de lo aprendido?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  },
+  {
+   "id": "h24",
+   "cuadros": [
+    {
+     "texto": "¿Te pasa con esto? Invitación a agendar",
+     "mostrar": "texto grande sobre fondo de color de la marca",
+     "sticker": null
+    },
+    {
+     "texto": "Lo que vemos cada semana: invitación a agendar",
+     "mostrar": "foto real del equipo trabajando, sin filtros",
+     "sticker": null
+    },
+    {
+     "texto": "Contanos cuál es tu duda",
+     "mostrar": "caja de preguntas sobre fondo liso",
+     "sticker": {
+      "tipo": "pregunta",
+      "pregunta": "Cuál es tu duda sobre invitación a agendar?"
+     }
+    },
+    {
+     "texto": "Votá cuál te sirve más",
+     "mostrar": "dos opciones en pantalla",
+     "sticker": {
+      "tipo": "encuesta",
+      "pregunta": "Cuál te sirve más hoy?",
+      "opciones": [
+       "Consejo",
+       "Ejemplo"
+      ]
+     }
+    },
+    {
+     "texto": "Escribinos por WhatsApp",
+     "mostrar": "botón de enlace al chat",
+     "sticker": {
+      "tipo": "enlace",
+      "texto": "Escribinos"
+     }
+    }
+   ]
+  }
+ ],
+ "reels": [
+  {
+   "id": "r1",
+   "plantilla": "tres_errores",
+   "angulo": "dolor",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel cuánto dura una",
+    "plantilla": "tres_errores",
+    "modo": "corto",
+    "angulo": "dolor",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Tres errores con cuánto dura una",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Error 1",
+      "texto": "Dejarlo para después",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Error 2",
+      "texto": "No pedir revisión",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Error 3",
+      "texto": "Ignorar las señales",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con cuánto dura una",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "dolor",
+     "texto": "Tres errores con cuánto dura una",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r2",
+   "plantilla": "lista_guardable",
+   "angulo": "error",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel miedo al",
+    "plantilla": "lista_guardable",
+    "modo": "corto",
+    "angulo": "error",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Lista sobre miedo al",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "1",
+      "texto": "Primero lo visible",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "2",
+      "texto": "Después lo que suena",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "3",
+      "texto": "Al final lo olvidado",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con miedo al",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "error",
+     "texto": "Lista sobre miedo al",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r3",
+   "plantilla": "paso_a_paso",
+   "angulo": "paso",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel errores al",
+    "plantilla": "paso_a_paso",
+    "modo": "corto",
+    "angulo": "paso",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Cuatro pasos: errores al",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Paso 1",
+      "texto": "Mirá lo básico",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Paso 2",
+      "texto": "Anotá lo raro",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Paso 3",
+      "texto": "Compará con lo normal",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Paso 4",
+      "texto": "Agendá una revisión",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con errores al",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "paso",
+     "texto": "Cuatro pasos: errores al",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r4",
+   "plantilla": "mito_realidad",
+   "angulo": "mito",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel dolor de muelas",
+    "plantilla": "mito_realidad",
+    "modo": "corto",
+    "angulo": "mito",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Lo que creés sobre dolor de muelas",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.55,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Mito",
+      "texto": "Si funciona, está bien",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Realidad",
+      "texto": "Se revisa aunque funcione",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Mito",
+      "texto": "Esperar es más barato",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Realidad",
+      "texto": "Esperar sale más caro",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con dolor de muelas",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "mito",
+     "texto": "Lo que creés sobre dolor de muelas",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r5",
+   "plantilla": "pregunta_respuesta",
+   "angulo": "pregunta",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel qué incluye la",
+    "plantilla": "pregunta_respuesta",
+    "modo": "corto",
+    "angulo": "pregunta",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "¿Qué hago con qué incluye la?",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Respuesta",
+      "texto": "Primero revisá lo básico",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Respuesta",
+      "texto": "Después sumá una visita",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con qué incluye la",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "pregunta",
+     "texto": "¿Qué hago con qué incluye la?",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r6",
+   "plantilla": "un_dato",
+   "angulo": "dato",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel blanqueamiento",
+    "plantilla": "un_dato",
+    "modo": "corto",
+    "angulo": "dato",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Pocos miran blanqueamiento",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Dato",
+      "texto": "Se revisa por partes",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Explicación",
+      "texto": "Cada parte falla distinto",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con blanqueamiento",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "dato",
+     "texto": "Pocos miran blanqueamiento",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r7",
+   "plantilla": "nadie_te_dice",
+   "angulo": "curiosidad",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel hilo dental que",
+    "plantilla": "nadie_te_dice",
+    "modo": "corto",
+    "angulo": "curiosidad",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Nadie cuenta hilo dental que",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Verdad 1",
+      "texto": "Falla cuando menos esperás",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Verdad 2",
+      "texto": "Se nota tarde",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Verdad 3",
+      "texto": "Se previene fácil",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con hilo dental que",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "curiosidad",
+     "texto": "Nadie cuenta hilo dental que",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r8",
+   "plantilla": "pregunta_incomoda",
+   "angulo": "incomoda",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel ortodoncia para",
+    "plantilla": "pregunta_incomoda",
+    "modo": "corto",
+    "angulo": "incomoda",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "¿Cuándo miraste ortodoncia para?",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Incómodo",
+      "texto": "Casi nadie lo revisa",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Salida",
+      "texto": "Ponelo en el calendario",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Salida",
+      "texto": "Buscá ayuda a tiempo",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con ortodoncia para",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "incomoda",
+     "texto": "¿Cuándo miraste ortodoncia para?",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r9",
+   "plantilla": "dia_con_sin",
+   "angulo": "prueba",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel revisión de",
+    "plantilla": "dia_con_sin",
+    "modo": "corto",
+    "angulo": "prueba",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Un día con y sin plan",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Sin",
+      "texto": "Todo se enreda",
+      "destacado": "",
+      "apoyo": "8:00",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Con",
+      "texto": "Todo fluye",
+      "destacado": "",
+      "apoyo": "8:30",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Sin",
+      "texto": "Sorpresa a media tarde",
+      "destacado": "",
+      "apoyo": "15:00",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Con",
+      "texto": "Ya estaba previsto",
+      "destacado": "",
+      "apoyo": "15:30",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con revisión de",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "prueba",
+     "texto": "Un día con y sin plan",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r10",
+   "plantilla": "antes_despues",
+   "angulo": "beneficio",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel cita de",
+    "plantilla": "antes_despues",
+    "modo": "corto",
+    "angulo": "beneficio",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Antes y después: cita de",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Antes",
+      "texto": "Sin revisión",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": {
+       "tipo": "whatsapp",
+       "chat": [
+        {
+         "de": "cliente",
+         "texto": "Se dañó otra vez"
+        },
+        {
+         "de": "asistente",
+         "texto": "Te respondemos en el día"
+        }
+       ]
+      }
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Después",
+      "texto": "Con revisión",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": {
+       "tipo": "whatsapp",
+       "chat": [
+        {
+         "de": "cliente",
+         "texto": "Todo en orden hoy"
+        },
+        {
+         "de": "asistente",
+         "texto": "Te respondemos en el día"
+        }
+       ]
+      }
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con cita de",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "beneficio",
+     "texto": "Antes y después: cita de",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r11",
+   "plantilla": "tres_errores",
+   "angulo": "dolor",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel sarro que no se",
+    "plantilla": "tres_errores",
+    "modo": "corto",
+    "angulo": "dolor",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Tres errores con sarro que no se",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.55,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Error 1",
+      "texto": "Dejarlo para después",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "Error 2",
+      "texto": "No pedir revisión",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "Error 3",
+      "texto": "Ignorar las señales",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con sarro que no se",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "dolor",
+     "texto": "Tres errores con sarro que no se",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  },
+  {
+   "id": "r12",
+   "plantilla": "lista_guardable",
+   "angulo": "error",
+   "guion": {
+    "version": 1,
+    "titulo": "Reel qué hacer si se",
+    "plantilla": "lista_guardable",
+    "modo": "corto",
+    "angulo": "error",
+    "marca": null,
+    "paleta": "noche",
+    "marca_agua": {
+     "activa": false,
+     "texto": ""
+    },
+    "etiqueta_ia": false,
+    "compartible": "Sirve para mandárselo a quien lo necesita",
+    "escenas": [
+     {
+      "rol": "gancho",
+      "etiqueta": "",
+      "texto": "Lista sobre qué hacer si se",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "1",
+      "texto": "Primero lo visible",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "valor",
+      "etiqueta": "2",
+      "texto": "Después lo que suena",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "desarrollo",
+      "etiqueta": "3",
+      "texto": "Al final lo olvidado",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     },
+     {
+      "rol": "cta",
+      "etiqueta": "",
+      "texto": "Escribinos por WhatsApp hoy",
+      "destacado": "",
+      "apoyo": "",
+      "dur": 2.4,
+      "mockup": null
+     }
+    ],
+    "loop": {
+     "eco": "Ya lo revisaste"
+    },
+    "caption": {
+     "primera_linea": "Esto pasa con qué hacer si se",
+     "cuerpo": "Lo vemos seguido en el día a día. Te contamos qué revisar primero.",
+     "cta": "Escribinos por WhatsApp",
+     "hashtags": [
+      "#mantenimiento",
+      "#costarica",
+      "#prevencion"
+     ]
+    },
+    "audio": {
+     "sugerencia": "Pista suave, ritmo medio, sin letra",
+     "sonidos": false
+    }
+   },
+   "avisos": [],
+   "acortados": [],
+   "ganchos": [
+    {
+     "angulo": "error",
+     "texto": "Lista sobre qué hacer si se",
+     "elegido": true
+    }
+   ],
+   "motivo_gancho": "Abre con una situación reconocible"
+  }
+ ],
+ "publicaciones": [
+  {
+   "id": "p1",
+   "formato": "carrusel",
+   "caption": {
+    "primera_linea": "Cuándo toca la limpieza dental y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Cuándo toca la limpieza dental",
+     "destacado": "dental",
+     "subtitulo": "Lo que casi todos pasan por alto en el día a día",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Primero observá 1",
+     "destacado": "observá",
+     "subtitulo": "Paso 1 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Revisá lo básico 2",
+     "destacado": "básico",
+     "subtitulo": "Paso 2 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Anotá lo que notás 3",
+     "destacado": "notás",
+     "subtitulo": "Paso 3 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "No lo dejes para después 4",
+     "destacado": "después",
+     "subtitulo": "Paso 4 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Buscá ayuda a tiempo 5",
+     "destacado": "tiempo",
+     "subtitulo": "Paso 5 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Compará con lo normal 6",
+     "destacado": "normal",
+     "subtitulo": "Paso 6 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "cierre",
+     "titular": "Escribinos y lo vemos",
+     "destacado": "lo vemos",
+     "subtitulo": "Contanos tu caso y te decimos por dónde empezar",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p2",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Mitos del blanqueamiento dental y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Mitos del blanqueamiento dental",
+     "destacado": "dental",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p3",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Primera cita con el dentista y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Primera cita con el dentista",
+     "destacado": "dentista",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p4",
+   "formato": "carrusel",
+   "caption": {
+    "primera_linea": "Cepillado correcto paso a paso y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Cepillado correcto paso a paso",
+     "destacado": "paso",
+     "subtitulo": "Lo que casi todos pasan por alto en el día a día",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Primero observá 1",
+     "destacado": "observá",
+     "subtitulo": "Paso 1 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Revisá lo básico 2",
+     "destacado": "básico",
+     "subtitulo": "Paso 2 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Anotá lo que notás 3",
+     "destacado": "notás",
+     "subtitulo": "Paso 3 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "No lo dejes para después 4",
+     "destacado": "después",
+     "subtitulo": "Paso 4 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Buscá ayuda a tiempo 5",
+     "destacado": "tiempo",
+     "subtitulo": "Paso 5 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Compará con lo normal 6",
+     "destacado": "normal",
+     "subtitulo": "Paso 6 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "cierre",
+     "titular": "Escribinos y lo vemos",
+     "destacado": "lo vemos",
+     "subtitulo": "Contanos tu caso y te decimos por dónde empezar",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p5",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Señales de que necesitás ortodoncia y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Señales de que necesitás ortodoncia",
+     "destacado": "ortodoncia",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p6",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Cuidar los dientes de los niños y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Cuidar los dientes de los niños",
+     "destacado": "niños",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p7",
+   "formato": "carrusel",
+   "caption": {
+    "primera_linea": "Qué comer después de una extracción y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Qué comer después de una extracción",
+     "destacado": "extracción",
+     "subtitulo": "Lo que casi todos pasan por alto en el día a día",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Primero observá 1",
+     "destacado": "observá",
+     "subtitulo": "Paso 1 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Revisá lo básico 2",
+     "destacado": "básico",
+     "subtitulo": "Paso 2 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Anotá lo que notás 3",
+     "destacado": "notás",
+     "subtitulo": "Paso 3 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "No lo dejes para después 4",
+     "destacado": "después",
+     "subtitulo": "Paso 4 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Buscá ayuda a tiempo 5",
+     "destacado": "tiempo",
+     "subtitulo": "Paso 5 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Compará con lo normal 6",
+     "destacado": "normal",
+     "subtitulo": "Paso 6 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "cierre",
+     "titular": "Escribinos y lo vemos",
+     "destacado": "lo vemos",
+     "subtitulo": "Contanos tu caso y te decimos por dónde empezar",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p8",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Encías que sangran al cepillar y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Encías que sangran al cepillar",
+     "destacado": "cepillar",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p9",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Dientes sensibles al frío y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Dientes sensibles al frío",
+     "destacado": "frío",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p10",
+   "formato": "carrusel",
+   "caption": {
+    "primera_linea": "Preguntas frecuentes de pacientes y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Preguntas frecuentes de pacientes",
+     "destacado": "pacientes",
+     "subtitulo": "Lo que casi todos pasan por alto en el día a día",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Primero observá 1",
+     "destacado": "observá",
+     "subtitulo": "Paso 1 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Revisá lo básico 2",
+     "destacado": "básico",
+     "subtitulo": "Paso 2 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Anotá lo que notás 3",
+     "destacado": "notás",
+     "subtitulo": "Paso 3 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "No lo dejes para después 4",
+     "destacado": "después",
+     "subtitulo": "Paso 4 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Buscá ayuda a tiempo 5",
+     "destacado": "tiempo",
+     "subtitulo": "Paso 5 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "contenido",
+     "titular": "Compará con lo normal 6",
+     "destacado": "normal",
+     "subtitulo": "Paso 6 del hilo, dicho con una situación concreta del rubro",
+     "cta": ""
+    },
+    {
+     "rol": "cierre",
+     "titular": "Escribinos y lo vemos",
+     "destacado": "lo vemos",
+     "subtitulo": "Contanos tu caso y te decimos por dónde empezar",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p11",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Cómo agendar tu cita por WhatsApp y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Cómo agendar tu cita por WhatsApp",
+     "destacado": "WhatsApp",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  },
+  {
+   "id": "p12",
+   "formato": "imagen",
+   "caption": {
+    "primera_linea": "Sonrisa para el Día de la Madre y cómo resolverlo",
+    "cuerpo": "Lo vemos seguido en el día a día del negocio. Te contamos lo que hay que revisar primero.",
+    "cta": "Escribinos por WhatsApp",
+    "hashtags": [
+     "#cuidado",
+     "#costarica",
+     "#prevencion"
+    ],
+    "pregunta_cierre": "Cuál de estos te ha pasado?"
+   },
+   "laminas": [
+    {
+     "rol": "portada",
+     "titular": "Sonrisa para el Día de la Madre",
+     "destacado": "Madre",
+     "subtitulo": "Una idea clara para que la guardes y se la mandes a alguien",
+     "cta": "Escribinos"
+    }
+   ]
+  }
+ ],
+ "preguntas": [
+  {
+   "id": "q1",
+   "texto": "Qué es lo primero que revisás cuando algo falla?",
+   "tipo": "abierta",
+   "donde": "historia",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q2",
+   "texto": "Cuál de los dos consejos te sirvió más esta semana?",
+   "tipo": "encuesta",
+   "donde": "comentario",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q3",
+   "texto": "Qué duda te gustaría que resolvamos en el próximo reel?",
+   "tipo": "abierta",
+   "donde": "publicacion",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q4",
+   "texto": "Alguna vez dejaste esto para después y te salió caro?",
+   "tipo": "opinion",
+   "donde": "historia",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q5",
+   "texto": "Con cuál de los mitos te habías quedado?",
+   "tipo": "abierta",
+   "donde": "comentario",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q6",
+   "texto": "Qué pregunta le haces siempre a tu proveedor?",
+   "tipo": "abierta",
+   "donde": "historia",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  },
+  {
+   "id": "q7",
+   "texto": "Cuál es tu mayor miedo con este tema?",
+   "tipo": "opinion",
+   "donde": "comentario",
+   "relacionada_con": "",
+   "para_que": "Alimenta el tema de la semana siguiente"
+  }
+ ],
+ "animaciones": [
+  {
+   "id": "a1",
+   "guion": {
+    "version": 1,
+    "tipo": "animacion",
+    "id": "a1",
+    "plantilla": "checklist",
+    "destino": "reel",
+    "titulo": "Cinco señales de que necesitás una limpieza",
+    "resumen": "Animación explicativa: Cinco señales de que necesitás una limpieza",
+    "paleta": "azul",
+    "bloques": [
+     {
+      "titulo": "Primer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Segundo paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Tercer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Cuarto paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Quinto paso",
+      "detalle": "Qué pasa en esta parte"
+     }
+    ],
+    "numero": "",
+    "unidad": "",
+    "lienzo": {
+     "ancho": 1080,
+     "alto": 1920,
+     "fps": 30
+    },
+    "duracion": 14,
+    "zona_segura": {
+     "izq": 70,
+     "der": 930,
+     "arriba": 270,
+     "abajo": 1440
+    },
+    "etiqueta": "",
+    "bucle": false,
+    "audio": false,
+    "material_real": [],
+    "entregables": [
+     "mp4"
+    ],
+    "peso_objetivo_mb": null
+   }
+  },
+  {
+   "id": "a2",
+   "guion": {
+    "version": 1,
+    "tipo": "animacion",
+    "id": "a2",
+    "plantilla": "flujo",
+    "destino": "web",
+    "titulo": "Cómo es tu primera cita paso a paso",
+    "resumen": "Animación explicativa: Cómo es tu primera cita paso a paso",
+    "paleta": "azul",
+    "bloques": [
+     {
+      "titulo": "Primer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Segundo paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Tercer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Cuarto paso",
+      "detalle": "Qué pasa en esta parte"
+     }
+    ],
+    "numero": "",
+    "unidad": "",
+    "lienzo": {
+     "ancho": 1280,
+     "alto": 720,
+     "fps": 30
+    },
+    "duracion": 9.2,
+    "zona_segura": null,
+    "etiqueta": "Ilustración",
+    "bucle": true,
+    "audio": false,
+    "material_real": [],
+    "entregables": [
+     "mp4",
+     "webm",
+     "html_video"
+    ],
+    "peso_objetivo_mb": 1.5
+   }
+  },
+  {
+   "id": "a4",
+   "guion": {
+    "version": 1,
+    "tipo": "animacion",
+    "id": "a4",
+    "plantilla": "antes_despues",
+    "destino": "historia",
+    "titulo": "Rutina sin plan y rutina con plan",
+    "resumen": "Animación explicativa: Rutina sin plan y rutina con plan",
+    "paleta": "azul",
+    "bloques": [
+     {
+      "titulo": "Primer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Segundo paso",
+      "detalle": "Qué pasa en esta parte"
+     }
+    ],
+    "numero": "",
+    "unidad": "",
+    "lienzo": {
+     "ancho": 1080,
+     "alto": 1920,
+     "fps": 30
+    },
+    "duracion": 6.8,
+    "zona_segura": {
+     "izq": 70,
+     "der": 930,
+     "arriba": 270,
+     "abajo": 1440
+    },
+    "etiqueta": "",
+    "bucle": false,
+    "audio": false,
+    "material_real": [],
+    "entregables": [
+     "mp4"
+    ],
+    "peso_objetivo_mb": null
+   }
+  },
+  {
+   "id": "a3",
+   "guion": {
+    "version": 1,
+    "tipo": "animacion",
+    "id": "a3",
+    "plantilla": "linea_tiempo",
+    "destino": "post",
+    "titulo": "Tu calendario de cuidado dental",
+    "resumen": "Animación explicativa: Tu calendario de cuidado dental",
+    "paleta": "azul",
+    "bloques": [
+     {
+      "titulo": "Primer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Segundo paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Tercer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Cuarto paso",
+      "detalle": "Qué pasa en esta parte"
+     }
+    ],
+    "numero": "",
+    "unidad": "",
+    "lienzo": {
+     "ancho": 1080,
+     "alto": 1080,
+     "fps": 30
+    },
+    "duracion": 9.2,
+    "zona_segura": null,
+    "etiqueta": "",
+    "bucle": false,
+    "audio": false,
+    "material_real": [],
+    "entregables": [
+     "mp4"
+    ],
+    "peso_objetivo_mb": null
+   }
+  },
+  {
+   "id": "a5",
+   "guion": {
+    "version": 1,
+    "tipo": "animacion",
+    "id": "a5",
+    "plantilla": "esquema",
+    "destino": "web",
+    "titulo": "Partes de un diente y qué cuida cada una",
+    "resumen": "Animación explicativa: Partes de un diente y qué cuida cada una",
+    "paleta": "azul",
+    "bloques": [
+     {
+      "titulo": "Primer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Segundo paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Tercer paso",
+      "detalle": "Qué pasa en esta parte"
+     },
+     {
+      "titulo": "Cuarto paso",
+      "detalle": "Qué pasa en esta parte"
+     }
+    ],
+    "numero": "",
+    "unidad": "",
+    "lienzo": {
+     "ancho": 1280,
+     "alto": 720,
+     "fps": 30
+    },
+    "duracion": 9.2,
+    "zona_segura": null,
+    "etiqueta": "Ilustración",
+    "bucle": true,
+    "audio": false,
+    "material_real": [],
+    "entregables": [
+     "mp4",
+     "webm",
+     "html_video"
+    ],
+    "peso_objetivo_mb": 1.5
+   }
+  }
+ ],
+ "pauta": {
+  "modo": "pauta",
+  "moneda": "CRC",
+  "monto_total": 100000,
+  "objetivo": "mensajes por WhatsApp",
+  "campanas": [
+   {
+    "pieza_id": "r1",
+    "formato": "reel",
+    "objetivo": "mensajes por WhatsApp",
+    "inicio": {
+     "semana": 1,
+     "dia": "martes"
+    },
+    "fin": {
+     "semana": 1,
+     "dia": "domingo"
+    },
+    "dias": 6,
+    "pct": 30,
+    "fase_prueba": true,
+    "publico": {
+     "zona": "San José y Heredia",
+     "intereses": [
+      "negocios locales",
+      "hogar"
+     ],
+     "edades": "adultos"
+    },
+    "texto_anuncio": {
+     "texto": "Mirá este reel y escribinos por WhatsApp",
+     "cta": "Escribinos por WhatsApp"
+    },
+    "medir": [
+     "mensajes recibidos",
+     "costo por mensaje",
+     "retención del video"
+    ],
+    "motivo": "Es el reel con el gancho más claro del plan.",
+    "monto": 30000
+   },
+   {
+    "pieza_id": "r4",
+    "formato": "reel",
+    "objetivo": "mensajes por WhatsApp",
+    "inicio": {
+     "semana": 2,
+     "dia": "martes"
+    },
+    "fin": {
+     "semana": 3,
+     "dia": "viernes"
+    },
+    "dias": 11,
+    "pct": 70,
+    "fase_prueba": false,
+    "publico": {
+     "zona": "San José y Heredia",
+     "intereses": [
+      "negocios locales",
+      "hogar"
+     ],
+     "edades": "adultos"
+    },
+    "texto_anuncio": {
+     "texto": "Mirá este reel y escribinos por WhatsApp",
+     "cta": "Escribinos por WhatsApp"
+    },
+    "medir": [
+     "mensajes recibidos",
+     "costo por mensaje",
+     "retención del video"
+    ],
+    "motivo": "Es el reel con el gancho más claro del plan.",
+    "monto": 70000
+   }
+  ],
+  "reparto_semanal": [
+   {
+    "semana": 1,
+    "pct": 30,
+    "monto": 30000
+   },
+   {
+    "semana": 2,
+    "pct": 38.2,
+    "monto": 38181.82
+   },
+   {
+    "semana": 3,
+    "pct": 31.8,
+    "monto": 31818.18
+   }
+  ],
+  "piezas": {
+   "h1": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h2": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r1": {
+    "estado": "impulsar",
+    "motivo": "Es el reel con el gancho más claro del plan."
+   },
+   "h3": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h4": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r2": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h5": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h6": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r3": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h7": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h8": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r4": {
+    "estado": "impulsar",
+    "motivo": "Es el reel con el gancho más claro del plan."
+   },
+   "h9": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h10": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r5": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h11": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h12": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r6": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h13": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h14": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r7": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h15": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h16": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r8": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h17": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h18": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r9": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h19": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h20": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r10": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h21": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h22": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r11": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h23": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "h24": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   },
+   "r12": {
+    "estado": "organica",
+    "motivo": "Contenido orgánico: la pauta va sobre la pieza más fuerte para que una campaña no pise a la otra."
+   }
+  },
+  "nota_prueba": "Empezá con la fase de prueba corta y recién después de ver los resultados mové el resto del presupuesto.",
+  "nota_medicion": "No hay cifras de referencia en tus datos: esto se mide en la primera semana. El reparto es una propuesta, no una garantía."
+ },
+ "estado_grupos": {
+  "historias": "ok",
+  "reels": "ok",
+  "publicaciones": "ok",
+  "animaciones": "ok",
+  "preguntas": "ok",
+  "pauta": "ok"
+ },
+ "llamadas": 23,
+ "avisos": {
+  "pauta": [
+   "r5: se solapa con otra campaña; no se impulsan dos piezas en la misma ventana."
+  ]
+ },
+ "faltantes": {
+  "historias": [],
+  "reels": [],
+  "publicaciones": [],
+  "animaciones": [],
+  "preguntas": [],
+  "pauta": []
+ },
+ "contexto_reel": {
+  "negocio": "Clínica Dental Sonrisa",
+  "datos": "Clínica dental. Limpieza dental, ortodoncia y blanqueamiento. Familias de Heredia. conseguir citas y mensajes de WhatsApp. Tema de ESTA pieza: Qué hacer si se rompe un diente. Atendemos de lunes a sábado. Los pacientes preguntan si duele la limpieza y cuánto dura la cita."
+ }
+}

@@ -1,0 +1,48 @@
+{
+ "version": 1,
+ "tipo": "animacion",
+ "id": "a1",
+ "plantilla": "flujo",
+ "destino": "web",
+ "titulo": "Cómo arranca la planta cuando se va la luz",
+ "resumen": "Diagrama de flujo: corte de energía, transferencia, arranque del generador y regreso de la luz.",
+ "paleta": "azul",
+ "bloques": [
+  {
+   "titulo": "Corte de energía",
+   "detalle": "La red eléctrica deja de llegar"
+  },
+  {
+   "titulo": "Transferencia",
+   "detalle": "El tablero detecta el corte y cambia de fuente"
+  },
+  {
+   "titulo": "Arranque",
+   "detalle": "El generador enciende y toma la carga"
+  },
+  {
+   "titulo": "Vuelve la luz",
+   "detalle": "El tablero regresa a la red y la planta descansa"
+  }
+ ],
+ "numero": "",
+ "unidad": "",
+ "lienzo": {
+  "ancho": 1280,
+  "alto": 720,
+  "fps": 30
+ },
+ "duracion": 9.2,
+ "zona_segura": null,
+ "etiqueta": "Ilustración",
+ "bucle": true,
+ "audio": false,
+ "material_real": [],
+ "entregables": [
+  "mp4",
+  "webm",
+  "html_video",
+  "html_svg"
+ ],
+ "peso_objetivo_mb": 1.5
+}

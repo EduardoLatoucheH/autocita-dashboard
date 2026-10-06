@@ -1,0 +1,22 @@
+{
+  "id": "a4",
+  "destino": "post",
+  "plantilla": "linea_tiempo",
+  "medidas": "1080x1080",
+  "duracion_s": 9.2,
+  "cuadros": 276,
+  "archivos": {
+    "mp4": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a4-que-incluye-una-visita-de-mantenimiento.mp4",
+      "mb": 0.33,
+      "crf": 18
+    },
+    "html_autocontenido": {
+      "ruta": "/home/user/autocita-dashboard/entregables-plan-contenido/render-animaciones/salida/a4-que-incluye-una-visita-de-mantenimiento-autocontenido.html",
+      "kb": 29.3
+    }
+  },
+  "tiempo_render_s": 20.2,
+  "tiempo_cuadros_s": 14.7,
+  "duracion_video_s": 9.2
+}
