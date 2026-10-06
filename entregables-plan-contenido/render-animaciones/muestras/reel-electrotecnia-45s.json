@@ -1,0 +1,16 @@
+{"version":1,"titulo":"Planta que no arranca","plantilla":"mito_realidad","modo":"medio","angulo":"mito","marca":null,"paleta":"azul","escenas":[
+{"rol":"gancho","etiqueta":"","texto":"¿Qué pasa si tu planta no arranca cuando se va la luz?","destacado":"no arranca","apoyo":"","dur":3.0,"mockup":null},
+{"rol":"desarrollo","etiqueta":"","texto":"Pasa más seguido de lo que pensás.","destacado":"","apoyo":"Y casi siempre se pudo evitar.","dur":2.8,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Mito","texto":"Si tiene combustible, la planta arranca.","destacado":"combustible","apoyo":"","dur":3.2,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Realidad","texto":"Sin batería revisada, igual falla.","destacado":"batería","apoyo":"","dur":3.2,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Mito","texto":"Probarla de vez en cuando es perder tiempo.","destacado":"perder tiempo","apoyo":"","dur":3.2,"mockup":null},
+{"rol":"valor","etiqueta":"Realidad","texto":"Una prueba a tiempo evita el apagón.","destacado":"evita el apagón","apoyo":"","dur":3.2,"mockup":null},
+{"rol":"desarrollo","etiqueta":"","texto":"Así nos escriben los clientes","destacado":"","apoyo":"","dur":4.4,"mockup":{"tipo":"whatsapp","chat":[{"de":"cliente","texto":"Se fue la luz y la planta no prendió"},{"de":"asistente","texto":"Vamos para allá. Revisamos batería y arranque"},{"de":"cliente","texto":"Gracias, es urgente"}]}},
+{"rol":"desarrollo","etiqueta":"Paso 1","texto":"Revisamos batería y combustible","destacado":"batería","apoyo":"Antes de que falle","dur":3.0,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Paso 2","texto":"Probamos el arranque con carga","destacado":"con carga","apoyo":"","dur":3.0,"mockup":null},
+{"rol":"valor","etiqueta":"Paso 3","texto":"Te dejamos un informe claro","destacado":"informe","apoyo":"Qué se revisó y qué atender primero","dur":3.2,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Antes","texto":"Apagón y sorpresa","destacado":"sorpresa","apoyo":"","dur":2.8,"mockup":null},
+{"rol":"desarrollo","etiqueta":"Después","texto":"Planta lista y negocio encendido","destacado":"negocio encendido","apoyo":"","dur":3.2,"mockup":null},
+{"rol":"desarrollo","etiqueta":"","texto":"Tu visita queda agendada","destacado":"agendada","apoyo":"","dur":4.2,"mockup":{"tipo":"agenda","agenda":[{"hora":"08:00","etiqueta":"Revisión","estado":"nuevo"},{"hora":"10:00","etiqueta":"Prueba","estado":"ocupado"},{"hora":"13:00","etiqueta":"Informe","estado":"libre"}]}},
+{"rol":"cta","etiqueta":"","texto":"Escribinos por WhatsApp y agendá tu revisión","destacado":"agendá","apoyo":"","dur":4.4,"mockup":null}],
+"loop":{"eco":"Que no te agarre el apagón"},"caption":{"primera_linea":"x","cuerpo":"x","cta":"x","hashtags":[]},"audio":{"sugerencia":"x","sonidos":false}}
