@@ -405,6 +405,8 @@
 .ii-mini img{display:block;width:100%;max-height:260px;object-fit:cover}
 .ii-mini-carga{display:block;padding:26px 14px;font-size:12px;color:inherit;opacity:.85}   /* sobre fondo gris: texto normal (el gris de ayuda daba ~3:1) */
 .ii-acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ii-doc{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--gray-100,#f1efe8);border-radius:8px;padding:8px 10px}
+.ii-doc-ico{font-size:22px;line-height:1}
 .ii-aviso{font-size:12px;color:inherit;background:var(--gray-100,#f1efe8);border-radius:8px;padding:8px 10px;line-height:1.45}
 .ii-fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
 .ii-ayuda{font-size:11px;color:var(--gray-500,#6b6862);line-height:1.4}
@@ -1732,23 +1734,31 @@ function iiEl(tag, props, texto) {
 function iiBoton(texto, onclick, clases) { var b = iiEl('button', { type: 'button', class: clases || 'btn btn-ghost btn-sm' }, texto); b.onclick = onclick; return b; }
 function iiEsImagen(m) { return !!m.media_url && /^image\/(jpeg|png|webp)$/i.test(String(m.media_mime || '')); }
 function iiEsDocumento(m) { return m.tipo === 'document' || /^application\/pdf/i.test(String(m.media_mime || '')); }
-function iiNombreArchivo(m) { return 'imagen-' + new Date(m.created_at || Date.now()).toISOString().slice(0, 10); }
+function iiNombreArchivo(m) { return (iiEsDocumento(m) ? 'documento-' : 'imagen-') + new Date(m.created_at || Date.now()).toISOString().slice(0, 10); }   // (08/10/2026): el PDF no se baja como "imagen"
 
-// URL firmada (1 h en el servidor; acá se reusa 50 min). descargar=true fuerza "Guardar como" con nombre seguro.
+// URL firmada (15 min en el servidor desde 08/10/2026; acá se reusa 12 min). descargar=true fuerza "Guardar como" con nombre seguro.
 async function iiFirmar(ruta, descargar, nombre) {
   var clave = ruta + '|' + (descargar ? '1' : '0') + '|' + (nombre || '');
   var c = iiEstado.firmas[clave];
   if (c && c.vence > Date.now()) return c.url;
   var q = '/media/firmar?ruta=' + encodeURIComponent(ruta) + (descargar ? '&descargar=1&nombre=' + encodeURIComponent(nombre || 'imagen') : '');
   var d = await apiFetch(q);
-  iiEstado.firmas[clave] = { url: d.url, vence: Date.now() + 50 * 60000 };
+  iiEstado.firmas[clave] = { url: d.url, vence: Date.now() + 12 * 60000 };
   return d.url;
 }
 async function iiDescargar(m) {
   try {
     var url = await iiFirmar(m.media_url, true, iiNombreArchivo(m));
     var a = document.createElement('a'); a.href = url; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
-  } catch (e) { alert('No se pudo descargar la imagen, probá de nuevo.'); }
+  } catch (e) { alert('No se pudo descargar el archivo, probá de nuevo.'); }
+}
+// Abrir un PDF en otra pestaña (08/10/2026). Mismo camino que la imagen: URL firmada de /media/firmar, que solo se
+// entrega si el mensaje es visible para quien pide (la política por fila lo decide en el servidor).
+async function iiAbrirDocumento(m) {
+  try {
+    var url = await iiFirmar(m.media_url, false);
+    var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { alert('No se pudo abrir el documento.'); }
 }
 // Ver en grande: capa encima de todo; se cierra con clic fuera, con la X o con Escape.
 async function iiVerGrande(m) {
@@ -1804,8 +1814,19 @@ function iiNodoAdjunto(m, convId) {
       acc.appendChild(iiBoton('✔ Marcar comprobante recibido', function () { iiMarcarComprobante(m, convId); }, 'btn btn-sm'));
     }
     caja.appendChild(acc);
+  } else if (iiEsDocumento(m) && m.media_url) {
+    // PDF guardado (08/10/2026): ícono, Ver y Descargar con URL firmada. Todo con textContent (el nombre lo pone el servidor).
+    var fila = iiEl('div', { class: 'ii-doc' });
+    fila.appendChild(iiEl('span', { class: 'ii-doc-ico', 'aria-hidden': 'true' }, '📄'));
+    fila.appendChild(iiEl('span', null, 'Documento PDF'));
+    caja.appendChild(fila);
+    var accDoc = iiEl('div', { class: 'ii-acc' });
+    accDoc.appendChild(iiBoton('Ver', function () { iiAbrirDocumento(m); }));
+    accDoc.appendChild(iiBoton('⬇ Descargar', function () { iiDescargar(m); }));
+    caja.appendChild(accDoc);
   } else if (iiEsDocumento(m)) {
-    caja.appendChild(iiEl('div', { class: 'ii-aviso' }, 'El cliente mandó un documento (PDF). Todavía no se muestra acá: abrilo desde WhatsApp Business.'));
+    // Sin ruta: el archivo no se pudo guardar al llegar (n8n "Continue on fail"). Se avisa en vez de dejar un hueco.
+    caja.appendChild(iiEl('div', { class: 'ii-aviso' }, 'El cliente mandó un documento (PDF) que no quedó guardado: abrilo desde WhatsApp Business.'));
   } else if (m.media_url) {
     var b = iiBoton('Ver adjunto', async function () { try { window.open(await iiFirmar(m.media_url, false), '_blank', 'noopener'); } catch (e) { alert('No se pudo abrir el archivo.'); } });
     caja.appendChild(b);
