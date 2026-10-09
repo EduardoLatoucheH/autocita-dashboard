@@ -555,6 +555,8 @@
             <!-- Dashboard -->
             <section class="section active" id="dashboard">
                 <h2 style="margin-bottom: 24px;" data-i18n="title.dashboard">Dashboard</h2>
+                <!-- Activación de WhatsApp (09/10/2026): solo lectura; el backend decide quién la ve (dueño) y qué muestra. -->
+                <div id="activacionCard" class="card" style="display:none"></div>
                 <div id="resumenHoy" class="resumen-hoy"></div>
                 <div class="kpis">
                     <div class="kpi"><div class="kpi-label" data-i18n="dash.citasHoy">Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
@@ -1413,6 +1415,25 @@ async function ensureClinicaCache() {
     }
     return clinicaCache;
 }
+// ── Activación de WhatsApp (09/10/2026) ─────────────────────────────────────
+// Tarjeta de solo lectura con el paso en que va la conexión y los documentos que hay que juntar.
+// Todo lo que viene del servidor pasa por escapeHtmlPanel. Si el servidor dice que no aplica (o no sos el dueño), no se muestra.
+async function cargarActivacion() {
+    const caja = document.getElementById('activacionCard');
+    if (!caja) return;
+    try {
+        const d = await apiFetch('/clinica/activacion');
+        if (!d || !d.aplica || d.estado === 'api_conectada') { caja.style.display = 'none'; return; }
+        const actual = (d.pasos || []).findIndex(p => p.id === d.estado);
+        const pasos = (d.pasos || []).map((p, i) => {
+            const hecho = i < actual, ahora = i === actual;
+            return `<li style="margin:4px 0;${ahora ? 'font-weight:700' : ''}${hecho || ahora ? '' : ';opacity:.6'}">${hecho ? '✔' : (ahora ? '▶' : '○')} ${escapeHtmlPanel(p.titulo)}${ahora ? ` — <span style="font-weight:400">${escapeHtmlPanel(p.detalle)}</span>` : ''}</li>`;
+        }).join('');
+        const docs = actual <= 0 ? `<div style="margin-top:12px;font-size:13px"><strong>Documentos que tenés que juntar</strong><ol style="margin:6px 0 0 18px">${(d.documentos || []).map(t => `<li style="margin:3px 0">${escapeHtmlPanel(t)}</li>`).join('')}</ol><div style="margin-top:6px;opacity:.75">${escapeHtmlPanel(d.aviso || '')}</div></div>` : '';
+        caja.innerHTML = `<div style="font-weight:700;margin-bottom:6px">Activación de WhatsApp</div><ul style="list-style:none;padding:0;margin:0">${pasos}</ul>${docs}`;
+        caja.style.display = '';
+    } catch (e) { caja.style.display = 'none'; }
+}
 async function loadAll() {
     await loadRol(); // primero el rol, luego el resto según permisos
     await loadPacientes(); // primero pacientes, así el respaldo de nombre ya está listo
@@ -1423,6 +1444,7 @@ async function loadAll() {
     loadListaEspera();
     loadServicios();
     loadSettings();
+    cargarActivacion();   // (09/10/2026) tarjeta de solo lectura; solo la ve el dueño
 }
 let terminosInfo = null; // { version, url, aceptado, en } — última respuesta de /mi-rol
 async function loadRol() {
