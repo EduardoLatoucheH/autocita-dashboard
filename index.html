@@ -1072,6 +1072,7 @@
                             <select id="equipoRol">
                                 <option value="recepcionista" data-i18n="set.rolRecepcionista">Recepcionista</option>
                                 <option value="doctor" data-i18n="set.rolDoctor">Doctor</option>
+                                <option value="jefe_area" data-i18n="set.rolJefe">Jefe de área</option>
                                 <option value="dueno" data-i18n="set.rolAdmin">Administrador</option>
                             </select>
                         </div>
@@ -1440,7 +1441,7 @@ async function loadRol() {
             await mostrarModalTerminos();
         }
     } catch (e) {
-        userRol = 'dueno'; // fallback: si falla, asumir dueño
+        userRol = 'sin_rol'; // (13/10/2026) si falla, NO se asume dueño: solo se muestra lo mínimo (el backend igual decide qué se puede ver)
     }
 }
 function mostrarModalTerminos() {
@@ -1488,7 +1489,7 @@ function aplicarPermisos() {
         // colegas (el backend registra cada acceso) y la vista de pacientes.
         jefe_area:      ['dashboard','inbox','pacientes','listaCitas','citas','listaEspera','bloqueos','doctores','expedientes','ayuda'],
     };
-    const visibles = [...(permisos[userRol] || permisos['dueno'])];
+    const visibles = [...(permisos[userRol] || ['dashboard', 'ayuda'])];
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
     // registro de doctor (userDoctorId). Recepción nunca lo ve.
     if (userDoctorId && !visibles.includes('expedientes')) visibles.push('expedientes');
@@ -2491,7 +2492,6 @@ async function loadFactura() {
                     <span>${escapeHtmlPanel(s.servicios?.nombre || t('fact.servicio'))}</span>
                     <span style="display:flex;align-items:center;gap:8px">
                         ₡${Number(s.precio).toLocaleString(getLocale())}
-                        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px;box-shadow:none" onclick="quitarServicioCita('${citaId}','${s.id}')">✕</button>
                     </span>
                 </div>
             `).join('')}
@@ -2518,12 +2518,7 @@ async function agregarServicioCita(citaId) {
         loadFactura();
     } catch (e) { alert('Error: ' + e.message); }
 }
-async function quitarServicioCita(citaId, servicioAplicadoId) {
-    try {
-        await apiFetch(`/cita/${citaId}/servicios/${servicioAplicadoId}`, { method: 'DELETE' });
-        loadFactura();
-    } catch (e) { alert('Error: ' + e.message); }
-}
+// (13/10/2026) Los servicios aplicados a una cita ya no se quitan (registro de cobro): se corrige agregando otro.
 // ── HERRAMIENTAS DE EMERGENCIA ───────────────────────────────────────
 function populateEmergDoctorSelect() {
     const sel = document.getElementById('emergDoctor');
@@ -3622,7 +3617,7 @@ async function loadExpediente() {
                         </span>
                     </div>
                     <div>${escapeHtmlPanel(n.contenido)}</div>
-                    ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${n.dolor_inicial ?? '—'} → ${n.dolor_actual ?? '—'}</div>` : ''}
+                    ${(n.dolor_inicial !== null && n.dolor_inicial !== undefined) || (n.dolor_actual !== null && n.dolor_actual !== undefined) ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📊 ${t('exp.dolorLabel')}: ${escapeHtmlPanel(String(n.dolor_inicial ?? '—'))} → ${escapeHtmlPanel(String(n.dolor_actual ?? '—'))}</div>` : ''}
                     ${n.plan_tratamiento ? `<div style="font-size:13px;color:var(--gray-700);margin-top:4px">📋 ${escapeHtmlPanel(n.plan_tratamiento)}</div>` : ''}
                 </div>
             `).join('');
@@ -3918,7 +3913,7 @@ async function loadEquipo() {
             tbody.innerHTML = data.map(m => `
                 <tr>
                     <td>${escapeHtmlPanel(m.email)}</td>
-                    <td><span class="badge badge-success">${m.rol === 'dueno' ? t('set.rolAdmin') : m.rol === 'recepcionista' ? t('set.rolRecepcionista') : t('set.rolDoctor')}</span></td>
+                    <td><span class="badge badge-success">${m.rol === 'dueno' ? t('set.rolAdmin') : m.rol === 'recepcionista' ? t('set.rolRecepcionista') : m.rol === 'jefe_area' ? t('set.rolJefe') : t('set.rolDoctor')}</span></td>
                     <td><span class="badge ${m.status === 'activo' ? 'badge-success' : 'badge-warning'}">${escapeHtmlPanel(m.status)}</span></td>
                     <td><button class="btn btn-danger btn-sm" onclick="eliminarMiembro('${m.id}')">${t('common.eliminar')}</button></td>
                 </tr>
@@ -3928,8 +3923,9 @@ async function loadEquipo() {
 }
 document.getElementById('equipoRol')?.addEventListener('change', function() {
     const doctorGroup = document.getElementById('equipoDoctorGroup');
-    if (doctorGroup) doctorGroup.style.display = this.value === 'doctor' ? 'block' : 'none';
-    if (this.value === 'doctor') {
+    const conFicha = this.value === 'doctor' || this.value === 'jefe_area';      // (13/10/2026) el jefe de área también se vincula a su ficha de doctor
+    if (doctorGroup) doctorGroup.style.display = conFicha ? 'block' : 'none';
+    if (conFicha) {
         const sel = document.getElementById('equipoDoctor');
         if (sel) {
             sel.innerHTML = `<option value="">${t('common.elegirDoctor')}</option>` +
@@ -3946,7 +3942,7 @@ async function invitarMiembro() {
     try {
         await apiFetch('/equipo/invitar', {
             method: 'POST',
-            body: JSON.stringify({ email, rol, doctor_id: rol === 'doctor' ? doctor_id : null })
+            body: JSON.stringify({ email, rol, doctor_id: (rol === 'doctor' || rol === 'jefe_area') ? doctor_id : null })
         });
         alertEl.innerHTML = `<div class="alert alert-success">${t('set.msgInvitado', { email: escapeHtmlPanel(email) })}</div>`;
         document.getElementById('equipoEmail').value = '';
@@ -5031,7 +5027,7 @@ const translations = {
         'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
         'set.rec1': 'Primer recordatorio (horas antes de la cita)', 'set.rec2': 'Segundo recordatorio (horas antes de la cita)',
         'set.btnGuardar': 'Guardar', 'set.equipoTitle': 'Equipo', 'set.emailNuevo': 'Email del nuevo miembro',
-        'set.emailNuevoPh': 'doctor@clinica.com', 'set.rol': 'Rol', 'set.rolRecepcionista': 'Recepcionista', 'set.rolDoctor': 'Doctor',
+        'set.emailNuevoPh': 'doctor@clinica.com', 'set.rol': 'Rol', 'set.rolRecepcionista': 'Recepcionista', 'set.rolJefe': 'Jefe de área', 'set.rolDoctor': 'Doctor',
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Doctor asociado (si el rol es Doctor)', 'set.btnInvitar': 'Enviar invitación',
         'set.miembrosTitle': 'Miembros del equipo', 'set.colEmail': 'Email', 'set.sinMiembros': 'Sin miembros todavía',
         'set.errEmail': 'Ingresá un email', 'set.msgInvitado': 'Invitación enviada a {email} ✓', 'set.confirmEliminarMiembro': '¿Eliminar este miembro del equipo?',
@@ -5170,7 +5166,7 @@ const translations = {
         'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
         'set.rec1': 'First reminder (hours before appointment)', 'set.rec2': 'Second reminder (hours before appointment)',
         'set.btnGuardar': 'Save', 'set.equipoTitle': 'Team', 'set.emailNuevo': 'New member email',
-        'set.emailNuevoPh': 'doctor@clinic.com', 'set.rol': 'Role', 'set.rolRecepcionista': 'Receptionist', 'set.rolDoctor': 'Doctor',
+        'set.emailNuevoPh': 'doctor@clinic.com', 'set.rol': 'Role', 'set.rolRecepcionista': 'Receptionist', 'set.rolJefe': 'Area lead', 'set.rolDoctor': 'Doctor',
         'set.rolAdmin': 'Administrator', 'set.doctorAsociado': 'Associated doctor (if role is Doctor)', 'set.btnInvitar': 'Send invitation',
         'set.miembrosTitle': 'Team members', 'set.colEmail': 'Email', 'set.sinMiembros': 'No members yet',
         'set.errEmail': 'Enter an email', 'set.msgInvitado': 'Invitation sent to {email} ✓', 'set.confirmEliminarMiembro': 'Remove this team member?',
@@ -5309,7 +5305,7 @@ const translations = {
         'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
         'set.rec1': 'Primeiro lembrete (horas antes da consulta)', 'set.rec2': 'Segundo lembrete (horas antes da consulta)',
         'set.btnGuardar': 'Salvar', 'set.equipoTitle': 'Equipe', 'set.emailNuevo': 'Email do novo membro',
-        'set.emailNuevoPh': 'medico@clinica.com', 'set.rol': 'Função', 'set.rolRecepcionista': 'Recepcionista', 'set.rolDoctor': 'Médico',
+        'set.emailNuevoPh': 'medico@clinica.com', 'set.rol': 'Função', 'set.rolRecepcionista': 'Recepcionista', 'set.rolJefe': 'Chefe de área', 'set.rolDoctor': 'Médico',
         'set.rolAdmin': 'Administrador', 'set.doctorAsociado': 'Médico associado (se a função for Médico)', 'set.btnInvitar': 'Enviar convite',
         'set.miembrosTitle': 'Membros da equipe', 'set.colEmail': 'Email', 'set.sinMiembros': 'Nenhum membro ainda',
         'set.errEmail': 'Digite um email', 'set.msgInvitado': 'Convite enviado para {email} ✓', 'set.confirmEliminarMiembro': 'Remover este membro da equipe?',
