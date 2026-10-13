@@ -851,6 +851,7 @@
                     <div class="form-group"><label data-i18n="doc.especialidad">Especialidad</label><input type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
                     <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
                     <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div class="form-group" id="docJefeGrupo" style="display:none"><label for="docJefe" data-i18n="doc.jefe">Jefe de área (a quién reporta)</label><select id="docJefe"></select></div>
                     <div class="form-group"><label data-i18n="doc.telefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
                     <div class="form-group">
                         <label data-i18n="doc.dias">Días que atiende</label>
@@ -1491,6 +1492,8 @@ function aplicarPermisos() {
     // Solo ven Expedientes los doctores, o el dueño cuando está vinculado a un
     // registro de doctor (userDoctorId). Recepción nunca lo ve.
     if (userDoctorId && !visibles.includes('expedientes')) visibles.push('expedientes');
+    // (13/10/2026) Sin un profesional vinculado no hay expediente que ver: ni el dueño que no atiende ni un jefe de área sin ficha de doctor.
+    if (!userDoctorId) { const i = visibles.indexOf('expedientes'); if (i >= 0) visibles.splice(i, 1); }
     document.querySelectorAll('.nav-link[data-section]').forEach(btn => {
         const sec = btn.getAttribute('data-section');
         btn.style.display = visibles.includes(sec) ? 'flex' : 'none';
@@ -3146,13 +3149,27 @@ function editarDoctor(id) {
     document.getElementById('docInstrucciones').value = doc.instrucciones || '';
     document.getElementById('docFotoUrl').value = doc.foto_url || '';
     document.getElementById('docBio').value = doc.bio_corta || '';
+    cargarOpcionesJefe(doc);
     document.getElementById('doctorFormTitle').textContent = t('doc.editTitle');
     document.getElementById('doctorSubmitBtn').textContent = t('doc.btnGuardarCambios');
     document.getElementById('doctorFormTitle').scrollIntoView({ behavior: 'smooth' });
     actualizarPreviewSlotsDoctor();
 }
+// (13/10/2026) Jefe de área: solo el dueño define a quién reporta cada profesional (el jefe ve los expedientes de sus subalternos y cada apertura queda registrada).
+function cargarOpcionesJefe(doc) {
+    const grupo = document.getElementById('docJefeGrupo'), sel = document.getElementById('docJefe');
+    if (!grupo || !sel) return;
+    grupo.style.display = userRol === 'dueno' && doc ? 'block' : 'none';
+    sel.textContent = '';
+    const ninguno = document.createElement('option'); ninguno.value = ''; ninguno.textContent = t('doc.jefeNinguno'); sel.appendChild(ninguno);
+    (doctoresCache || []).filter(d => doc && d.id !== doc.id).forEach(d => {
+        const o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre || '—'; sel.appendChild(o);
+    });
+    sel.value = (doc && doc.jefe_doctor_id) || '';
+}
 function cancelarEdicionDoctor() {
     editandoDoctorId = null;
+    cargarOpcionesJefe(null);
     ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docTelefono', 'docHorario', 'docHoraInicio', 'docHoraFin', 'docAlmuerzoInicio', 'docAlmuerzoFin', 'docInstrucciones', 'docFotoUrl', 'docBio'].forEach(id => document.getElementById(id).value = '');
     marcarDias([]);
     horariosDiaCache = {};
@@ -3339,6 +3356,7 @@ async function guardarDoctor() {
     const dias_semana = diasSeleccionados();
     const horarios_por_dia = leerHorariosPorDia();
     const body = { nombre, especialidad, duracion_cita, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones, dias_semana, horarios_por_dia, foto_url, bio_corta };
+    if (editandoDoctorId && userRol === 'dueno') body.jefe_doctor_id = document.getElementById('docJefe').value || null;
     try {
         if (editandoDoctorId) {
             await apiFetch(`/doctores/${editandoDoctorId}`, {
@@ -3537,7 +3555,7 @@ async function loadAccesosExpediente(pacienteId) {
     // El backend solo se la muestra al dueño y al jefe de área. Se corta acá
     // para no pedir un 403 en cada expediente que abre un doctor — funcionaba
     // igual, pero llenaba la consola de errores que no son errores.
-    if (!['dueno', 'jefe_area'].includes(userRol)) { cont.innerHTML = ''; return; }
+    if (!['dueno', 'jefe_area', 'doctor'].includes(userRol)) { cont.innerHTML = ''; return; }      // (13/10/2026) el profesional también ve quién abrió sus notas
     try {
         const accesos = await apiFetch(`/expediente/accesos?paciente_id=${pacienteId}`);
         if (!accesos?.length) { cont.innerHTML = ''; return; }
@@ -3547,7 +3565,7 @@ async function loadAccesosExpediente(pacienteId) {
             </summary>
             <div style="margin-top:8px;font-size:12px;color:var(--gray-600)">
                 ${accesos.slice(0, 30).map(a => `<div style="padding:4px 0;border-bottom:1px solid var(--gray-200)">
-                    ${escapeHtmlPanel(a.usuario_email || a.usuario || '—')} · ${new Date(a.created_at).toLocaleString(getLocale())}
+                    ${escapeHtmlPanel(a.user_email || '—')}${a.rol_al_momento ? ' (' + escapeHtmlPanel(a.rol_al_momento) + ')' : ''} · ${new Date(a.created_at).toLocaleString(getLocale())}
                 </div>`).join('')}
             </div>
         </details>`;
@@ -5023,6 +5041,7 @@ const translations = {
         'citas.sinExpedienteTitulo': 'cita(s) atendida(s) sin nota en el expediente',
         'exp.confirmarAcceso': 'Vas a abrir el expediente de un paciente que no es tuyo. El acceso queda registrado con tu nombre en el historial de este paciente. ¿Continuar?',
         'exp.quienConsulto': 'Quién consultó este expediente',
+        'doc.jefe': 'Jefe de área (a quién reporta)', 'doc.jefeNinguno': 'Ninguno (no reporta a nadie)',
         'badge.recordatorio_enviado': 'Recordatorio enviado',
     },
     en: {
@@ -5161,6 +5180,7 @@ const translations = {
         'citas.sinExpedienteTitulo': 'completed appointment(s) with no record note',
         'exp.confirmarAcceso': 'You are about to open the record of a patient who is not yours. This access is logged with your name in the patient\'s history. Continue?',
         'exp.quienConsulto': 'Who accessed this record',
+        'doc.jefe': 'Area lead (who they report to)', 'doc.jefeNinguno': 'None (reports to no one)',
         'badge.recordatorio_enviado': 'Reminder sent',
     },
     pt: {
@@ -5299,6 +5319,7 @@ const translations = {
         'citas.sinExpedienteTitulo': 'consulta(s) atendida(s) sem nota no prontuário',
         'exp.confirmarAcceso': 'Você vai abrir o prontuário de um paciente que não é seu. O acesso fica registrado com o seu nome no histórico deste paciente. Continuar?',
         'exp.quienConsulto': 'Quem consultou este prontuário',
+        'doc.jefe': 'Chefe de área (a quem reporta)', 'doc.jefeNinguno': 'Nenhum (não reporta a ninguém)',
         'badge.recordatorio_enviado': 'Lembrete enviado',
     }
 };
