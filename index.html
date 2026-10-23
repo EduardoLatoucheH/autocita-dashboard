@@ -1092,6 +1092,21 @@
                         </table></div>
                     </div>
                 </div>
+                <!-- Material de la clínica para Sara (21/10/2026): políticas, preparación, ubicación, convenios. Solo dueño y recepción. -->
+                <div class="card" id="cardConocimiento" style="display:none">
+                    <div class="card-title" data-i18n="conoc.titulo">Material de la clínica para Sara</div>
+                    <p class="card-subtitle" data-i18n="conoc.desc">Subí políticas, preparación de estudios, ubicación y convenios para que Sara responda con esa información.</p>
+                    <div id="alertConocimiento"></div>
+                    <div class="form-group"><label for="conocTitulo" data-i18n="conoc.tituloDoc">Título del documento</label><input type="text" id="conocTitulo" maxlength="120" placeholder="Ej: Políticas de cancelación"></div>
+                    <div class="form-group"><label for="conocTexto" data-i18n="conoc.texto">Texto (pegá el contenido o cargá un archivo .txt o .md)</label><textarea id="conocTexto" rows="7" maxlength="200000"></textarea></div>
+                    <div class="form-group"><label for="conocArchivo" data-i18n="conoc.archivo">Cargar archivo .txt o .md</label><input type="file" id="conocArchivo" accept=".txt,.md,text/plain,text/markdown" onchange="leerArchivoConocimiento(this)"></div>
+                    <p class="card-subtitle" data-i18n="conoc.aviso">Solo material de la clínica: nunca datos de pacientes ni instrucciones para el asistente. Si Sara no encuentra la respuesta acá, lo consulta con una persona.</p>
+                    <button class="btn btn-block" id="conocGuardarBtn" onclick="guardarConocimiento()" data-i18n="conoc.btnGuardar">Guardar material</button>
+                    <div class="table-wrap" style="margin-top:16px"><table>
+                        <thead><tr><th data-i18n="conoc.colDoc">Documento</th><th data-i18n="conoc.colFecha">Fecha</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                        <tbody id="tablaConocimiento"><tr><td colspan="3" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                    </table></div>
+                </div>
             </section>
         </div>
     </div>
@@ -2382,6 +2397,65 @@ async function cancelarCita(citaId) {
 }
 // ── SERVICIOS Y FACTURACIÓN ───────────────────────────────────────
 let serviciosCache = [];
+// ── Material de la clínica para Sara (21/10/2026) ─────────────────────────────────────────────
+// Solo dueño y recepción (el servidor lo vuelve a verificar). Todo texto del usuario se pinta con textContent / escapeHtmlPanel.
+const CONOC_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function cargarConocimiento() {
+    const card = document.getElementById('cardConocimiento');
+    if (!card) return;
+    if (!['dueno', 'recepcionista'].includes(userRol)) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    const tbody = document.getElementById('tablaConocimiento');
+    try {
+        const docs = await apiFetch('/conocimiento');
+        tbody.replaceChildren();
+        if (!docs.length) {
+            const tr = document.createElement('tr'), td = document.createElement('td');
+            td.colSpan = 3; td.style.cssText = 'text-align:center;color:var(--gray-500)'; td.textContent = t('conoc.vacio'); tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        docs.forEach(d => {
+            if (!CONOC_UUID.test(String(d.id))) return;
+            const tr = document.createElement('tr'), a = document.createElement('td'), f = document.createElement('td'), x = document.createElement('td');
+            const fuerte = document.createElement('strong'); fuerte.textContent = d.titulo; a.appendChild(fuerte);
+            f.textContent = d.creado_at ? new Date(d.creado_at).toLocaleDateString(getLocale()) : '';
+            const b = document.createElement('button'); b.className = 'btn btn-sm btn-danger'; b.textContent = t('conoc.btnBorrar');
+            b.addEventListener('click', () => borrarConocimiento(d.id));
+            x.appendChild(b); tr.append(a, f, x); tbody.appendChild(tr);
+        });
+    } catch (e) { console.error('Conocimiento:', e); }
+}
+function leerArchivoConocimiento(input) {
+    const alertEl = document.getElementById('alertConocimiento'), f = input.files && input.files[0];
+    if (!f) return;
+    alertEl.replaceChildren();
+    if (!/\.(txt|md)$/i.test(f.name) || f.size > 200000) {
+        const d = document.createElement('div'); d.className = 'alert alert-error'; d.textContent = t('conoc.errArchivo'); alertEl.appendChild(d); input.value = ''; return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => {
+        document.getElementById('conocTexto').value = String(lector.result || '');
+        const ti = document.getElementById('conocTitulo'); if (!ti.value.trim()) ti.value = f.name.replace(/\.(txt|md)$/i, '').slice(0, 120);
+    };
+    lector.readAsText(f, 'utf-8');
+}
+async function guardarConocimiento() {
+    const alertEl = document.getElementById('alertConocimiento'), btn = document.getElementById('conocGuardarBtn');
+    const archivo = document.getElementById('conocArchivo').files && document.getElementById('conocArchivo').files[0];
+    const body = { titulo: document.getElementById('conocTitulo').value.trim(), texto: document.getElementById('conocTexto').value, nombre_archivo: archivo ? archivo.name : undefined };
+    const aviso = (tipo, txt) => { const d = document.createElement('div'); d.className = 'alert alert-' + tipo; d.textContent = txt; alertEl.replaceChildren(d); };
+    btn.disabled = true;
+    try {
+        const r = await apiFetch('/conocimiento', { method: 'POST', body: JSON.stringify(body) });
+        aviso('success', t('conoc.guardado', { n: r.fragmentos }));
+        ['conocTitulo', 'conocTexto', 'conocArchivo'].forEach(id => { document.getElementById(id).value = ''; });
+        cargarConocimiento();
+    } catch (e) { aviso('error', e.message); }
+    btn.disabled = false;
+}
+async function borrarConocimiento(id) {
+    if (!CONOC_UUID.test(String(id)) || !confirm(t('conoc.confirmarBorrar'))) return;
+    try { await apiFetch(`/conocimiento/${id}`, { method: 'DELETE' }); cargarConocimiento(); } catch (e) { alert('Error: ' + e.message); }
+}
 async function loadServicios() {
     try {
         const data = await apiFetch('/servicios');
@@ -4137,6 +4211,7 @@ function showSection(id, btn) {
     document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
+    if (id === 'settings') cargarConocimiento();      // (21/10/2026) material de la clínica para Sara (solo dueño y recepción)
     if (id === 'bloqueos') loadBloqueos();
     if (id === 'inbox') loadConversaciones();
     if (id === 'ayuda') cargarSoporte();
@@ -4911,6 +4986,7 @@ const translations = {
         'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
+        'conoc.titulo': 'Material de la clínica para Sara', 'conoc.desc': 'Subí políticas, preparación de estudios, ubicación y convenios para que Sara responda con esa información.', 'conoc.tituloDoc': 'Título del documento', 'conoc.texto': 'Texto (pegá el contenido o cargá un archivo .txt o .md)', 'conoc.archivo': 'Cargar archivo .txt o .md', 'conoc.aviso': 'Solo material de la clínica: nunca datos de pacientes ni instrucciones para el asistente. Si Sara no encuentra la respuesta acá, lo consulta con una persona.', 'conoc.btnGuardar': 'Guardar material', 'conoc.guardado': 'Material guardado ✓ ({n} fragmentos)', 'conoc.vacio': 'Todavía no hay documentos.', 'conoc.confirmarBorrar': '¿Borrar este documento?', 'conoc.colDoc': 'Documento', 'conoc.colFecha': 'Fecha', 'conoc.btnBorrar': 'Borrar', 'conoc.errArchivo': 'Solo archivos .txt o .md de hasta 200 KB.',
         'title.facturacion': 'Facturación', 'title.expedientes': 'Expedientes', 'title.settings': 'Configuración',
         'login.tabLogin': 'Iniciar sesión', 'login.tabRegister': 'Crear cuenta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
         'login.password': 'Contraseña', 'login.passwordPh': 'Mín. 10: mayúscula, minúscula y número', 'login.confirmPassword': 'Confirmar contraseña',
@@ -5050,6 +5126,7 @@ const translations = {
         'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
+        'conoc.titulo': 'Clinic material for Sara', 'conoc.desc': 'Upload policies, exam preparation, location and insurance agreements so Sara answers with that information.', 'conoc.tituloDoc': 'Document title', 'conoc.texto': 'Text (paste the content or upload a .txt or .md file)', 'conoc.archivo': 'Upload a .txt or .md file', 'conoc.aviso': 'Clinic material only: never patient data or instructions for the assistant. If Sara cannot find the answer here, she checks with a person.', 'conoc.btnGuardar': 'Save material', 'conoc.guardado': 'Material saved ✓ ({n} fragments)', 'conoc.vacio': 'There are no documents yet.', 'conoc.confirmarBorrar': 'Delete this document?', 'conoc.colDoc': 'Document', 'conoc.colFecha': 'Date', 'conoc.btnBorrar': 'Delete', 'conoc.errArchivo': 'Only .txt or .md files up to 200 KB.',
         'title.facturacion': 'Billing', 'title.expedientes': 'Records', 'title.settings': 'Settings',
         'login.tabLogin': 'Sign in', 'login.tabRegister': 'Create account', 'login.email': 'Email', 'login.emailPh': 'email@clinic.com',
         'login.password': 'Password', 'login.passwordPh': 'Min. 10: uppercase, lowercase and a digit', 'login.confirmPassword': 'Confirm password',
@@ -5189,6 +5266,7 @@ const translations = {
         'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
+        'conoc.titulo': 'Material da clínica para a Sara', 'conoc.desc': 'Envie políticas, preparo de exames, localização e convênios para que a Sara responda com essas informações.', 'conoc.tituloDoc': 'Título do documento', 'conoc.texto': 'Texto (cole o conteúdo ou envie um arquivo .txt ou .md)', 'conoc.archivo': 'Enviar arquivo .txt ou .md', 'conoc.aviso': 'Somente material da clínica: nunca dados de pacientes nem instruções para o assistente. Se a Sara não encontrar a resposta aqui, ela consulta uma pessoa.', 'conoc.btnGuardar': 'Salvar material', 'conoc.guardado': 'Material salvo ✓ ({n} trechos)', 'conoc.vacio': 'Ainda não há documentos.', 'conoc.confirmarBorrar': 'Excluir este documento?', 'conoc.colDoc': 'Documento', 'conoc.colFecha': 'Data', 'conoc.btnBorrar': 'Excluir', 'conoc.errArchivo': 'Somente arquivos .txt ou .md de até 200 KB.',
         'title.facturacion': 'Faturamento', 'title.expedientes': 'Prontuários', 'title.settings': 'Configurações',
         'login.tabLogin': 'Entrar', 'login.tabRegister': 'Criar conta', 'login.email': 'Email', 'login.emailPh': 'email@clinica.com',
         'login.password': 'Senha', 'login.passwordPh': 'Mín. 10: maiúscula, minúscula e número', 'login.confirmPassword': 'Confirmar senha',
