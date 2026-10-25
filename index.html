@@ -1315,7 +1315,7 @@ async function register() {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassMatch')}</div>`;
         return;
     }
-    if (!(pass && pass.length >= 10 && /[a-z]/.test(pass) && /[A-Z]/.test(pass) && /\d/.test(pass))) {
+    if (!ClaveSegura.evaluar(pass).cumple) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
@@ -1328,11 +1328,11 @@ async function register() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || t('login.errCrearCuenta'));
         const token = data.session?.access_token;
-        if (!token) throw new Error(t('login.errSinToken'));
+        if (!token) { alertEl.innerHTML = `<div class="alert alert-success">${t('login.confirmaCorreo')}</div>`; switchAuthTab('login'); return; }   // (25/10/2026) con "Confirm email" activo no hay sesión hasta confirmar
         setToken(token);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(e.message) + '</div>';
+        alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(ClaveSegura.mensajeServidor(e.message)) + '</div>';
     }
 }
 async function login() {
@@ -1383,11 +1383,210 @@ function detectarInvitacion() {
     // no dejar el access_token visible en la barra de direcciones).
     history.replaceState(null, '', window.location.pathname + window.location.search);
 }
+// <compartido:enlace-panel>
+// ─── Enlace del correo en los paneles (FUENTE ÚNICA, 24/10/2026) ──────────────────────────────────────────────────────────
+// Se copia con `python3 build-compartido.py` a autocita-dashboard.html y autoventas-dashboard.html. Editar SOLO este archivo.
+// Lee ?token_hash=…&type=… , lo borra de la barra de direcciones, lo manda al backend (/auth/verificar-enlace) y muestra el resultado.
+// invite y recovery devuelven un access_token: se lo pasa a opc.alVerificar para que el panel muestre "elegí tu contraseña".
+// Todo texto del servidor se pinta con textContent. Reenvío con espera de 60 s y máximo 3 por visita (el servidor también limita).
+let enlaceCorreoPendiente = false;
+function detectarEnlaceToken(opc) {
+  const q = new URLSearchParams(window.location.search);
+  const tokenHash = q.get('token_hash'), tipo = q.get('type');
+  if (!tokenHash) return;
+  enlaceCorreoPendiente = true;
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* nada */ }
+  const zona = () => opc.alerta();
+  const aviso = (texto, clase) => {
+    const z = zona(); z.textContent = '';
+    const d = document.createElement('div'); d.className = 'alert ' + clase; d.setAttribute('role', 'status'); d.textContent = texto; z.appendChild(d);
+    return z;
+  };
+  const ofrecerReenvio = () => {
+    const z = aviso('Este enlace ya no está disponible. Pudo haber vencido o ya se usó. Escribí tu correo y te enviamos uno nuevo.', 'alert-error');
+    const campo = document.createElement('input'); campo.type = 'email'; campo.autocomplete = 'email'; campo.maxLength = 254; campo.setAttribute('aria-label', 'Correo');
+    campo.style.cssText = 'width:100%;margin-top:8px;padding:10px;border:1px solid #bbb;border-radius:8px;font:inherit';
+    const boton = document.createElement('button'); boton.type = 'button'; boton.className = 'btn'; boton.textContent = 'Reenviar correo de confirmación'; boton.style.marginTop = '8px';
+    const estado = document.createElement('div'); estado.setAttribute('role', 'status'); estado.style.marginTop = '8px';
+    let pedidos = 0, ultimo = 0;
+    boton.addEventListener('click', async () => {
+      const correo = campo.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) { estado.textContent = 'Revisá el correo.'; return; }
+      const espera = 60000 - (Date.now() - ultimo);
+      if (pedidos >= 3) { estado.textContent = 'Ya enviamos varios correos. Esperá unos minutos y probá de nuevo.'; return; }
+      if (pedidos > 0 && espera > 0) { estado.textContent = 'Esperá ' + Math.ceil(espera / 1000) + ' segundos antes de pedir otro.'; return; }
+      pedidos++; ultimo = Date.now(); boton.disabled = true;
+      try {
+        const r = await fetch(opc.api + '/auth/reenviar-enlace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: correo, tipo: tipo === 'recovery' ? 'recovery' : 'signup' }) });
+        const d = await r.json().catch(() => ({}));
+        estado.textContent = r.ok ? (d.mensaje || 'Listo, revisá tu correo.') : (d.error || 'No se pudo enviar. Probá de nuevo en un momento.');
+      } catch (e) { estado.textContent = 'No hay conexión. Revisá tu internet e intentá de nuevo.'; }
+      boton.disabled = false;
+    });
+    z.appendChild(campo); z.appendChild(boton); z.appendChild(estado);
+  };
+  fetch(opc.api + '/auth/verificar-enlace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token_hash: tokenHash, type: tipo }) })
+    .then(async (r) => ({ r, d: await r.json().catch(() => ({})) }))
+    .then(({ r, d }) => {
+      enlaceCorreoPendiente = false;
+      if (!r.ok) { if (r.status === 410) ofrecerReenvio(); else aviso('No pudimos confirmar tu cuenta. Probá de nuevo en un momento o pedí un enlace nuevo.', 'alert-error'); return; }
+      if (d.access_token && (d.tipo === 'invite' || d.tipo === 'recovery')) { zona().textContent = ''; opc.alVerificar(d.tipo, d.access_token); return; }
+      aviso('Tu correo quedó confirmado. Ya podés iniciar sesión.', 'alert-success');
+    })
+    .catch(() => { enlaceCorreoPendiente = false; aviso('No pudimos verificar el enlace. Revisá tu conexión e intentá de nuevo.', 'alert-error'); });
+}
+// </compartido:enlace-panel>
+// <compartido:acceso-ui>
+// ─── Acceso: barra de seguridad de la contraseña y "Recordar mi correo" (FUENTE ÚNICA, 25/10/2026) ───────────────────────
+// Se copia con `python3 build-compartido.py` a pluggs-app/js/acceso-ui.js, autocita-dashboard.html y autoventas-dashboard.html. Editar SOLO este archivo.
+//  • ClaveSegura: el cálculo es LOCAL; la contraseña no se envía a ningún servicio ni se escribe en logs. Los requisitos son los que el servidor exige
+//    (10 o más caracteres, mayúscula, minúscula y número), más "no es una clave muy común". La barra es orientación: el servidor valida de todos modos.
+//  • RecordarCorreo: guarda SOLO el correo en localStorage (con try/catch) si la casilla está marcada; al desmarcar se borra. Nunca claves ni tokens.
+// Pruebas: pluggs-api/tests/acceso-ui.test.js.
+(function (raiz) {
+  'use strict';
+  var COMUNES = ['password', 'contrasena', 'contraseña', 'qwertyuiop', 'qwerty', 'iloveyou', 'admin', 'welcome', 'letmein', 'monkey', 'dragon', 'football', 'baseball',
+    'sunshine', 'princess', 'azerty', 'abc123', 'abcdefgh', 'pluggs', 'autocita', 'autoventas', 'automatia', 'costarica', 'puravida', 'clinica', 'tienda', 'passw0rd'];
+  var SOLO_NUMEROS = /^(?:0123456789|1234567890|123456789|12345678|1234567|987654321|0000000000|1111111111)$/;
+  var SECUENCIAS = ['abcdefghijklmnopqrstuvwxyz', 'zyxwvutsrqponmlkjihgfedcba', '0123456789', '9876543210', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+  var ETIQUETAS = ['Débil', 'Regular', 'Buena', 'Fuerte'];
+  var COLORES = ['#d93f3f', '#b87400', '#2e9e6b', '#1a8f4e'];   // tonos medios: contraste de 3:1 o más (elementos gráficos) tanto sobre fondo claro como oscuro; el nivel se dice también con texto
+
+  function esComun(clave) {
+    var m = String(clave).toLowerCase();
+    if (SOLO_NUMEROS.test(m)) return true;
+    for (var i = 0; i < COMUNES.length; i++) { if (m.indexOf(COMUNES[i]) === 0 && /^[0-9!@#$%^&*._-]{0,6}$/.test(m.slice(COMUNES[i].length))) return true; }   // clave común + hasta 6 números o símbolos al final
+    return false;
+  }
+  function tieneSecuencia(clave) {
+    var m = String(clave).toLowerCase();
+    for (var i = 0; i + 4 <= m.length; i++) { var t = m.substr(i, 4); for (var j = 0; j < SECUENCIAS.length; j++) { if (SECUENCIAS[j].indexOf(t) >= 0) return true; } }
+    return false;
+  }
+  function contiene(clave, dato, minimo) {
+    var d = String(dato || '').toLowerCase().trim(); if (!d) return false;
+    var m = String(clave).toLowerCase();
+    var partes = d.indexOf('@') > 0 ? [d.split('@')[0]] : d.split(/[^a-z0-9áéíóúñ]+/);
+    return partes.some(function (p) { return p.length >= minimo && m.indexOf(p) >= 0; });
+  }
+
+  // evaluar(clave, { correo, nombre }) → { cumple, nivel (0 a 3), etiqueta, requisitos: [{ id, texto, ok }] }
+  function evaluar(clave, datos) {
+    clave = String(clave == null ? '' : clave); datos = datos || {};
+    var comun = clave.length > 0 && esComun(clave);
+    var req = [
+      { id: 'largo', texto: '10 caracteres como mínimo', ok: clave.length >= 10 },
+      { id: 'mayus', texto: 'Una letra mayúscula', ok: /[A-Z]/.test(clave) },
+      { id: 'minus', texto: 'Una letra minúscula', ok: /[a-z]/.test(clave) },
+      { id: 'numero', texto: 'Un número', ok: /\d/.test(clave) },
+      { id: 'comun', texto: 'No es una contraseña muy común', ok: clave.length > 0 && !comun },
+    ];
+    var cumple = req.every(function (r) { return r.ok; });
+    var pts = 0;
+    if (clave.length >= 10) pts++; if (clave.length >= 12) pts++; if (clave.length >= 16) pts++;
+    var clases = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(clave); }).length;
+    if (clases >= 3) pts++; if (clases === 4) pts++;
+    if (/(.)\1{2,}/.test(clave)) pts--;
+    if (tieneSecuencia(clave)) pts--;
+    if (contiene(clave, datos.correo, 4) || contiene(clave, datos.nombre, 4)) pts -= 2;
+    var nivel = pts <= 2 ? 0 : pts === 3 ? 1 : pts === 4 ? 2 : 3;
+    if (!cumple) nivel = Math.min(nivel, clave.length < 8 ? 0 : 1);
+    if (comun) nivel = 0;
+    return { cumple: cumple, nivel: nivel, etiqueta: ETIQUETAS[nivel], requisitos: req };
+  }
+
+  // Convierte el error del servidor sobre la clave en un mensaje claro (se muestra bajo el campo).
+  function mensajeServidor(texto) {
+    var t = String(texto || '');
+    if (/weak|d[eé]bil|common|filtrad|pwned|leaked|easy to guess|compromised|known to be/i.test(t)) return 'Esa contraseña no es lo bastante segura o es muy común. Elegí otra con al menos 10 caracteres, mayúsculas, minúsculas y números.';
+    if (/at least|minimum|too short|muy corta|10 caracteres/i.test(t)) return 'La contraseña debe tener al menos 10 caracteres, con mayúsculas, minúsculas y números.';
+    return t;
+  }
+
+  var ESTILO_ID = 'claveSeguraEstilos';
+  function inyectarEstilos() {
+    if (document.getElementById(ESTILO_ID)) return;
+    var s = document.createElement('style'); s.id = ESTILO_ID;
+    s.textContent = '.cs-caja{margin-top:8px;font-size:13px;line-height:1.45}.cs-barra{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0}' +
+      '.cs-barra span{height:6px;border-radius:3px;background:rgba(128,128,128,.3)}.cs-nivel{font-weight:700}' +
+      '.cs-lista{list-style:none;margin:6px 0 0;padding:0}.cs-lista li{display:flex;gap:6px;align-items:baseline;opacity:.85}.cs-lista li.ok{opacity:1;font-weight:600}' +
+      '.cs-lista li::before{content:"○";flex:none}.cs-lista li.ok::before{content:"✓"}' +
+      '.cs-ver{min-height:44px;margin-top:2px;padding:6px 4px;background:none;border:none;color:inherit;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}' +
+      '.cs-ver:focus-visible,.rc-caja input:focus-visible{outline:3px solid #c1662f;outline-offset:2px}' +
+      '.rc-caja{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:4px;font-size:13px;cursor:pointer}.rc-caja input{width:20px;height:20px;flex:none;margin:0}';
+    document.head.appendChild(s);
+  }
+
+  var contador = 0;
+  // montar(input, { correo: fn, nombre: fn, tambien: [inputs a mostrar/ocultar a la vez], onCambio: fn(cumple) }) → { cumple(), evaluar() }
+  function montar(input, opc) {
+    opc = opc || {}; inyectarEstilos(); var id = 'cs' + (++contador);
+    input.setAttribute('autocomplete', 'new-password'); input.setAttribute('aria-describedby', id + '-lista');
+    var caja = document.createElement('div'); caja.className = 'cs-caja';
+    var ver = document.createElement('button'); ver.type = 'button'; ver.className = 'cs-ver'; ver.setAttribute('aria-pressed', 'false'); ver.textContent = 'Mostrar contraseña';
+    var barra = document.createElement('div'); barra.className = 'cs-barra'; barra.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 4; i++) barra.appendChild(document.createElement('span'));
+    var estado = document.createElement('div'); estado.setAttribute('aria-live', 'polite'); estado.setAttribute('aria-atomic', 'true');
+    var lista = document.createElement('ul'); lista.className = 'cs-lista'; lista.id = id + '-lista'; lista.setAttribute('aria-label', 'Requisitos de la contraseña');
+    caja.appendChild(ver); caja.appendChild(barra); caja.appendChild(estado); caja.appendChild(lista);
+    input.insertAdjacentElement('afterend', caja);
+    var todos = [input].concat(opc.tambien || []);
+    ver.addEventListener('click', function () {
+      var mostrar = input.type === 'password';
+      todos.forEach(function (c) { c.type = mostrar ? 'text' : 'password'; });
+      ver.setAttribute('aria-pressed', mostrar ? 'true' : 'false'); ver.textContent = mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña';
+    });
+    var ultimo = { texto: '' }, ultimoOk = null;
+    function actualizar() {
+      var r = evaluar(input.value, { correo: opc.correo ? opc.correo() : '', nombre: opc.nombre ? opc.nombre() : '' });
+      var vacia = input.value.length === 0;
+      Array.prototype.forEach.call(barra.children, function (seg, k) { seg.style.background = !vacia && k <= r.nivel ? COLORES[r.nivel] : ''; });
+      var texto = vacia ? '' : 'Seguridad: ' + r.etiqueta;
+      if (texto !== ultimo.texto) { estado.textContent = ''; var b = document.createElement('span'); b.className = 'cs-nivel'; b.textContent = texto; if (texto) estado.appendChild(b); ultimo.texto = texto; }
+      lista.textContent = '';
+      r.requisitos.forEach(function (q) { var li = document.createElement('li'); if (q.ok) li.className = 'ok'; li.textContent = q.texto + (q.ok ? ' (cumplido)' : ''); lista.appendChild(li); });
+      if (opc.onCambio && ultimoOk !== r.cumple) { ultimoOk = r.cumple; opc.onCambio(r.cumple); }
+      return r;
+    }
+    input.addEventListener('input', actualizar);
+    actualizar();
+    return { cumple: function () { return actualizar().cumple; }, evaluar: actualizar };
+  }
+
+  // ── Recordar mi correo ─────────────────────────────────────────────────────────────────────────────────────────────
+  var CORREO_OK = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function leerCorreo(clave) { try { var v = localStorage.getItem(clave); return v && v.length <= 254 && CORREO_OK.test(v) ? v : ''; } catch (e) { return ''; } }
+  function guardarCorreo(clave, v) { try { localStorage.setItem(clave, v); } catch (e) { /* modo privado: simplemente no se recuerda */ } }
+  function borrarCorreo(clave) { try { localStorage.removeItem(clave); } catch (e) { /* nada */ } }
+  // montar(input, { clave, autocomplete, sinCasilla }) — con casilla "Recordar mi correo"; sinCasilla solo rellena (y mantiene al día si ya se eligió recordar).
+  function montarCorreo(input, opc) {
+    opc = opc || {}; var clave = opc.clave || 'correo_recordado_v1';
+    input.setAttribute('autocomplete', opc.autocomplete || 'username');
+    var guardado = leerCorreo(clave); if (guardado && !input.value) input.value = guardado;
+    if (opc.sinCasilla) { input.addEventListener('input', function () { if (leerCorreo(clave) && CORREO_OK.test(input.value.trim())) guardarCorreo(clave, input.value.trim()); }); return {}; }
+    inyectarEstilos();
+    var et = document.createElement('label'); et.className = 'rc-caja';
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !!guardado;
+    var tx = document.createElement('span'); tx.textContent = 'Recordar mi correo';
+    et.appendChild(cb); et.appendChild(tx);
+    var ancla = input.parentNode && input.parentNode.tagName !== 'BODY' ? input.parentNode : input;
+    ancla.insertAdjacentElement('afterend', et);
+    function sincronizar() { var v = input.value.trim(); if (cb.checked && CORREO_OK.test(v) && v.length <= 254) guardarCorreo(clave, v); }
+    cb.addEventListener('change', function () { if (cb.checked) sincronizar(); else borrarCorreo(clave); });
+    input.addEventListener('input', sincronizar);
+    input.addEventListener('change', sincronizar);
+    return { guardar: sincronizar };
+  }
+
+  raiz.ClaveSegura = { evaluar: evaluar, montar: montar, mensajeServidor: mensajeServidor };
+  raiz.RecordarCorreo = { montar: montarCorreo };
+})(typeof window !== 'undefined' ? window : globalThis);
+// </compartido:acceso-ui>
 async function aceptarInvitacion() {
     const alertEl = document.getElementById('loginAlert');
     const pass = document.getElementById('invitePass').value;
     const pass2 = document.getElementById('invitePass2').value;
-    if (!(pass && pass.length >= 10 && /[a-z]/.test(pass) && /[A-Z]/.test(pass) && /\d/.test(pass))) {
+    if (!ClaveSegura.evaluar(pass).cumple) {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
@@ -1406,7 +1605,7 @@ async function aceptarInvitacion() {
         setToken(inviteAccessToken);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(ClaveSegura.mensajeServidor(e.message))}</div>`;
     }
 }
 function logout() {
@@ -5008,7 +5207,7 @@ const translations = {
         'invite.btnActivar': 'Activar mi cuenta', 'invite.errActivar': 'No se pudo activar la cuenta. Pedile al dueño que te reenvíe la invitación.',
         'login.errCampos': 'Completá todos los campos', 'login.errPassMatch': 'Las contraseñas no coinciden',
         'login.errPassLen': 'La contraseña debe tener al menos 10 caracteres, con mayúsculas, minúsculas y números', 'login.errCrearCuenta': 'Error al crear la cuenta',
-        'login.errSinToken': 'No se recibió token', 'login.errCredenciales': 'Credenciales inválidas',
+        'login.errSinToken': 'No se recibió token', 'login.confirmaCorreo': 'Cuenta creada. Te enviamos un correo para confirmar tu dirección: tocá el enlace y después iniciá sesión.', 'login.errCredenciales': 'Credenciales inválidas',
         'login.sesionExpirada': 'Tu sesión expiró. Ingresá de nuevo.',
         'common.loading': 'Cargando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Fecha', 'common.colHora': 'Hora',
         'common.colEstado': 'Estado', 'common.colNombre': 'Nombre', 'common.colAccion': 'Acción', 'common.paciente': 'Paciente',
@@ -5148,7 +5347,7 @@ const translations = {
         'invite.btnActivar': 'Activate my account', 'invite.errActivar': 'Could not activate the account. Ask the owner to resend the invitation.',
         'login.errCampos': 'Fill in all fields', 'login.errPassMatch': 'Passwords do not match',
         'login.errPassLen': 'Password must be at least 10 characters, with uppercase, lowercase letters and digits', 'login.errCrearCuenta': 'Error creating account',
-        'login.errSinToken': 'No token received', 'login.errCredenciales': 'Invalid credentials',
+        'login.errSinToken': 'No token received', 'login.confirmaCorreo': 'Account created. We sent you an email to confirm your address: tap the link, then sign in.', 'login.errCredenciales': 'Invalid credentials',
         'login.sesionExpirada': 'Your session expired. Please log in again.',
         'common.loading': 'Loading...', 'common.colPaciente': 'Patient', 'common.colFecha': 'Date', 'common.colHora': 'Time',
         'common.colEstado': 'Status', 'common.colNombre': 'Name', 'common.colAccion': 'Action', 'common.paciente': 'Patient',
@@ -5288,7 +5487,7 @@ const translations = {
         'invite.btnActivar': 'Ativar minha conta', 'invite.errActivar': 'Não foi possível ativar a conta. Peça ao dono para reenviar o convite.',
         'login.errCampos': 'Preencha todos os campos', 'login.errPassMatch': 'As senhas não coincidem',
         'login.errPassLen': 'A senha deve ter pelo menos 10 caracteres, com maiúsculas, minúsculas e números', 'login.errCrearCuenta': 'Erro ao criar a conta',
-        'login.errSinToken': 'Nenhum token recebido', 'login.errCredenciales': 'Credenciais inválidas',
+        'login.errSinToken': 'Nenhum token recebido', 'login.confirmaCorreo': 'Conta criada. Enviamos um e-mail para confirmar o seu endereço: toque no link e depois entre.', 'login.errCredenciales': 'Credenciais inválidas',
         'login.sesionExpirada': 'Sua sessão expirou. Entre novamente.',
         'common.loading': 'Carregando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Data', 'common.colHora': 'Hora',
         'common.colEstado': 'Status', 'common.colNombre': 'Nome', 'common.colAccion': 'Ação', 'common.paciente': 'Paciente',
@@ -5450,8 +5649,25 @@ document.querySelectorAll('.lang-btn').forEach(b => {
     else b.classList.remove('active');
 });
 applyPanelLang(currentLang, { skipReload: true });
+// (24/10/2026) Enlace nuevo del correo (?token_hash=…): lo confirma el servidor; invite/recovery siguen al paso de elegir contraseña.
+// (25/10/2026) "Recordar mi correo" y barra de seguridad de la clave (fuente: compartido/acceso-ui.js).
+RecordarCorreo.montar(document.getElementById('loginEmail'), { clave: 'autocita_correo_recordado_v1', autocomplete: 'username' });
+document.getElementById('loginPassword').setAttribute('autocomplete', 'current-password');
+document.getElementById('regEmail').setAttribute('autocomplete', 'email');
+ClaveSegura.montar(document.getElementById('regPass'), { correo: () => document.getElementById('regEmail').value, nombre: () => document.getElementById('regNombre').value, tambien: [document.getElementById('regPass2')] });
+ClaveSegura.montar(document.getElementById('invitePass'), { tambien: [document.getElementById('invitePass2')] });
+detectarEnlaceToken({
+    api: API,
+    alerta: () => document.getElementById('loginAlert'),
+    alVerificar: (tipo, token) => {
+        inviteAccessToken = token;
+        document.querySelectorAll('.auth-tab').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.auth-pane').forEach(el => el.classList.remove('active'));
+        document.getElementById('paneAceptarInvitacion').classList.add('active');
+    },
+});
 detectarInvitacion();
-if (!inviteAccessToken && getToken()) {
+if (!enlaceCorreoPendiente && !inviteAccessToken && getToken()) {
     showApp();
     setInterval(() => { if (getToken()) loadAll(); }, 45000);
 }
