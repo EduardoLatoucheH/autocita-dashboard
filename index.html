@@ -536,7 +536,7 @@
             <button class="nav-link" data-section="redes" data-i18n="nav.redes" onclick="showSection('redes', this)">Redes</button>
             <button class="nav-link" data-section="expedientes" data-i18n="nav.expedientes" onclick="showSection('expedientes', this)">Expedientes</button>
             <button class="nav-link" data-section="settings" data-i18n="nav.settings" onclick="showSection('settings', this)">Settings</button>
-            <button class="nav-link" data-section="ayuda" data-i18n="nav.ayuda" onclick="showSection('ayuda', this)">Ayuda</button>
+            <button class="nav-link" data-section="ayuda" data-i18n="nav.ayuda" onclick="showSection('ayuda', this)">Centro de ayuda</button>
         </div>
         <button class="nav-link logout-link" data-i18n="nav.logout" onclick="logout()">Logout</button>
     </aside>
@@ -999,7 +999,7 @@
             </section>
             <!-- Ayuda y sugerencias (27/09/2026) -->
             <section class="section" id="ayuda">
-                <h2 style="margin-bottom: 24px;" data-i18n="title.ayuda">Ayuda y sugerencias</h2>
+                <h2 style="margin-bottom: 24px;" data-i18n="title.ayuda">Centro de ayuda</h2>
                 <div class="sop-grid">
                     <div class="card">
                         <div class="card-title" data-i18n="sop.ayudaTitle">¿Necesitás ayuda?</div>
@@ -1273,6 +1273,7 @@ async function apiFetch(path, opts = {}) {
         sessionExpired();
         throw new Error('Sesión expirada');
     }
+    if (res.status === 402) { pagoPendienteGate(() => {}); throw new Error('Cuenta pendiente de pago'); }   // Fix (25/10/2026)
     const data = await res.json();
     // El backend manda el motivo real de Meta en `detalle` (ej: "Template name
     // does not exist", "Recipient phone number not in allowed list"). Antes se
@@ -1613,11 +1614,76 @@ function logout() {
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('loginScreen').classList.add('visible');
 }
+// <compartido:pago-pendiente-panel>
+// Pantalla «Activá tu plan» (25/10/2026): una cuenta en 'pago_pendiente' ve cómo pagar y no entra al panel hasta que Eduardo la activa.
+// Fuente única para los dashboards de AutoCita y AutoVentas. Editar acá, nunca las copias.
+// Seguridad: los datos de pago llegan del servidor (tabla ajustes_pago) y se pintan SOLO con textContent; nunca de la URL ni del usuario.
+function ppPantalla(inst, avisado) {
+  let capa = document.getElementById('pagoPendiente');
+  if (capa) capa.remove();
+  document.getElementById('appContainer').style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('visible');
+  capa = document.createElement('div');
+  capa.id = 'pagoPendiente';
+  capa.style.cssText = 'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:var(--bg,#f6f7f5)';
+  const caja = document.createElement('div');
+  caja.style.cssText = 'max-width:480px;width:100%;background:var(--card,#fff);color:var(--text,#1c2a24);border-radius:14px;padding:28px 24px;box-shadow:0 8px 30px rgba(0,0,0,.08);font-family:inherit';
+  const linea = (txt, negrita, margen) => {
+    const p = document.createElement('p');
+    p.style.cssText = 'margin:' + (margen || '0 0 12px') + ';line-height:1.5;font-size:15px' + (negrita ? ';font-weight:600' : '');
+    p.textContent = txt;
+    return p;
+  };
+  const h = document.createElement('h2');
+  h.style.cssText = 'margin:0 0 14px;font-size:22px';
+  h.textContent = 'Activá tu plan';
+  caja.appendChild(h);
+  caja.appendChild(linea('Tu cuenta ya está creada. Para activar tu plan, realizá el pago por SINPE Móvil al ' + inst.sinpe + (inst.banco_cuenta ? ' o por transferencia a la cuenta BAC ' + inst.banco_cuenta : '') + '.'));
+  caja.appendChild(linea('A nombre de ' + inst.titular + '.'));
+  caja.appendChild(linea('Como referencia, usá el correo de tu cuenta o el nombre de tu negocio. Enviá el comprobante a ' + inst.correo + '.'));
+  caja.appendChild(linea('Tu acceso se autoriza en menos de 24 horas una vez confirmado el pago.', true));
+  const estado = linea(avisado ? 'Recibimos tu aviso de pago. Estamos verificándolo.' : '', false, '0 0 12px');
+  estado.id = 'ppEstado';
+  caja.appendChild(estado);
+  const fila = document.createElement('div');
+  fila.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap';
+  const avisar = document.createElement('button');
+  avisar.type = 'button'; avisar.className = 'btn'; avisar.textContent = 'Ya realicé el pago';
+  avisar.onclick = async () => {
+    avisar.disabled = true;
+    try {
+      const r = await fetch(API + '/pago/avisar', { method: 'POST', headers: authH() });
+      const d = await r.json().catch(() => ({}));
+      estado.textContent = r.ok ? d.mensaje : (d.error || 'No pudimos registrar tu aviso. Escribinos a ' + inst.correo + '.');
+    } catch (e) { estado.textContent = 'No pudimos registrar tu aviso. Escribinos a ' + inst.correo + '.'; }
+    avisar.disabled = false;
+  };
+  const salir = document.createElement('button');
+  salir.type = 'button'; salir.className = 'btn btn-ghost'; salir.textContent = 'Cerrar sesión';
+  salir.onclick = () => { capa.remove(); logout(); };
+  fila.appendChild(avisar); fila.appendChild(salir);
+  caja.appendChild(fila);
+  capa.appendChild(caja);
+  document.body.appendChild(capa);
+}
+// Pregunta al servidor si la cuenta está pendiente. Si no lo está, sigue con `siguiente` (cargar el panel).
+async function pagoPendienteGate(siguiente) {
+  try {
+    const r = await fetch(API + '/pago/estado', { headers: authH() });
+    if (r.status === 401) { sessionExpired(); return; }
+    const d = r.ok ? await r.json() : null;
+    if (d && d.pendiente && d.instrucciones) { ppPantalla(d.instrucciones, d.avisado); return; }
+  } catch (e) { /* si no se puede consultar, el servidor igual bloquea con 402 */ }
+  const aviso = document.getElementById('pagoPendiente');
+  if (aviso) aviso.remove();
+  siguiente();
+}
+// </compartido:pago-pendiente-panel>
 function showApp() {
     document.getElementById('loginScreen').classList.remove('visible');
     document.getElementById('appContainer').style.display = 'flex';
     applyPanelLang(currentLang, { skipReload: true });
-    loadAll();
+    pagoPendienteGate(loadAll);   // Fix (25/10/2026): una cuenta pendiente de pago ve «Activá tu plan» y no carga el panel
 }
 // ── LOAD ALL ──────────────────────────────────────────────────────
 let userRol = 'dueno'; // default hasta que cargue
@@ -4454,55 +4520,164 @@ document.addEventListener('DOMContentLoaded', marcarBotonTema);
 // Pedido de Eduardo: una casilla de Ayuda y otra de Sugerencias que le
 // lleguen directo al panel principal de AutomatIA (y por correo). Acá el
 // cliente escribe y ve el estado y la respuesta de lo que mandó.
+// <compartido:soporte-ui>
+// Centro de ayuda del cliente (25/10/2026): mensaje + hasta 3 capturas, con la sección donde estaba y el navegador.
+// Fuente única para los dashboards de AutoCita y AutoVentas. Editar acá, nunca las copias. Reemplaza a enviarSoporte/cargarSoporte (27/09/2026).
+// Seguridad: las capturas son del cliente pero el servidor las trata como dato no confiable (firma real, sin EXIF, tope de peso). Acá se recomprimen a JPEG en un canvas,
+// lo que además borra el EXIF/GPS antes de salir del navegador. Todo texto del servidor se pinta con textContent / escape; nada de innerHTML con datos sin escapar.
+const SOP_TXT = {
+  es: { adjuntar: 'Adjuntar capturas (hasta 3)', quitar: 'Quitar', maxTres: 'Podés adjuntar hasta 3 capturas.', noImagen: 'Solo se aceptan imágenes PNG, JPG o WebP.', noLeer: 'No pudimos leer esa imagen. Probá con otra captura.',
+    aviso: 'Junto con tu mensaje enviamos la sección del panel donde estabas y tu navegador, para ayudarte más rápido. Nunca enviamos tu contraseña. Evitá mostrar datos personales de las personas que atendés en las capturas.',
+    corto: 'Escribí un poco más (mínimo 3 caracteres).', enviando: 'Enviando…', enviado: '✓ Recibimos tu mensaje. Te respondemos lo antes posible.', error: 'Error: ', verCaptura: 'Ver captura', vacio: 'Todavía no enviaste ningún mensaje.', respuesta: 'Respuesta',
+    ayuda: 'Ayuda', sugerencia: 'Sugerencia', nuevo: 'Recibido', en_proceso: 'En revisión', resuelto: 'Resuelto', descartado: 'Cerrado', capturas: 'Capturas' },
+  en: { adjuntar: 'Attach screenshots (up to 3)', quitar: 'Remove', maxTres: 'You can attach up to 3 screenshots.', noImagen: 'Only PNG, JPG or WebP images are accepted.', noLeer: 'We could not read that image. Try another screenshot.',
+    aviso: 'We send the section of the panel you were in and your browser along with your message, to help you faster. We never send your password. Avoid showing personal data of the people you serve in screenshots.',
+    corto: 'Please write a little more (at least 3 characters).', enviando: 'Sending…', enviado: '✓ We received your message. We will reply as soon as possible.', error: 'Error: ', verCaptura: 'View screenshot', vacio: 'You have not sent any messages yet.', respuesta: 'Reply',
+    ayuda: 'Help', sugerencia: 'Suggestion', nuevo: 'Received', en_proceso: 'In review', resuelto: 'Resolved', descartado: 'Closed', capturas: 'Screenshots' },
+  pt: { adjuntar: 'Anexar capturas (até 3)', quitar: 'Remover', maxTres: 'Você pode anexar até 3 capturas.', noImagen: 'Só aceitamos imagens PNG, JPG ou WebP.', noLeer: 'Não conseguimos ler essa imagem. Tente outra captura.',
+    aviso: 'Junto com sua mensagem enviamos a seção do painel em que você estava e seu navegador, para ajudar mais rápido. Nunca enviamos sua senha. Evite mostrar dados pessoais de quem você atende nas capturas.',
+    corto: 'Escreva um pouco mais (mínimo 3 caracteres).', enviando: 'Enviando…', enviado: '✓ Recebemos sua mensagem. Respondemos o mais rápido possível.', error: 'Erro: ', verCaptura: 'Ver captura', vacio: 'Você ainda não enviou nenhuma mensagem.', respuesta: 'Resposta',
+    ayuda: 'Ajuda', sugerencia: 'Sugestão', nuevo: 'Recebido', en_proceso: 'Em análise', resuelto: 'Resolvido', descartado: 'Encerrado', capturas: 'Capturas' },
+};
+const sopT = (k) => { const l = (typeof currentLang === 'string' && SOP_TXT[currentLang]) ? currentLang : 'es'; return SOP_TXT[l][k] || SOP_TXT.es[k] || k; };
+const sopEsc = (x) => String(x == null ? '' : x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SOP_MAX_IMG = 3, SOP_LADO = 1600, SOP_ORIGEN_MAX = 20 * 1024 * 1024;
+let sopAdjuntos = [];     // { data: base64 (JPEG ya recomprimido), url: vista previa local }
+
+function sopPintarPrevias() {
+  const caja = document.getElementById('sopPrevias');
+  if (!caja) return;
+  caja.textContent = '';
+  sopAdjuntos.forEach((a, i) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'position:relative;width:84px;height:64px;border:1px solid var(--gray-200,#ddd);border-radius:8px;overflow:hidden';
+    const img = document.createElement('img');
+    img.src = a.url; img.alt = ''; img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    const x = document.createElement('button');
+    x.type = 'button'; x.title = sopT('quitar'); x.setAttribute('aria-label', sopT('quitar')); x.textContent = '×';
+    x.style.cssText = 'position:absolute;top:2px;right:2px;width:22px;height:22px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;line-height:20px;padding:0';
+    x.onclick = () => { URL.revokeObjectURL(a.url); sopAdjuntos.splice(i, 1); sopPintarPrevias(); };
+    item.appendChild(img); item.appendChild(x); caja.appendChild(item);
+  });
+  const btn = document.getElementById('sopBtnAdjuntar');
+  if (btn) btn.style.display = sopAdjuntos.length >= SOP_MAX_IMG ? 'none' : '';
+}
+// Redibuja la captura en un canvas (fondo blanco, lado máximo 1600 px) y la exporta como JPEG: sin EXIF, sin GPS, sin metadatos y mucho más liviana.
+async function sopComprimir(file) {
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) throw new Error(sopT('noImagen'));
+  if (file.size > SOP_ORIGEN_MAX) throw new Error(sopT('noLeer'));
+  let bmp;
+  try { bmp = await createImageBitmap(file); } catch (e) { throw new Error(sopT('noLeer')); }
+  const k = Math.min(1, SOP_LADO / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  if (bmp.close) bmp.close();
+  let blob = null;
+  for (const q of [0.86, 0.7, 0.5]) {
+    blob = await new Promise((ok) => c.toBlob(ok, 'image/jpeg', q));
+    if (blob && blob.size <= 3 * 1024 * 1024) break;
+  }
+  if (!blob || blob.size > 3 * 1024 * 1024) throw new Error(sopT('noLeer'));
+  const data = await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(',')[1] || ''); fr.onerror = () => no(new Error(sopT('noLeer'))); fr.readAsDataURL(blob); });
+  return { data, url: URL.createObjectURL(blob) };
+}
+async function sopElegirArchivos(input) {
+  const est = document.getElementById('soporteAyudaEstado');
+  const archivos = Array.from(input.files || []);
+  input.value = '';
+  for (const f of archivos) {
+    if (sopAdjuntos.length >= SOP_MAX_IMG) { if (est) { est.style.color = 'var(--danger)'; est.textContent = sopT('maxTres'); } break; }
+    try { sopAdjuntos.push(await sopComprimir(f)); if (est) est.textContent = ''; }
+    catch (e) { if (est) { est.style.color = 'var(--danger)'; est.textContent = e.message; } }
+  }
+  sopPintarPrevias();
+}
+// Agrega el selector de capturas bajo el cuadro de texto de «Ayuda» (se arma por código para no repetir HTML en los dos paneles).
+function sopMontarAdjuntos() {
+  const msg = document.getElementById('soporteAyudaMsg');
+  if (!msg || document.getElementById('sopArchivos')) return;
+  const caja = document.createElement('div');
+  caja.className = 'form-group';
+  const label = document.createElement('label');
+  label.id = 'sopBtnAdjuntar'; label.htmlFor = 'sopArchivos'; label.className = 'btn btn-ghost btn-sm'; label.style.cssText = 'display:inline-block;cursor:pointer'; label.textContent = sopT('adjuntar');
+  const input = document.createElement('input');
+  input.type = 'file'; input.id = 'sopArchivos'; input.accept = 'image/png,image/jpeg,image/webp'; input.multiple = true; input.style.display = 'none';
+  input.onchange = () => sopElegirArchivos(input);
+  const previas = document.createElement('div');
+  previas.id = 'sopPrevias'; previas.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
+  const aviso = document.createElement('p');
+  aviso.id = 'sopAviso'; aviso.style.cssText = 'font-size:12px;color:var(--gray-500,#777);margin:8px 0 0;line-height:1.4'; aviso.textContent = sopT('aviso');
+  caja.appendChild(label); caja.appendChild(input); caja.appendChild(previas); caja.appendChild(aviso);
+  msg.parentNode.insertAdjacentElement('afterend', caja);
+}
 async function enviarSoporte(tipo, btn) {
-    const esAyuda = tipo === 'ayuda';
-    const asuntoEl = esAyuda ? document.getElementById('soporteAsunto') : null;
-    const msgEl = document.getElementById(esAyuda ? 'soporteAyudaMsg' : 'soporteSugMsg');
-    const est = document.getElementById(esAyuda ? 'soporteAyudaEstado' : 'soporteSugEstado');
-    const mensaje = msgEl.value.trim();
-    if (mensaje.length < 3) { est.style.color = 'var(--danger)'; est.textContent = t('sop.corto'); return; }
-    if (btn) btn.disabled = true;
-    est.style.color = 'var(--gray-500)'; est.textContent = t('sop.enviando');
-    try {
-        const r = await fetch(API + '/soporte', { method: 'POST', headers: authH(), body: JSON.stringify({ tipo, asunto: asuntoEl ? asuntoEl.value.trim() : '', mensaje }) });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
-        msgEl.value = '';
-        if (asuntoEl) asuntoEl.value = '';
-        est.style.color = 'var(--primary-dark, #1f5c40)'; est.textContent = t('sop.enviado');
-        cargarSoporte();
-    } catch (e) {
-        est.style.color = 'var(--danger)'; est.textContent = 'Error: ' + e.message;
-    } finally {
-        if (btn) btn.disabled = false;
-    }
+  const esAyuda = tipo === 'ayuda';
+  const asuntoEl = esAyuda ? document.getElementById('soporteAsunto') : null;
+  const msgEl = document.getElementById(esAyuda ? 'soporteAyudaMsg' : 'soporteSugMsg');
+  const est = document.getElementById(esAyuda ? 'soporteAyudaEstado' : 'soporteSugEstado');
+  const mensaje = msgEl.value.trim();
+  if (mensaje.length < 3) { est.style.color = 'var(--danger)'; est.textContent = sopT('corto'); return; }
+  if (btn) btn.disabled = true;
+  est.style.color = 'var(--gray-500)'; est.textContent = sopT('enviando');
+  try {
+    const seccion = (document.querySelector('.section.active') || {}).id || '';
+    const cuerpo = { tipo, asunto: asuntoEl ? asuntoEl.value.trim() : '', mensaje, pagina: seccion, navegador: String(navigator.userAgent || '').slice(0, 200) };
+    if (esAyuda && sopAdjuntos.length) cuerpo.imagenes = sopAdjuntos.map((a) => ({ data: a.data }));
+    const r = await fetch(API + '/soporte', { method: 'POST', headers: authH(), body: JSON.stringify(cuerpo) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    msgEl.value = '';
+    if (asuntoEl) asuntoEl.value = '';
+    if (esAyuda) { sopAdjuntos.forEach((a) => URL.revokeObjectURL(a.url)); sopAdjuntos = []; sopPintarPrevias(); }
+    est.style.color = 'var(--primary-dark, #1f5c40)'; est.textContent = sopT('enviado');
+    cargarSoporte();
+  } catch (e) {
+    est.style.color = 'var(--danger)'; est.textContent = sopT('error') + e.message;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 async function cargarSoporte() {
-    const cont = document.getElementById('soporteLista');
-    if (!cont) return;
-    try {
-        const r = await fetch(API + '/soporte', { headers: authH() });
-        const lista = await r.json().catch(() => []);
-        if (!r.ok) throw new Error((lista && lista.error) || ('HTTP ' + r.status));
-        if (!lista.length) { cont.innerHTML = '<div style="color:var(--gray-500);font-size:14px">' + escapeHtmlPanel(t('sop.vacio')) + '</div>'; return; }
-        const nombreEstado = { nuevo: t('sop.estado.nuevo'), en_proceso: t('sop.estado.en_proceso'), resuelto: t('sop.estado.resuelto'), descartado: t('sop.estado.descartado') };
-        const claseEstado = { nuevo: 'badge-warning', en_proceso: 'badge-warning', resuelto: 'badge-success', descartado: 'badge-danger' };
-        cont.innerHTML = lista.map(m => `
-            <div class="sop-item">
-                <div class="sop-meta">
-                    <span>${escapeHtmlPanel(new Date(m.created_at).toLocaleString())}</span>
-                    <span class="badge">${escapeHtmlPanel(m.tipo === 'ayuda' ? t('sop.tipo.ayuda') : t('sop.tipo.sugerencia'))}</span>
-                    <span class="badge ${claseEstado[m.estado] || ''}">${escapeHtmlPanel(nombreEstado[m.estado] || m.estado)}</span>
-                </div>
-                ${m.asunto ? `<div style="font-weight:600;margin-bottom:4px">${escapeHtmlPanel(m.asunto)}</div>` : ''}
-                <div class="sop-msg">${escapeHtmlPanel(m.mensaje)}</div>
-                ${m.respuesta ? `<div class="sop-resp"><strong>${escapeHtmlPanel(t('sop.respuesta'))}:</strong> ${escapeHtmlPanel(m.respuesta)}</div>` : ''}
-            </div>`).join('');
-    } catch (e) {
-        cont.innerHTML = '<div style="color:var(--danger);font-size:14px">' + escapeHtmlPanel('Error: ' + e.message) + '</div>';
-    }
+  const cont = document.getElementById('soporteLista');
+  if (!cont) return;
+  sopMontarAdjuntos();
+  try {
+    const r = await fetch(API + '/soporte', { headers: authH() });
+    const lista = await r.json().catch(() => []);
+    if (!r.ok) throw new Error((lista && lista.error) || ('HTTP ' + r.status));
+    if (!lista.length) { cont.innerHTML = '<div style="color:var(--gray-500);font-size:14px">' + sopEsc(sopT('vacio')) + '</div>'; return; }
+    const claseEstado = { nuevo: 'badge-warning', en_proceso: 'badge-warning', resuelto: 'badge-success', descartado: 'badge-danger' };
+    cont.innerHTML = lista.map((m) => `
+      <div class="sop-item">
+        <div class="sop-meta">
+          <span>${sopEsc(new Date(m.created_at).toLocaleString())}</span>
+          <span class="badge">${sopEsc(m.tipo === 'ayuda' ? sopT('ayuda') : sopT('sugerencia'))}</span>
+          <span class="badge ${claseEstado[m.estado] || ''}">${sopEsc(sopT(m.estado))}</span>
+        </div>
+        ${m.asunto ? `<div style="font-weight:600;margin-bottom:4px">${sopEsc(m.asunto)}</div>` : ''}
+        <div class="sop-msg">${sopEsc(m.mensaje)}</div>
+        ${m.imagenes_n ? `<div style="margin-top:6px;font-size:13px">${sopEsc(sopT('capturas'))}: ${Array.from({ length: Math.min(3, Number(m.imagenes_n) || 0) }, (_, i) => `<button type="button" class="btn btn-ghost btn-sm" data-sop-id="${sopEsc(m.id)}" data-sop-n="${i + 1}">${sopEsc(sopT('verCaptura'))} ${i + 1}</button>`).join(' ')}</div>` : ''}
+        ${m.respuesta ? `<div class="sop-resp"><strong>${sopEsc(sopT('respuesta'))}:</strong> ${sopEsc(m.respuesta)}</div>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    cont.innerHTML = '<div style="color:var(--danger);font-size:14px">' + sopEsc(sopT('error') + e.message) + '</div>';
+  }
 }
-
+// «Ver captura»: pide una URL firmada de 60 s al servidor (solo de los mensajes del propio negocio) y la abre en otra pestaña.
+document.addEventListener('click', async (ev) => {
+  const b = ev.target.closest && ev.target.closest('[data-sop-id]');
+  if (!b) return;
+  b.disabled = true;
+  try {
+    const r = await fetch(API + '/soporte/' + encodeURIComponent(b.dataset.sopId) + '/imagen/' + encodeURIComponent(b.dataset.sopN), { headers: authH() });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && /^https:\/\//.test(d.url || '')) window.open(d.url, '_blank', 'noopener');
+  } catch (e) { /* sin red: el botón se reactiva */ }
+  b.disabled = false;
+});
+// </compartido:soporte-ui>
 // ── App instalable (PWA) ─────────────────────────────────────────
 // Registra el service worker si está subido junto a este archivo. Solo guarda
 // en caché la "cáscara" del panel para que abra sin conexión; nunca guarda
@@ -5182,7 +5357,7 @@ const translations = {
         'nav.redes': 'Redes', 'title.redes': 'Imágenes para redes', 'redes.intro': 'Elegí un servicio o un doctor y te armamos la imagen con nombre, precio y detalle en 3 estilos y 3 tamaños (post, vertical e historia). Podés subir una foto y descargarla o compartirla directo.', 'redes.servicios': 'Servicios', 'redes.doctores': 'Doctores', 'redes.libre': '+ Imagen con otro texto', 'redes.crear': 'Crear imagen', 'redes.sinServicios': 'Todavía no hay servicios. Agregalos en Facturación → Servicios.', 'redes.sinDoctores': 'Todavía no hay doctores cargados.', 'redes.consulta': 'Consulta',
         'redes.catalogoBtn': '🖼 Catálogo (1 imagen)', 'redes.reelBtn': '🎞 Reel (varias imágenes)', 'redes.seleccionados': ' seleccionados', 'redes.seleccionado': ' seleccionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarcá algunos.',
         'resumen.citaSinConfirmar': ' cita de hoy sin confirmar', 'resumen.citasSinConfirmar': ' citas de hoy sin confirmar', 'resumen.msjSinResponder': ' mensaje esperando respuesta', 'resumen.msjsSinResponder': ' mensajes esperando respuesta', 'resumen.vacio': 'Nada pendiente por ahora.',
-        'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Ayuda', 'title.ayuda': 'Ayuda y sugerencias', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
+        'pieza.btn': 'Imagen', 'pieza.titulo': 'Imagen para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamaño', 'pieza.nombre': 'Nombre', 'pieza.precio': 'Precio', 'pieza.detalle': 'Detalle (si es largo, se acomoda solo)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'La foto guardada', 'pieza.fotoSubida': 'Una foto que subo ahora', 'pieza.sinFoto': 'Sin foto (color de marca)', 'pieza.subir': 'Subir foto', 'pieza.color': 'Color de marca', 'pieza.descargar': 'Descargar', 'pieza.compartir': 'Compartir', 'pieza.fotoError': 'No se pudo usar la foto guardada. Subila con "Subir foto".', 'pieza.fotoInvalida': 'Elegí una imagen JPG o PNG de menos de 15 MB.', 'pieza.pl.vitrina': 'Vitrina (foto arriba, ficha abajo)', 'pieza.pl.etiqueta': 'Etiqueta de precio (foto completa)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post cuadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Historia / Story (1080×1920)', 'nav.ayuda': 'Centro de ayuda', 'title.ayuda': 'Centro de ayuda', 'sop.ayudaTitle': '¿Necesitás ayuda?', 'sop.ayudaDesc': 'Contanos qué pasa y te respondemos por correo lo antes posible.', 'sop.asuntoPh': 'Asunto (opcional)', 'sop.ayudaPh': 'Describí el problema o la duda…', 'sop.enviarAyuda': 'Pedir ayuda', 'sop.sugTitle': 'Sugerencias', 'sop.sugDesc': '¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.', 'sop.sugPh': 'Tu idea…', 'sop.enviarSug': 'Enviar sugerencia', 'sop.misMensajes': 'Mis mensajes', 'sop.vacio': 'Todavía no enviaste ningún mensaje.', 'sop.corto': 'Escribí un poco más (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Te respondemos por correo.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ayuda', 'sop.tipo.sugerencia': 'Sugerencia', 'sop.estado.nuevo': 'Recibido', 'sop.estado.en_proceso': 'En proceso', 'sop.estado.resuelto': 'Resuelto', 'sop.estado.descartado': 'Cerrado', 'sop.respuesta': 'Respuesta',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Pacientes', 'title.citas': 'Crear Cita',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendario', 'title.doctores': 'Doctores',
         'conoc.titulo': 'Material de la clínica para Sara', 'conoc.desc': 'Subí políticas, preparación de estudios, ubicación y convenios para que Sara responda con esa información.', 'conoc.tituloDoc': 'Título del documento', 'conoc.texto': 'Texto (pegá el contenido o cargá un archivo .txt o .md)', 'conoc.archivo': 'Cargar archivo .txt o .md', 'conoc.aviso': 'Solo material de la clínica: nunca datos de pacientes ni instrucciones para el asistente. Si Sara no encuentra la respuesta acá, lo consulta con una persona.', 'conoc.btnGuardar': 'Guardar material', 'conoc.guardado': 'Material guardado ✓ ({n} fragmentos)', 'conoc.vacio': 'Todavía no hay documentos.', 'conoc.confirmarBorrar': '¿Borrar este documento?', 'conoc.colDoc': 'Documento', 'conoc.colFecha': 'Fecha', 'conoc.btnBorrar': 'Borrar', 'conoc.errArchivo': 'Solo archivos .txt o .md de hasta 200 KB.',
@@ -5322,7 +5497,7 @@ const translations = {
         'nav.redes': 'Social', 'title.redes': 'Social media images', 'redes.intro': 'Pick a service or a doctor and we build the image with name, price and details in 3 styles and 3 sizes (post, portrait and story). You can upload a photo and download or share it right away.', 'redes.servicios': 'Services', 'redes.doctores': 'Doctors', 'redes.libre': '+ Image with custom text', 'redes.crear': 'Create image', 'redes.sinServicios': 'No services yet. Add them in Billing → Services.', 'redes.sinDoctores': 'No doctors yet.', 'redes.consulta': 'Consultation',
         'redes.catalogoBtn': '🖼 Catalog (1 image)', 'redes.reelBtn': '🎞 Reel (several images)', 'redes.seleccionados': ' selected', 'redes.seleccionado': ' selected', 'redes.maxCatalogo': 'Max 9 per catalog — deselect some.',
         'resumen.citaSinConfirmar': ' unconfirmed appointment today', 'resumen.citasSinConfirmar': ' unconfirmed appointments today', 'resumen.msjSinResponder': ' message waiting for a reply', 'resumen.msjsSinResponder': ' messages waiting for a reply', 'resumen.vacio': 'Nothing pending right now.',
-        'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help', 'title.ayuda': 'Help & suggestions', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
+        'pieza.btn': 'Image', 'pieza.titulo': 'Social media image', 'pieza.plantilla': 'Style', 'pieza.tamano': 'Size', 'pieza.nombre': 'Name', 'pieza.precio': 'Price', 'pieza.detalle': 'Details (long text fits automatically)', 'pieza.foto': 'Photo', 'pieza.fotoProducto': 'Saved photo', 'pieza.fotoSubida': 'A photo I upload now', 'pieza.sinFoto': 'No photo (brand color)', 'pieza.subir': 'Upload photo', 'pieza.color': 'Brand color', 'pieza.descargar': 'Download', 'pieza.compartir': 'Share', 'pieza.fotoError': 'The saved photo could not be used. Upload it with "Upload photo".', 'pieza.fotoInvalida': 'Choose a JPG or PNG image under 15 MB.', 'pieza.pl.vitrina': 'Showcase (photo top, details below)', 'pieza.pl.etiqueta': 'Price tag (full photo)', 'pieza.pl.editorial': 'Editorial (elegant)', 'pieza.tam.cuadrado': 'Square post (1080×1080)', 'pieza.tam.vertical': 'Portrait post (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Help center', 'title.ayuda': 'Help center', 'sop.ayudaTitle': 'Need help?', 'sop.ayudaDesc': 'Tell us what is going on and we will reply by email as soon as possible.', 'sop.asuntoPh': 'Subject (optional)', 'sop.ayudaPh': 'Describe the problem or question…', 'sop.enviarAyuda': 'Ask for help', 'sop.sugTitle': 'Suggestions', 'sop.sugDesc': 'What would you add or change in AutoCita? We read every one.', 'sop.sugPh': 'Your idea…', 'sop.enviarSug': 'Send suggestion', 'sop.misMensajes': 'My messages', 'sop.vacio': 'You have not sent any messages yet.', 'sop.corto': 'Please write a bit more (at least 3 characters).', 'sop.enviado': '✓ Sent. We will reply by email.', 'sop.enviando': 'Sending…', 'sop.tipo.ayuda': 'Help', 'sop.tipo.sugerencia': 'Suggestion', 'sop.estado.nuevo': 'Received', 'sop.estado.en_proceso': 'In progress', 'sop.estado.resuelto': 'Resolved', 'sop.estado.descartado': 'Closed', 'sop.respuesta': 'Reply',
         'title.dashboard': 'Dashboard', 'title.pacientes': 'Patients', 'title.citas': 'Create Appointment',
         'title.listaEspera': 'Waiting List', 'title.calendario': 'Calendar', 'title.doctores': 'Doctors',
         'conoc.titulo': 'Clinic material for Sara', 'conoc.desc': 'Upload policies, exam preparation, location and insurance agreements so Sara answers with that information.', 'conoc.tituloDoc': 'Document title', 'conoc.texto': 'Text (paste the content or upload a .txt or .md file)', 'conoc.archivo': 'Upload a .txt or .md file', 'conoc.aviso': 'Clinic material only: never patient data or instructions for the assistant. If Sara cannot find the answer here, she checks with a person.', 'conoc.btnGuardar': 'Save material', 'conoc.guardado': 'Material saved ✓ ({n} fragments)', 'conoc.vacio': 'There are no documents yet.', 'conoc.confirmarBorrar': 'Delete this document?', 'conoc.colDoc': 'Document', 'conoc.colFecha': 'Date', 'conoc.btnBorrar': 'Delete', 'conoc.errArchivo': 'Only .txt or .md files up to 200 KB.',
@@ -5462,7 +5637,7 @@ const translations = {
         'nav.redes': 'Redes', 'title.redes': 'Imagens para redes', 'redes.intro': 'Escolha um serviço ou um médico e montamos a imagem com nome, preço e detalhe em 3 estilos e 3 tamanhos (post, vertical e story). Você pode enviar uma foto e baixar ou compartilhar direto.', 'redes.servicios': 'Serviços', 'redes.doctores': 'Médicos', 'redes.libre': '+ Imagem com outro texto', 'redes.crear': 'Criar imagem', 'redes.sinServicios': 'Ainda não há serviços. Adicione em Faturamento → Serviços.', 'redes.sinDoctores': 'Ainda não há médicos cadastrados.', 'redes.consulta': 'Consulta',
         'redes.catalogoBtn': '🖼 Catálogo (1 imagem)', 'redes.reelBtn': '🎞 Reel (várias imagens)', 'redes.seleccionados': ' selecionados', 'redes.seleccionado': ' selecionado', 'redes.maxCatalogo': 'Máximo 9 por catálogo — desmarque alguns.',
         'resumen.citaSinConfirmar': ' consulta de hoje sem confirmar', 'resumen.citasSinConfirmar': ' consultas de hoje sem confirmar', 'resumen.msjSinResponder': ' mensagem esperando resposta', 'resumen.msjsSinResponder': ' mensagens esperando resposta', 'resumen.vacio': 'Nada pendente por enquanto.',
-        'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Ajuda', 'title.ayuda': 'Ajuda e sugestões', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
+        'pieza.btn': 'Imagem', 'pieza.titulo': 'Imagem para redes', 'pieza.plantilla': 'Estilo', 'pieza.tamano': 'Tamanho', 'pieza.nombre': 'Nome', 'pieza.precio': 'Preço', 'pieza.detalle': 'Detalhe (texto longo se ajusta sozinho)', 'pieza.foto': 'Foto', 'pieza.fotoProducto': 'A foto salva', 'pieza.fotoSubida': 'Uma foto que envio agora', 'pieza.sinFoto': 'Sem foto (cor da marca)', 'pieza.subir': 'Enviar foto', 'pieza.color': 'Cor da marca', 'pieza.descargar': 'Baixar', 'pieza.compartir': 'Compartilhar', 'pieza.fotoError': 'Não foi possível usar a foto salva. Envie com "Enviar foto".', 'pieza.fotoInvalida': 'Escolha uma imagem JPG ou PNG de até 15 MB.', 'pieza.pl.vitrina': 'Vitrine (foto em cima, ficha embaixo)', 'pieza.pl.etiqueta': 'Etiqueta de preço (foto inteira)', 'pieza.pl.editorial': 'Editorial (elegante)', 'pieza.tam.cuadrado': 'Post quadrado (1080×1080)', 'pieza.tam.vertical': 'Post vertical (1080×1350)', 'pieza.tam.story': 'Story (1080×1920)', 'nav.ayuda': 'Central de ajuda', 'title.ayuda': 'Central de ajuda', 'sop.ayudaTitle': 'Precisa de ajuda?', 'sop.ayudaDesc': 'Conte o que está acontecendo e responderemos por e-mail o quanto antes.', 'sop.asuntoPh': 'Assunto (opcional)', 'sop.ayudaPh': 'Descreva o problema ou a dúvida…', 'sop.enviarAyuda': 'Pedir ajuda', 'sop.sugTitle': 'Sugestões', 'sop.sugDesc': 'O que você adicionaria ou mudaria no AutoCita? Lemos todas.', 'sop.sugPh': 'Sua ideia…', 'sop.enviarSug': 'Enviar sugestão', 'sop.misMensajes': 'Minhas mensagens', 'sop.vacio': 'Você ainda não enviou nenhuma mensagem.', 'sop.corto': 'Escreva um pouco mais (mínimo 3 caracteres).', 'sop.enviado': '✓ Enviado. Responderemos por e-mail.', 'sop.enviando': 'Enviando…', 'sop.tipo.ayuda': 'Ajuda', 'sop.tipo.sugerencia': 'Sugestão', 'sop.estado.nuevo': 'Recebido', 'sop.estado.en_proceso': 'Em andamento', 'sop.estado.resuelto': 'Resolvido', 'sop.estado.descartado': 'Fechado', 'sop.respuesta': 'Resposta',
         'title.dashboard': 'Painel', 'title.pacientes': 'Pacientes', 'title.citas': 'Criar Consulta',
         'title.listaEspera': 'Lista de Espera', 'title.calendario': 'Calendário', 'title.doctores': 'Médicos',
         'conoc.titulo': 'Material da clínica para a Sara', 'conoc.desc': 'Envie políticas, preparo de exames, localização e convênios para que a Sara responda com essas informações.', 'conoc.tituloDoc': 'Título do documento', 'conoc.texto': 'Texto (cole o conteúdo ou envie um arquivo .txt ou .md)', 'conoc.archivo': 'Enviar arquivo .txt ou .md', 'conoc.aviso': 'Somente material da clínica: nunca dados de pacientes nem instruções para o assistente. Se a Sara não encontrar a resposta aqui, ela consulta uma pessoa.', 'conoc.btnGuardar': 'Salvar material', 'conoc.guardado': 'Material salvo ✓ ({n} trechos)', 'conoc.vacio': 'Ainda não há documentos.', 'conoc.confirmarBorrar': 'Excluir este documento?', 'conoc.colDoc': 'Documento', 'conoc.colFecha': 'Data', 'conoc.btnBorrar': 'Excluir', 'conoc.errArchivo': 'Somente arquivos .txt ou .md de até 200 KB.',
