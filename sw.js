@@ -4,15 +4,18 @@
 //  1. Cachea SOLO los archivos estáticos de la cáscara (íconos, manifest y la página sin conexión). Nunca páginas, API, pedidos, clientes ni tokens.
 //  2. Solo toca peticiones GET del mismo sitio; todo lo demás (la API de Railway, Supabase, fuentes, CDN) pasa directo al navegador.
 //  3. Una navegación siempre va a la red (versión nueva garantizada); si no hay internet se muestra la página sin conexión.
-//  4. Versión: cambiar PWA_VERSION en build-compartido.py renombra la caché; al activar se borran las anteriores.
+//  4. Los archivos de la cáscara se sirven de la caché y se refrescan en segundo plano. Versión: cambiar PWA_VERSION en build-compartido.py renombra la caché; al activar se borran las anteriores.
 // Este archivo no puede usar comillas invertidas ni dólar-llave (en la tienda se incrusta como texto).
-const CACHE = 'autocita-panel-2026-10-28.1';
+const CACHE = 'autocita-panel-2026-10-28.2';
 const BASE = self.registration.scope;
 const CASCARA = ["manifest.webmanifest", "icon-192.png", "icon-512.png", "offline.html"].map(function (p) { return new URL(p, BASE).href; });
 const OFFLINE = new URL('offline.html', BASE).href;
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CASCARA); }).then(function () { return self.skipWaiting(); }));
+  // Revisión 28/10/2026 (Fase 4): cada archivo se guarda por separado y un 404 (deploy a medias) no aborta la instalación; el que falte se pedirá de la red.
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all(CASCARA.map(function (u) { return c.add(u).catch(function () { /* se reintenta al pedirlo */ }); }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 function borrarOtras() {
@@ -38,6 +41,14 @@ self.addEventListener('fetch', function (e) {
   }
   // Solo archivos de la cáscara (sin parámetros): cualquier otra cosa se deja pasar sin tocarla.
   if (CASCARA.indexOf(url.origin + url.pathname) !== -1 && !url.search) {
-    e.respondWith(caches.match(req).then(function (r) { return r || fetch(req); }));
+    // Revisión 28/10/2026 (Fase 4): se responde con lo guardado (rápido, funciona sin conexión) y se refresca en segundo plano: un ícono o manifest nuevo llega a la siguiente apertura sin esperar a una versión nueva del service worker.
+    e.respondWith(caches.open(CACHE).then(function (c) {
+      return c.match(req).then(function (r) {
+        // Revisión 29/10/2026 (Fase 5): el refresco queda ligado al evento (waitUntil) para que el navegador no cierre el worker a medias, y un fallo al guardar (cuota) no queda sin atender.
+        const red = fetch(req).then(function (resp) { if (resp && resp.ok) return c.put(req, resp.clone()).then(function () { return resp; }, function () { return resp; }); return resp; }).catch(function () { return r || Response.error(); });
+        if (r) e.waitUntil(red.then(function () {}, function () {}));
+        return r || red;
+      });
+    }));
   }
 });
