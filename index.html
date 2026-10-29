@@ -250,6 +250,13 @@
         #loginScreen.visible { display: flex; }
         .login-box { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; }
         .login-box h2 { font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 24px; text-align:center; letter-spacing: -0.02em; }
+        /* (28/10/2026) Registro con plan: la caja se ensancha para mostrar los planes y la pantalla permite desplazarse en celulares. */
+        #loginScreen { overflow-y: auto; padding: 16px; box-sizing: border-box; }
+        #loginScreen .login-box { margin: auto; }
+        .login-box.con-planes { max-width: 880px; }
+        .login-box.con-planes .form-group, .login-box.con-planes > .auth-pane > .btn-block { max-width: 420px; margin-left: auto; margin-right: auto; }
+        .login-box.con-planes .btn-block { display: block; width: 100%; }
+
         .auth-tabs { display: flex; border-bottom: 1.5px solid var(--gray-200); margin-bottom: 24px; }
         .auth-tab { flex: 1; padding: 10px; border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border-bottom: 2px solid transparent; margin-bottom: -1.5px; }
         .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -452,7 +459,7 @@
             <div class="form-group"><label data-i18n="login.clinicName">Nombre de la clínica</label><input type="text" id="regNombre" data-i18n-placeholder="login.clinicNamePh" placeholder="Clínica San José"></div>
             <div class="form-group">
                 <label data-i18n="login.tipoNegocio">Tipo de negocio</label>
-                <select id="regTipoNegocio">
+                <select id="regTipoNegocio" onchange="ppMontarRegistro(this.value)">
                     <option value="clinica_general" data-i18n="tipoNegocio.clinica_general">Clínica General / Consultorio Médico</option>
                     <option value="dental" data-i18n="tipoNegocio.dental">Consultorio Dental</option>
                     <option value="fisioterapia" data-i18n="tipoNegocio.fisioterapia">Fisioterapia / Rehabilitación</option>
@@ -477,6 +484,10 @@
             <div id="regDoctorCampos" style="display:none">
                 <div class="form-group"><label data-i18n="login.doctorNombre">Tu nombre como doctor/a</label><input type="text" id="regDoctorNombre" maxlength="120" data-i18n-placeholder="login.doctorNombrePh" placeholder="Dra. Ana Rodríguez"></div>
                 <div class="form-group"><label data-i18n="login.especialidad">Especialidad</label><input type="text" id="regEspecialidad" maxlength="80" data-i18n-placeholder="login.especialidadPh" placeholder="Medicina general"></div>
+            </div>
+            <div class="form-group" id="regPlanesGrupo" style="max-width:none">
+                <label>Escogé tu plan</label>
+                <div id="regPlanes"></div>
             </div>
             <button class="btn btn-block" onclick="register()" data-i18n="login.tabRegister">Crear cuenta</button>
         </div>
@@ -1302,6 +1313,9 @@ function switchAuthTab(tab) {
     document.getElementById('tabLogin').className = 'auth-tab ' + (isLogin ? 'active' : 'inactive');
     document.getElementById('tabRegister').className = 'auth-tab ' + (isLogin ? 'inactive' : 'active');
     document.getElementById('loginAlert').innerHTML = '';
+    var caja = document.querySelector('#loginScreen .login-box');
+    if (isLogin && caja) caja.classList.remove('con-planes');
+    if (!isLogin) ppMontarRegistro(document.getElementById('regTipoNegocio').value);   // (28/10/2026) planes del registro
 }
 async function register() {
     const email = document.getElementById('regEmail').value.trim();
@@ -1325,11 +1339,13 @@ async function register() {
         alertEl.innerHTML = `<div class="alert alert-error">${t('login.errPassLen')}</div>`;
         return;
     }
+    const datosPlan = ppDatosRegistro();   // (28/10/2026) plan elegido (el servidor lo valida contra la tabla de planes)
+    if (datosPlan.error) { alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(datosPlan.error) + '</div>'; return; }
     try {
         const res = await fetch(API + '/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password: pass, clinica_nombre: nombre, tipo_negocio, es_doctor, doctor_nombre, especialidad })
+            body: JSON.stringify({ email, password: pass, clinica_nombre: nombre, tipo_negocio, es_doctor, doctor_nombre, especialidad, ...datosPlan.campos })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || t('login.errCrearCuenta'));
@@ -1616,72 +1632,368 @@ async function aceptarInvitacion() {
 }
 function logout() {
     localStorage.removeItem('autocita_token');
+    pwaLimpiarSesion();   // (28/10/2026) el service worker vacía cualquier caché que no sea la cáscara estática
     document.getElementById('appContainer').style.display = 'none';
     document.getElementById('loginScreen').classList.add('visible');
 }
 // <compartido:pago-pendiente-panel>
-// Pantalla «Activá tu plan» (25/10/2026): una cuenta en 'pago_pendiente' ve cómo pagar y no entra al panel hasta que Eduardo la activa.
+// Registro con plan y pantalla de pago (25/10/2026, ampliado 28/10/2026): elegir plan, ver el total, aplicar un código y saber cómo pagar.
 // Fuente única para los dashboards de AutoCita y AutoVentas. Editar acá, nunca las copias.
-// Seguridad: los datos de pago llegan del servidor (tabla ajustes_pago) y se pintan SOLO con textContent; nunca de la URL ni del usuario.
-function ppPantalla(inst, avisado) {
+// Seguridad: planes, montos e instrucciones llegan del servidor y se pintan SOLO con textContent; nada de la URL ni del usuario entra como HTML.
+// Los montos que se ven acá son informativos: el servidor los recalcula al registrar, aplicar el código y activar.
+const PP_WA_PLANES = 'https://wa.me/50686205959';   // consultas de planes a medida (el mismo número del sitio)
+function ppEl(tag, css, txt, cls) {
+  const e = document.createElement(tag);
+  if (css) e.style.cssText = css;
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+const ppUsd = (n) => 'US$ ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 });
+const ppFecha = (t) => new Date(t).toLocaleDateString('es-CR', { day: 'numeric', month: 'long', year: 'numeric' });
+function ppEstilos() {
+  if (document.getElementById('ppEstilos')) return;
+  const st = document.createElement('style');
+  st.id = 'ppEstilos';
+  st.textContent = '.pp-planes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:6px 0 12px}'
+    + '.pp-plan{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 16px 14px;border:1.5px solid var(--gray-200,#e5eae6);border-radius:12px;background:var(--white,#fff);color:var(--gray-900,#16211b);cursor:pointer;text-align:left;font:inherit}'
+    + '.pp-plan:hover{border-color:var(--primary,#2d6a4f)}.pp-plan:focus-visible{outline:2px solid var(--primary,#2d6a4f);outline-offset:2px}'
+    + '.pp-plan.sel{border-color:var(--primary,#2d6a4f);box-shadow:0 0 0 3px var(--primary-soft,#eaf4ee)}'
+    + '.pp-plan.nodisp{cursor:default;opacity:.75}.pp-plan.nodisp:hover{border-color:var(--gray-200,#e5eae6)}'
+    + '.pp-insignia{position:absolute;top:-10px;left:14px;padding:2px 10px;border-radius:999px;background:var(--primary,#2d6a4f);color:var(--white,#fff);font-size:11px;font-weight:700;letter-spacing:.02em}'
+    + '.pp-nombre{font-size:15px;font-weight:700}.pp-desc{font-size:12.5px;color:var(--gray-500,#71807a);line-height:1.4;min-height:34px}'
+    + '.pp-precio{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}.pp-precio small{font-size:12px;font-weight:600;color:var(--gray-500,#71807a);letter-spacing:0}'
+    + '.pp-lista{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.35;color:var(--gray-700,#3c4a43)}'
+    + '.pp-lista li{padding-left:18px;position:relative}.pp-lista li::before{content:"\\2713";position:absolute;left:0;color:var(--primary,#2d6a4f);font-weight:700}'
+    + '.pp-cant{display:flex;align-items:center;gap:8px;margin:2px 0 12px;font-size:13px;color:var(--gray-700,#3c4a43)}.pp-cant input{width:64px;text-align:center}'
+    + '.pp-fila{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.pp-fila.total{border-top:1px solid var(--gray-200,#e5eae6);margin-top:4px;padding-top:10px;font-size:16px;font-weight:800}'
+    + '.pp-muted{font-size:12.5px;color:var(--gray-500,#71807a);line-height:1.5}'
+    + '.pp-capa{position:fixed;inset:0;z-index:9999;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;box-sizing:border-box;background:var(--gray-50,#fafbfa)}'
+    + '.pp-caja{width:100%;max-width:760px;margin:auto;background:var(--white,#fff);color:var(--gray-900,#16211b);border-radius:14px;padding:28px 24px;box-shadow:0 8px 30px rgba(0,0,0,.12);box-sizing:border-box}'
+    + '.pp-aviso{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;padding:10px 16px;background:var(--warning-soft,#fff3e0);color:var(--gray-900,#16211b);font-size:13.5px;border-bottom:1px solid var(--warning,#e0a355)}';
+  document.head.appendChild(st);
+}
+// Selector de planes: tarjetas con la comparación en una pantalla, el recomendado destacado y, si el precio es por profesional, la cantidad.
+// `est` guarda lo elegido ({plan, cantidad}); `cambio` avisa cada vez que cambia.
+function ppSelectorPlanes(cont, planes, est, cambio) {
+  ppEstilos();
+  cont.textContent = '';
+  const grupo = ppEl('div', null, null, 'pp-planes');
+  grupo.setAttribute('role', 'radiogroup');
+  grupo.setAttribute('aria-label', 'Planes disponibles');
+  const total = ppEl('p', 'margin:0 0 4px;font-weight:700;font-size:14px');
+  const cant = ppEl('div', null, null, 'pp-cant');
+  const pintarTotal = () => {
+    const p = planes.find((x) => x.id === est.plan);
+    cant.style.display = p && p.por_profesional ? 'flex' : 'none';
+    total.textContent = p && p.precio_usd != null ? 'Tu inversión mensual: ' + ppUsd(p.precio_usd * (p.por_profesional ? est.cantidad : 1)) + ' + IVA' : '';
+  };
+  const tarjetas = [];
+  const elegir = (p) => {
+    if (!p.disponible) return;
+    est.plan = p.id;
+    tarjetas.forEach((t) => { const on = t.dataset.id === p.id; t.classList.toggle('sel', on); t.setAttribute('aria-checked', on ? 'true' : 'false'); });
+    pintarTotal();
+    if (cambio) cambio();
+  };
+  planes.forEach((p) => {
+    const t = ppEl('div', null, null, 'pp-plan' + (p.disponible ? '' : ' nodisp'));
+    t.dataset.id = p.id;
+    t.setAttribute('role', 'radio');
+    t.setAttribute('aria-checked', est.plan === p.id ? 'true' : 'false');
+    t.tabIndex = p.disponible ? 0 : -1;
+    if (p.disponible) t.setAttribute('aria-label', p.nombre);
+    else t.setAttribute('aria-disabled', 'true');
+    if (est.plan === p.id) t.classList.add('sel');
+    if (p.destacado && p.disponible) t.appendChild(ppEl('span', null, 'El más elegido', 'pp-insignia'));
+    t.appendChild(ppEl('div', null, p.nombre, 'pp-nombre'));
+    t.appendChild(ppEl('div', null, p.descripcion, 'pp-desc'));
+    const pr = ppEl('div', null, null, 'pp-precio');
+    if (p.disponible) { pr.appendChild(document.createTextNode(ppUsd(p.precio_usd))); pr.appendChild(ppEl('small', null, p.por_profesional ? ' /profesional al mes' : ' /mes')); }
+    else if (p.a_medida) pr.appendChild(ppEl('span', 'font-size:18px', 'A medida'));
+    else pr.appendChild(ppEl('span', 'font-size:16px;color:var(--gray-500,#71807a)', 'Disponible pronto'));
+    t.appendChild(pr);
+    const ul = ppEl('ul', null, null, 'pp-lista');
+    (p.incluye || []).forEach((x) => ul.appendChild(ppEl('li', null, x)));
+    t.appendChild(ul);
+    if (p.a_medida) {
+      const a = ppEl('a', 'margin-top:6px;font-size:13px;font-weight:600;color:var(--primary,#2d6a4f)', 'Consultar precio');
+      a.href = PP_WA_PLANES + '?text=' + encodeURIComponent('Hola, quiero información del plan ' + p.nombre);
+      a.target = '_blank'; a.rel = 'noopener noreferrer';
+      t.appendChild(a);
+    }
+    t.addEventListener('click', () => elegir(p));
+    t.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); elegir(p); } });
+    tarjetas.push(t);
+    grupo.appendChild(t);
+  });
+  cont.appendChild(grupo);
+  const lbl = ppEl('label', null, 'Cantidad de profesionales');
+  const inp = document.createElement('input');
+  inp.type = 'number'; inp.min = '1'; inp.max = '50'; inp.value = String(est.cantidad || 1);
+  inp.addEventListener('input', () => { const n = parseInt(inp.value, 10); est.cantidad = Number.isInteger(n) ? Math.max(1, Math.min(50, n)) : 1; pintarTotal(); if (cambio) cambio(); });
+  lbl.setAttribute('for', 'ppCantidad'); inp.id = 'ppCantidad';
+  cant.appendChild(lbl); cant.appendChild(inp);
+  cont.appendChild(cant);
+  cont.appendChild(total);
+  pintarTotal();
+}
+// Planes públicos para el formulario de registro (el precio puede variar con el tipo de negocio: barberías y spas).
+const ppEleccion = { plan: null, cantidad: 1, hay: false };
+async function ppMontarRegistro(tipo) {
+  const cont = document.getElementById('regPlanes');
+  if (!cont) return;
+  try {
+    const r = await fetch(API + '/planes' + (tipo ? '?tipo=' + encodeURIComponent(tipo) : ''));
+    const d = r.ok ? await r.json() : null;
+    const planes = d && Array.isArray(d.planes) ? d.planes : [];
+    ppEleccion.hay = planes.some((p) => p.disponible);
+    const caja = cont.closest('.login-box');
+    if (caja) caja.classList.toggle('con-planes', planes.length > 0);
+    if (!planes.length) { cont.textContent = ''; return; }
+    if (!planes.some((p) => p.id === ppEleccion.plan && p.disponible)) ppEleccion.plan = null;
+    ppSelectorPlanes(cont, planes, ppEleccion, null);
+    if (d.aviso_fiscal) cont.appendChild(ppEl('p', null, d.aviso_fiscal, 'pp-muted'));   // VERIFICAR CON CONTADOR
+  } catch (e) { cont.textContent = ''; ppEleccion.hay = false; }
+}
+// Campos del plan para el cuerpo del registro. Si hay planes para elegir y no se escogió ninguno, devuelve el error para mostrar.
+function ppDatosRegistro() {
+  if (ppEleccion.hay && !ppEleccion.plan) return { error: 'Escogé tu plan para continuar.' };
+  return { campos: ppEleccion.plan ? { plan_elegido: ppEleccion.plan, plan_cantidad: ppEleccion.cantidad } : {} };
+}
+
+// Pantalla de pago. `d` es la respuesta de /pago/estado. Bloqueada (pendiente, vencida, pausada, cancelada) no deja volver al panel;
+// opcional (en gracia o por vencer) sí.
+const PP_TITULOS = {
+  pendiente: ['Activá tu plan', 'Tu cuenta ya está creada. Completá el pago para activar tu plan: tu acceso se autoriza en menos de 24 horas una vez confirmado.'],
+  vencido: ['El pago de tu plan está vencido', 'Registrá tu pago para volver a usar el servicio. En cuanto lo confirmemos, tu cuenta vuelve a estar activa.'],
+  en_gracia: ['Pago de tu plan pendiente', 'Tu servicio sigue activo. Registrá el pago antes de la fecha de suspensión para no tener interrupciones.'],
+  por_vencer: ['Renovación de tu plan', 'Tu plan se renueva pronto. Podés pagar ahora y dejarlo listo.'],
+  pausado: ['Tu cuenta está pausada', 'Escribinos y la reactivamos.'],
+  cancelado: ['Tu cuenta está cancelada', 'Si querés retomarla, escribinos y te ayudamos.'],
+};
+function ppPantalla(d, opcional) {
+  ppEstilos();
   let capa = document.getElementById('pagoPendiente');
   if (capa) capa.remove();
-  document.getElementById('appContainer').style.display = 'none';
-  document.getElementById('loginScreen').classList.remove('visible');
-  capa = document.createElement('div');
+  const app = document.getElementById('appContainer');
+  if (app && !opcional) app.style.display = 'none';
+  const login = document.getElementById('loginScreen');
+  if (login) login.classList.remove('visible');
+  capa = ppEl('div', null, null, 'pp-capa');
   capa.id = 'pagoPendiente';
-  capa.style.cssText = 'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;background:var(--bg,#f6f7f5)';
-  const caja = document.createElement('div');
-  caja.style.cssText = 'max-width:480px;width:100%;background:var(--card,#fff);color:var(--text,#1c2a24);border-radius:14px;padding:28px 24px;box-shadow:0 8px 30px rgba(0,0,0,.08);font-family:inherit';
-  const linea = (txt, negrita, margen) => {
-    const p = document.createElement('p');
-    p.style.cssText = 'margin:' + (margen || '0 0 12px') + ';line-height:1.5;font-size:15px' + (negrita ? ';font-weight:600' : '');
-    p.textContent = txt;
-    return p;
-  };
-  const h = document.createElement('h2');
-  h.style.cssText = 'margin:0 0 14px;font-size:22px';
-  h.textContent = 'Activá tu plan';
+  const caja = ppEl('div', null, null, 'pp-caja');
+  capa.appendChild(caja);
+  const inst = d.instrucciones || {};
+  const correo = inst.correo || 'hola@automatiaai.com';
+  const [titulo, intro] = PP_TITULOS[d.estado] || PP_TITULOS.pendiente;
+  const h = ppEl('h2', 'margin:0 0 8px;font-size:22px;outline:none', titulo);   // el foco programático lleva el lector de pantalla al título sin dibujar un recuadro
+  h.setAttribute('tabindex', '-1');
   caja.appendChild(h);
-  caja.appendChild(linea('Tu cuenta ya está creada. Para activar tu plan, realizá el pago por SINPE Móvil al ' + inst.sinpe + (inst.banco_cuenta ? ' o por transferencia a la cuenta BAC ' + inst.banco_cuenta : '') + '.'));
-  caja.appendChild(linea('A nombre de ' + inst.titular + '.'));
-  caja.appendChild(linea('Como referencia, usá el correo de tu cuenta o el nombre de tu negocio. Enviá el comprobante a ' + inst.correo + '.'));
-  caja.appendChild(linea('Tu acceso se autoriza en menos de 24 horas una vez confirmado el pago.', true));
-  const estado = linea(avisado ? 'Recibimos tu aviso de pago. Estamos verificándolo.' : '', false, '0 0 12px');
-  estado.id = 'ppEstado';
-  caja.appendChild(estado);
-  const fila = document.createElement('div');
-  fila.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap';
-  const avisar = document.createElement('button');
-  avisar.type = 'button'; avisar.className = 'btn'; avisar.textContent = 'Ya realicé el pago';
-  avisar.onclick = async () => {
-    avisar.disabled = true;
+  caja.appendChild(ppEl('p', 'margin:0 0 16px;line-height:1.5;font-size:15px', intro + (d.estado === 'pausado' || d.estado === 'cancelado' ? ' Escribinos a ' + correo + '.' : '')));
+  if (d.estado === 'en_gracia' && d.vence_at) caja.appendChild(ppEl('p', 'margin:0 0 14px;font-weight:600', 'Tu pago venció el ' + ppFecha(d.vence_at) + '. Si no lo registramos en ' + d.dias_restantes + (d.dias_restantes === 1 ? ' día' : ' días') + ', el servicio se suspende.'));
+  if (d.estado === 'por_vencer' && d.vence_at) caja.appendChild(ppEl('p', 'margin:0 0 14px;font-weight:600', 'Tu plan se renueva el ' + ppFecha(d.vence_at) + '.'));
+  const estado = ppEl('p', 'margin:12px 0;line-height:1.5;font-size:14px', d.avisado ? 'Recibimos tu aviso de pago. Estamos verificándolo.' : '');
+  estado.setAttribute('role', 'status');
+  const cuerpo = ppEl('div');
+  caja.appendChild(cuerpo);
+  const recargar = async () => {
     try {
-      const r = await fetch(API + '/pago/avisar', { method: 'POST', headers: authH() });
-      const d = await r.json().catch(() => ({}));
-      estado.textContent = r.ok ? d.mensaje : (d.error || 'No pudimos registrar tu aviso. Escribinos a ' + inst.correo + '.');
-    } catch (e) { estado.textContent = 'No pudimos registrar tu aviso. Escribinos a ' + inst.correo + '.'; }
-    avisar.disabled = false;
+      const r = await fetch(API + '/pago/estado', { headers: authH() });
+      if (r.status === 401) { sessionExpired(); return; }
+      if (r.ok) { const nd = await r.json(); if (nd.bloqueada || opcional) ppPantalla(nd, opcional); else pagoPendienteGate(() => {}); return; }
+    } catch (e) { /* queda la pantalla actual */ }
+    estado.textContent = 'No pudimos actualizar tu información. Intentá de nuevo en un momento.';
   };
-  const salir = document.createElement('button');
-  salir.type = 'button'; salir.className = 'btn btn-ghost'; salir.textContent = 'Cerrar sesión';
+  const mensajeError = (e) => { estado.textContent = e; };
+  const conPago = ['pendiente', 'vencido', 'en_gracia', 'por_vencer'].includes(d.estado);
+  if (d.estado === 'pendiente') ppPasoPlan(cuerpo, d, recargar, mensajeError);
+  if (conPago) ppPasoPago(cuerpo, d, inst, correo);
+  caja.appendChild(estado);
+  const fila = ppEl('div', 'display:flex;gap:10px;flex-wrap:wrap;margin-top:8px');
+  if (conPago) {
+    const avisar = ppEl('button', null, 'Ya realicé el pago', 'btn');
+    avisar.type = 'button';
+    avisar.onclick = async () => {
+      avisar.disabled = true;
+      try {
+        const r = await fetch(API + '/pago/avisar', { method: 'POST', headers: authH() });
+        const x = await r.json().catch(() => ({}));
+        estado.textContent = r.ok ? x.mensaje : (x.error || 'No pudimos registrar tu aviso. Escribinos a ' + correo + '.');
+      } catch (e) { estado.textContent = 'No pudimos registrar tu aviso. Escribinos a ' + correo + '.'; }
+      avisar.disabled = false;
+    };
+    fila.appendChild(avisar);
+  } else {
+    const a = ppEl('a', null, 'Escribir a ' + correo, 'btn');
+    a.href = 'mailto:' + correo;
+    fila.appendChild(a);
+  }
+  if (opcional) {
+    const volver = ppEl('button', null, 'Volver al panel', 'btn btn-ghost');
+    volver.type = 'button';
+    volver.onclick = () => capa.remove();
+    fila.appendChild(volver);
+  }
+  const salir = ppEl('button', null, 'Cerrar sesión', 'btn btn-ghost');
+  salir.type = 'button';
   salir.onclick = () => { capa.remove(); logout(); };
-  fila.appendChild(avisar); fila.appendChild(salir);
+  fila.appendChild(salir);
+  caja.appendChild(fila);
+  if (d.aviso_fiscal) caja.appendChild(ppEl('p', 'margin:16px 0 0', d.aviso_fiscal, 'pp-muted'));
+  document.body.appendChild(capa);
+  h.focus();
+}
+// Paso 1 (solo pendiente): elegir o cambiar plan, ver el total y aplicar un código.
+function ppPasoPlan(cuerpo, d, recargar, mensajeError) {
+  const bloque = ppEl('div', 'margin-bottom:18px');
+  cuerpo.appendChild(bloque);
+  const est = { plan: d.plan ? d.plan.id : null, cantidad: d.plan ? d.plan.cantidad : 1 };
+  const abrirSelector = () => {
+    bloque.textContent = '';
+    if (!d.planes || !d.planes.length) { bloque.appendChild(ppEl('p', 'line-height:1.5', 'Estamos preparando las opciones de plan para tu cuenta. Escribinos a ' + ((d.instrucciones && d.instrucciones.correo) || 'hola@automatiaai.com') + ' y te ayudamos a activarla.')); return; }
+    bloque.appendChild(ppEl('h3', 'margin:0 0 4px;font-size:16px', 'Escogé tu plan'));
+    const sel = ppEl('div');
+    bloque.appendChild(sel);
+    ppSelectorPlanes(sel, d.planes, est, null);
+    const ok = ppEl('button', null, 'Continuar con este plan', 'btn');
+    ok.type = 'button';
+    ok.onclick = async () => {
+      if (!est.plan) { mensajeError('Escogé un plan para continuar.'); return; }
+      ok.disabled = true;
+      try {
+        const r = await fetch(API + '/pago/plan', { method: 'POST', headers: { ...authH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: est.plan, cantidad: est.cantidad }) });
+        const x = await r.json().catch(() => ({}));
+        if (!r.ok) { mensajeError(x.error || 'No pudimos guardar tu plan.'); ok.disabled = false; return; }
+        await recargar();
+      } catch (e) { mensajeError('No pudimos guardar tu plan. Intentá de nuevo.'); ok.disabled = false; }
+    };
+    bloque.appendChild(ok);
+  };
+  if (!d.plan) { abrirSelector(); return; }
+  bloque.appendChild(ppEl('h3', 'margin:0 0 6px;font-size:16px', 'Tu plan'));
+  const p = d.plan;
+  const lineas = [[p.nombre + (p.por_profesional ? ' × ' + p.cantidad + (p.cantidad === 1 ? ' profesional' : ' profesionales') : ''), ppUsd(p.mensual_usd) + ' /mes']];
+  if (p.descuento_usd > 0) lineas.push(['Código ' + p.codigo, '− ' + ppUsd(p.descuento_usd)]);
+  if (p.activacion_usd > 0) lineas.push(['Activación (pago único)', ppUsd(p.activacion_usd)]);
+  lineas.forEach((l) => { const f = ppEl('div', null, null, 'pp-fila'); f.appendChild(ppEl('span', null, l[0])); f.appendChild(ppEl('span', null, l[1])); bloque.appendChild(f); });
+  const t = ppEl('div', null, null, 'pp-fila total');
+  t.appendChild(ppEl('span', null, 'Total a pagar ahora'));
+  t.appendChild(ppEl('span', null, ppUsd(p.total_usd) + ' + IVA'));
+  bloque.appendChild(t);
+  // Código de descuento: lo valida el servidor (límite de intentos, por plan).
+  const cod = ppEl('div', 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 4px');
+  if (p.descuento_usd > 0) {
+    const quitar = ppEl('button', null, 'Quitar código', 'btn btn-ghost');
+    quitar.type = 'button';
+    quitar.onclick = async () => { try { await fetch(API + '/pago/codigo', { method: 'DELETE', headers: authH() }); } catch (e) { /* se recarga igual */ } recargar(); };
+    cod.appendChild(quitar);
+  } else {
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.maxLength = 32; inp.placeholder = 'Código de descuento'; inp.autocomplete = 'off'; inp.style.cssText = 'max-width:220px';
+    inp.setAttribute('aria-label', 'Código de descuento');
+    const ap = ppEl('button', null, 'Aplicar', 'btn btn-ghost');
+    ap.type = 'button';
+    ap.onclick = async () => {
+      const v = inp.value.trim();
+      if (!v) return;
+      ap.disabled = true;
+      try {
+        const r = await fetch(API + '/pago/codigo', { method: 'POST', headers: { ...authH(), 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: v }) });
+        const x = await r.json().catch(() => ({}));
+        if (!r.ok) { mensajeError(x.error || 'Código no válido o vencido.'); ap.disabled = false; return; }
+        await recargar();
+      } catch (e) { mensajeError('No pudimos validar el código. Intentá de nuevo.'); ap.disabled = false; }
+    };
+    inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ap.click(); });
+    cod.appendChild(inp); cod.appendChild(ap);
+  }
+  bloque.appendChild(cod);
+  const cambiar = ppEl('button', 'margin-top:4px', 'Cambiar de plan', 'btn btn-ghost');
+  cambiar.type = 'button';
+  cambiar.onclick = abrirSelector;
+  bloque.appendChild(cambiar);
+}
+// Paso 2: cómo pagar. Datos del servidor (tabla ajustes_pago), solo con textContent.
+function ppPasoPago(cuerpo, d, inst, correo) {
+  const bloque = ppEl('div', 'margin:6px 0 10px');
+  bloque.appendChild(ppEl('h3', 'margin:0 0 6px;font-size:16px', 'Cómo pagar'));
+  if (d.estado !== 'pendiente' && d.plan) {
+    const f = ppEl('div', null, null, 'pp-fila total');
+    f.appendChild(ppEl('span', null, 'Pago mensual · ' + d.plan.nombre));
+    f.appendChild(ppEl('span', null, ppUsd(d.plan.mensual_usd) + ' + IVA'));
+    bloque.appendChild(f);
+  }
+  const linea = (txt, negrita) => bloque.appendChild(ppEl('p', 'margin:0 0 10px;line-height:1.5;font-size:15px' + (negrita ? ';font-weight:600' : ''), txt));
+  // El número SINPE no se parte en dos líneas en pantallas angostas (sigue siendo texto normal, se copia tal cual).
+  const sinpe = ppEl('p', 'margin:0 0 10px;line-height:1.5;font-size:15px');
+  sinpe.appendChild(document.createTextNode('Realizá el pago por SINPE Móvil al '));
+  sinpe.appendChild(ppEl('span', 'white-space:nowrap;font-weight:600', inst.sinpe));
+  sinpe.appendChild(document.createTextNode((inst.banco_cuenta ? ' o por transferencia a la cuenta BAC ' + inst.banco_cuenta : '') + '.'));
+  bloque.appendChild(sinpe);
+  linea('A nombre de ' + inst.titular + '.');
+  linea('Como referencia, usá el correo de tu cuenta o el nombre de tu negocio. Enviá el comprobante a ' + correo + '.');
+  linea('Tu acceso se autoriza en menos de 24 horas una vez confirmado el pago.', true);
+  cuerpo.appendChild(bloque);
+}
+function ppPantallaError(siguiente) {
+  ppEstilos();
+  const previa = document.getElementById('pagoPendiente');
+  if (previa) previa.remove();
+  const app = document.getElementById('appContainer');
+  if (app) app.style.display = 'none';
+  const capa = ppEl('div', null, null, 'pp-capa');
+  capa.id = 'pagoPendiente';
+  const caja = ppEl('div', null, null, 'pp-caja');
+  caja.style.maxWidth = '480px';
+  caja.appendChild(ppEl('h2', 'margin:0 0 10px;font-size:20px', 'No pudimos verificar tu cuenta'));
+  const msg = ppEl('p', 'margin:0 0 16px;line-height:1.5', 'Hubo un problema de conexión al revisar el estado de tu plan. Tus datos están a salvo; intentá de nuevo en un momento.');
+  msg.setAttribute('role', 'status');
+  caja.appendChild(msg);
+  const fila = ppEl('div', 'display:flex;gap:10px;flex-wrap:wrap');
+  const reintentar = ppEl('button', null, 'Reintentar', 'btn');
+  reintentar.type = 'button';
+  reintentar.onclick = () => pagoPendienteGate(siguiente || (() => { location.reload(); }));
+  const salir = ppEl('button', null, 'Cerrar sesión', 'btn btn-ghost');
+  salir.type = 'button';
+  salir.onclick = () => { capa.remove(); logout(); };
+  fila.appendChild(reintentar); fila.appendChild(salir);
   caja.appendChild(fila);
   capa.appendChild(caja);
   document.body.appendChild(capa);
 }
-// Pregunta al servidor si la cuenta está pendiente. Si no lo está, sigue con `siguiente` (cargar el panel).
+// Aviso fijo arriba cuando el pago está por vencer o venció pero sigue en los 7 días de gracia.
+function ppAviso(d) {
+  const previo = document.getElementById('ppAviso');
+  if (previo) previo.remove();
+  if (!d || (d.estado !== 'en_gracia' && d.estado !== 'por_vencer')) return;
+  ppEstilos();
+  const barra = ppEl('div', null, null, 'pp-aviso');
+  barra.id = 'ppAviso';
+  barra.setAttribute('role', 'status');
+  barra.appendChild(ppEl('span', null, d.estado === 'en_gracia'
+    ? 'El pago de tu plan venció el ' + ppFecha(d.vence_at) + '. Tu servicio sigue activo y se suspende en ' + d.dias_restantes + (d.dias_restantes === 1 ? ' día' : ' días') + ' si no lo registramos.'
+    : 'Tu plan se renueva el ' + ppFecha(d.vence_at) + '.'));
+  const ver = ppEl('button', null, 'Ver cómo pagar', 'btn');
+  ver.type = 'button';
+  ver.onclick = () => ppPantalla(d, true);
+  barra.appendChild(ver);
+  document.body.insertBefore(barra, document.body.firstChild);
+}
+// Pregunta al servidor el estado de la cuenta. Si está operativa, sigue con `siguiente` (cargar el panel). Falla-cerrado: sin respuesta, no se carga el panel.
 async function pagoPendienteGate(siguiente) {
+  let d = null;
   try {
     const r = await fetch(API + '/pago/estado', { headers: authH() });
     if (r.status === 401) { sessionExpired(); return; }
-    const d = r.ok ? await r.json() : null;
-    if (d && d.pendiente && d.instrucciones) { ppPantalla(d.instrucciones, d.avisado); return; }
-  } catch (e) { /* si no se puede consultar, el servidor igual bloquea con 402 */ }
+    if (!r.ok) { ppPantallaError(siguiente); return; }      // 503, 500, 403, 429…: sin respuesta válida el panel no se carga (falla-cerrado)
+    d = await r.json();
+  } catch (e) { ppPantallaError(siguiente); return; }
+  if (d && d.bloqueada) { ppPantalla(d, false); return; }
   const aviso = document.getElementById('pagoPendiente');
   if (aviso) aviso.remove();
   siguiente();
+  ppAviso(d);
 }
 // </compartido:pago-pendiente-panel>
 function showApp() {
@@ -4686,13 +4998,115 @@ document.addEventListener('click', async (ev) => {
   b.disabled = false;
 });
 // </compartido:soporte-ui>
+// <compartido:pwa-instalar>
+// App instalable (PWA): registro del service worker + invitación a instalar (28/10/2026, Fase 3).
+// Fuente única para el dashboard de AutoCita, el panel de AutoVentas y la tienda /tienda/:slug. Editar acá, nunca las copias:
+//   python3 build-compartido.py   (en la tienda se incrusta como texto, por eso este archivo NO puede usar comillas invertidas ni dólar-llave)
+// Seguridad: todo lo que se pinta usa textContent / createElementNS; nada de la URL ni del usuario entra como HTML.
+// Privacidad: el service worker no guarda datos de clientes (ver compartido/pwa-sw.js); al cerrar sesión se le pide limpiar igual.
+function pwaIniciar(cfg) {
+  // cfg: { clave, producto, sw, alcance }  (clave: nombre corto sin espacios para el localStorage)
+  var guardar = function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* modo privado: la invitación simplemente puede repetirse */ } };
+  var leer = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  var llave = 'pwa_invitacion_' + String(cfg.clave || 'app').replace(/[^a-z0-9_-]/gi, '').slice(0, 40);
+  var enApp = function () { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; };
+  var enIos = function () { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); };
+  var eventoInstalar = null, tarjeta = null;
+  // Textos (la tienda atiende en es/en/pt; el idioma lo fija la propia página en <html lang>).
+  var TEXTOS = {
+    es: { t: 'Llevá {p} en tu celular', d: 'Abrila desde tu pantalla de inicio, como cualquier otra app.', s1: 'Tocá Compartir, abajo en Safari', s2: 'Elegí «Agregar a inicio»', ok: 'Entendido', no: 'Ahora no', si: 'Instalar en tu celular', r: 'Instalar en tu celular' },
+    en: { t: 'Take {p} on your phone', d: 'Open it from your home screen, like any other app.', s1: 'Tap Share, at the bottom of Safari', s2: 'Choose "Add to Home Screen"', ok: 'Got it', no: 'Not now', si: 'Install on your phone', r: 'Install on your phone' },
+    pt: { t: 'Leve {p} no seu celular', d: 'Abra pela tela inicial, como qualquer outro app.', s1: 'Toque em Compartilhar, na parte de baixo do Safari', s2: 'Escolha «Adicionar à Tela de Início»', ok: 'Entendi', no: 'Agora não', si: 'Instalar no celular', r: 'Instalar no celular' }
+  };
+  var tx = function () { return TEXTOS[String(document.documentElement.lang || 'es').slice(0, 2).toLowerCase()] || TEXTOS.es; };
+
+  // 1) Service worker. updateViaCache:'none' hace que el navegador pida sw.js siempre fresco: así una versión nueva llega sola.
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register(cfg.sw, { scope: cfg.alcance, updateViaCache: 'none' }).then(function (reg) {
+        var ultimo = 0;
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible' && Date.now() - ultimo > 3600000) { ultimo = Date.now(); reg.update().catch(function () {}); }
+        });
+      }).catch(function () { /* sin service worker el panel funciona igual que siempre */ });
+    });
+  }
+
+  // 2) Invitación discreta: una sola vez, sin bloquear nada, con «Ahora no».
+  var icono = function (tipo) {
+    var ns = 'http://www.w3.org/2000/svg', s = document.createElementNS(ns, 'svg');
+    s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('width', '20'); s.setAttribute('height', '20'); s.setAttribute('aria-hidden', 'true');
+    s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
+    var p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', tipo === 'compartir' ? 'M12 3v12M8 7l4-4 4 4M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1' : 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM12 8v8M8 12h8');
+    s.appendChild(p); return s;
+  };
+  var el = function (tag, clase, texto) { var e = document.createElement(tag); if (clase) e.className = clase; if (texto) e.textContent = texto; return e; };
+  var cerrar = function (motivo) { guardar(llave, motivo); if (tarjeta && tarjeta.parentNode) tarjeta.parentNode.removeChild(tarjeta); tarjeta = null; };
+
+  var mostrar = function () {
+    if (tarjeta || enApp() || leer(llave)) return;
+    var ios = enIos();
+    if (!ios && !eventoInstalar) return;   // el navegador todavía no permite instalar
+    guardar(llave, 'visto');               // se muestra una sola vez; «Ahora no» y cerrar la pantalla lo respetan
+    if (!document.getElementById('pwaEstilos')) {
+      var st = document.createElement('style'); st.id = 'pwaEstilos';
+      st.textContent = '.pwa-inv{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:420px;margin:0 auto;z-index:900;background:var(--white,#fff);color:var(--gray-900,#1d1c1a);border:1px solid rgba(128,128,128,.28);border-radius:16px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.18);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}' +
+        '.pwa-inv h2{margin:0 0 2px;font-size:15px;font-weight:700}.pwa-inv p{margin:0 0 10px;opacity:.78}' +
+        '.pwa-inv ol{margin:0 0 10px;padding:0;list-style:none;display:grid;gap:8px}.pwa-inv li{display:flex;align-items:center;gap:10px}' +
+        '.pwa-inv li svg{flex:none;width:30px;height:30px;padding:5px;border-radius:8px;background:rgba(128,128,128,.16)}' +
+        '.pwa-inv .pwa-fila{display:flex;gap:8px;justify-content:flex-end}' +
+        '.pwa-inv button{font:inherit;font-weight:600;border-radius:10px;padding:9px 14px;min-height:40px;cursor:pointer;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit}' +
+        '.pwa-inv button.pwa-si{background:var(--primary,#2D6A4F);border-color:var(--primary,#2D6A4F);color:var(--gray-50,#faf9f6)}' +
+        '.pwa-inv button:focus-visible{outline:2px solid var(--primary,#2D6A4F);outline-offset:2px}';
+      document.head.appendChild(st);
+    }
+    var T = tx();
+    tarjeta = el('section', 'pwa-inv'); tarjeta.setAttribute('role', 'region'); tarjeta.setAttribute('aria-label', T.r);
+    tarjeta.appendChild(el('h2', '', T.t.replace('{p}', function () { return String(cfg.producto || '').slice(0, 60); })));
+    tarjeta.appendChild(el('p', '', T.d));
+    var fila = el('div', 'pwa-fila');
+    if (ios) {
+      var pasos = el('ol');
+      var p1 = el('li'); p1.appendChild(icono('compartir')); p1.appendChild(el('span', '', T.s1));
+      var p2 = el('li'); p2.appendChild(icono('agregar')); p2.appendChild(el('span', '', T.s2));
+      pasos.appendChild(p1); pasos.appendChild(p2); tarjeta.appendChild(pasos);
+    }
+    var no = el('button', '', ios ? T.ok : T.no); no.type = 'button'; no.addEventListener('click', function () { cerrar('oculto'); });
+    fila.appendChild(no);
+    if (!ios) {
+      var si = el('button', 'pwa-si', T.si); si.type = 'button';
+      si.addEventListener('click', function () {
+        var ev = eventoInstalar; eventoInstalar = null;
+        if (!ev) { cerrar('oculto'); return; }
+        ev.prompt(); ev.userChoice.then(function (r) { cerrar(r && r.outcome === 'accepted' ? 'instalada' : 'oculto'); }).catch(function () { cerrar('oculto'); });
+      });
+      fila.appendChild(si);
+    }
+    tarjeta.appendChild(fila);
+    tarjeta.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrar('oculto'); });
+    document.body.appendChild(tarjeta);
+  };
+
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); eventoInstalar = e; setTimeout(mostrar, 8000); });
+  window.addEventListener('appinstalled', function () { guardar(llave, 'instalada'); if (tarjeta) cerrar('instalada'); });
+  if (enIos()) window.addEventListener('load', function () { setTimeout(mostrar, 8000); });
+}
+
+// Al cerrar sesión: el service worker borra cualquier caché que no sea la cáscara estática. No hay datos de clientes ahí
+// (nunca se guardan), pero así queda demostrado y cubre versiones viejas del service worker.
+function pwaLimpiarSesion() {
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ tipo: 'limpiar' });
+  } catch (e) { /* sin service worker no hay nada que limpiar */ }
+}
+// </compartido:pwa-instalar>
 // ── App instalable (PWA) ─────────────────────────────────────────
 // Registra el service worker si está subido junto a este archivo. Solo guarda
 // en caché la "cáscara" del panel para que abra sin conexión; nunca guarda
 // respuestas de la API (datos de pacientes/clientes siempre van en vivo).
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
-}
+// (28/10/2026) Registro del service worker e invitación a instalar: módulo compartido (bloque pwa-instalar, arriba). Solo estáticos; nunca datos de clientes.
+pwaIniciar({ clave: 'autocita', producto: 'AutoCita', sw: 'sw.js', alcance: './' });
 
 // ─── Imagen para redes de un producto / servicio (27/09/2026) ────────────────
 // Pedido de Eduardo: que cada producto (AutoVentas) o servicio (AutoCita)
