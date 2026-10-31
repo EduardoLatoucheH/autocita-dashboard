@@ -43,6 +43,9 @@
                ─────────────────────────────────────────────────────────────── */
             --primary: #4ADE9B;
             --primary-dark: #2F6B4F;
+            /* Fix accesibilidad (30/10/2026, H-188): --primary-dark (#2F6B4F) como TEXTO sobre fondo oscuro daba 2,35 a 2,63:1. Para texto de marca se usa --primary-text y para el hover de botones --primary-hover; --primary-dark queda solo para fondos. */
+            --primary-text: #4ADE9B;
+            --primary-hover: #7BE8B8;
             --primary-soft: #1C2B23;
             --terracotta: #E08A5F;
             --terracotta-dark: #B8663C;
@@ -89,6 +92,8 @@
         [data-theme="light"] {
             --primary: #2F6B4F;
             --primary-dark: #1C4A34;
+            --primary-text: #1C4A34;
+            --primary-hover: #1C4A34;
             --primary-soft: #E8F5EE;
             --terracotta: #C1663B;
             --terracotta-dark: #96501F;
@@ -113,19 +118,19 @@
         }
         .theme-toggle { display: flex; align-items: center; gap: 6px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 999px; padding: 4px; cursor: pointer; }
         .theme-toggle button { border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; color: var(--gray-500); display: flex; align-items: center; gap: 5px; }
-        .theme-toggle button.activo { background: var(--white); color: var(--primary-dark); box-shadow: var(--shadow-sm); }
+        .theme-toggle button.activo { background: var(--white); color: var(--primary-text); box-shadow: var(--shadow-sm); }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
         .container { display: flex; min-height: 100vh; }
 
         /* Sidebar */
         .sidebar { width: 252px; background: var(--white); border-right: 1px solid var(--gray-200); padding: 20px 12px; position: fixed; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
         .logo { padding: 8px 12px 24px; }
-        .logo h1 { font-size: 20px; font-weight: 800; color: var(--primary-dark); letter-spacing: -0.02em; }
+        .logo h1 { font-size: 20px; font-weight: 800; color: var(--primary-text); letter-spacing: -0.02em; }
         .logo span { display: block; font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
         .nav-group { display: flex; flex-direction: column; gap: 2px; flex: 1; }
         .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--gray-700); cursor: pointer; background: none; border: none; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; width: 100%; text-align: left; font-family: inherit; font-size: 14px; font-weight: 500; transition: all 0.15s; }
         .nav-link:hover { background: var(--gray-100); color: var(--gray-900); }
-        .nav-link.active { background: var(--primary-soft); color: var(--primary-dark); border-left-color: var(--primary); font-weight: 600; }
+        .nav-link.active { background: var(--primary-soft); color: var(--primary-text); border-left-color: var(--primary); font-weight: 600; }
         .nav-link.logout-link { margin-top: 24px; color: var(--danger); }
         .nav-link.logout-link:hover { background: var(--danger-soft); }
 
@@ -156,9 +161,12 @@
         input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); background: var(--gray-50); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; color: var(--gray-900); transition: border-color .15s, background .15s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: var(--white); }
         textarea { min-height: 100px; resize: vertical; }
+        /* Fix accesibilidad (30/10/2026, H-188): foco visible con teclado y sin animaciones si la persona lo pidió. */
+        input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--primary-text); outline-offset: 1px; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 
         .btn { padding: 10px 18px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; background: var(--primary); color: var(--white); box-shadow: var(--shadow-sm); transition: transform .1s, box-shadow .1s, background .15s; }
-        .btn:hover { background: var(--primary-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .btn:hover { background: var(--primary-hover); box-shadow: var(--shadow-md); transform: translateY(-1px); }
         .btn:active { transform: translateY(0); }
         .btn-danger { background: var(--danger); }
         .btn-danger:hover { background: var(--danger); }
@@ -178,7 +186,7 @@
         tbody tr:hover { background: var(--gray-50); }
         tbody tr:last-child td { border-bottom: none; }
         th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
-        th.sortable:hover { color: var(--primary-dark); }
+        th.sortable:hover { color: var(--primary-text); }
         th.sortable .arrow { display: inline-block; margin-left: 4px; opacity: .35; font-size: 10px; }
         th.sortable.sort-asc .arrow, th.sortable.sort-desc .arrow { opacity: 1; color: var(--primary); }
 
@@ -206,7 +214,7 @@
 
         .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; }
         .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-        .badge-success { background: var(--primary-soft); color: var(--primary-dark); }
+        .badge-success { background: var(--primary-soft); color: var(--primary-text); }
         .badge-warning { background: var(--warning-soft); color: var(--warning); }
         .badge-danger { background: var(--danger-soft); color: var(--danger); }
 
@@ -225,12 +233,12 @@
         .msg .meta { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
         @media (max-width: 768px) { .inbox-wrap { grid-template-columns: 1fr; } .inbox-lista { max-height: 320px; } }
         .alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13.5px; font-weight: 500; }
-        .alert-success { background: var(--primary-soft); color: var(--primary-dark); }
+        .alert-success { background: var(--primary-soft); color: var(--primary-text); }
         .alert-error { background: var(--danger-soft); color: var(--danger); }
 
         .bubble-group { display: flex; flex-wrap: wrap; gap: 8px; }
         .bubble { padding: 7px 14px; border: 1.5px solid var(--gray-200); border-radius: 100px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--white); color: var(--gray-700); transition: all .15s; }
-        .bubble:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-dark); }
+        .bubble:hover:not(:disabled) { border-color: var(--primary); color: var(--primary-text); }
         .bubble.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
         .bubble:disabled { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
 
@@ -249,7 +257,7 @@
         #loginScreen { display: none; position: fixed; inset: 0; background: linear-gradient(180deg, var(--gray-50), var(--primary-soft)); z-index: 1000; align-items: center; justify-content: center; }
         #loginScreen.visible { display: flex; }
         .login-box { background: var(--white); border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg); border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; }
-        .login-box h2 { font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 24px; text-align:center; letter-spacing: -0.02em; }
+        .login-box h2 { font-size: 22px; font-weight: 800; color: var(--primary-text); margin-bottom: 24px; text-align:center; letter-spacing: -0.02em; }
         /* (28/10/2026) Registro con plan: la caja se ensancha para mostrar los planes y la pantalla permite desplazarse en celulares. */
         #loginScreen { overflow-y: auto; padding: 16px; box-sizing: border-box; }
         #loginScreen .login-box { margin: auto; }
@@ -296,7 +304,7 @@
         .pieza-ctrl input, .pieza-ctrl select, .pieza-ctrl textarea { font: inherit; font-size: 14px; font-weight: 400; color: inherit; padding: 8px 10px; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; background: #fff; }
         .pieza-ctrl input[type=color] { padding: 2px; height: 38px; width: 70px; }
         .pieza-ctrl textarea { resize: vertical; }
-        .pieza-subir { cursor: pointer; flex-direction: row !important; align-items: center; justify-content: center; border: 1px dashed var(--gray-300, #d1d5db); border-radius: 8px; padding: 9px; color: var(--primary-dark, #1f5c40) !important; }
+        .pieza-subir { cursor: pointer; flex-direction: row !important; align-items: center; justify-content: center; border: 1px dashed var(--gray-300, #d1d5db); border-radius: 8px; padding: 9px; color: var(--primary-text, #1f5c40) !important; }
         .pieza-subir input { display: none; }
         .pieza-aviso { font-size: 12px; color: var(--danger, #b91c1c); min-height: 14px; }
         .pieza-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -447,18 +455,18 @@
         <div id="loginAlert"></div>
         <!-- Login -->
         <div id="paneLogin" class="auth-pane active">
-            <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="loginEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
-            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+            <div class="form-group"><label data-i18n="login.email" for="loginEmail">Email</label><input type="email" id="loginEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
+            <div class="form-group"><label data-i18n="login.password" for="loginPassword">Contraseña</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
             <button class="btn btn-block" onclick="login()" data-i18n="login.tabLogin">Iniciar sesión</button>
         </div>
         <!-- Registro -->
         <div id="paneRegister" class="auth-pane">
-            <div class="form-group"><label data-i18n="login.email">Email</label><input type="email" id="regEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
-            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="regPass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
-            <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="regPass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
-            <div class="form-group"><label data-i18n="login.clinicName">Nombre de la clínica</label><input type="text" id="regNombre" data-i18n-placeholder="login.clinicNamePh" placeholder="Clínica San José"></div>
+            <div class="form-group"><label data-i18n="login.email" for="regEmail">Email</label><input type="email" id="regEmail" data-i18n-placeholder="login.emailPh" placeholder="email@clinica.com"></div>
+            <div class="form-group"><label data-i18n="login.password" for="regPass">Contraseña</label><input type="password" id="regPass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
+            <div class="form-group"><label data-i18n="login.confirmPassword" for="regPass2">Confirmar contraseña</label><input type="password" id="regPass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
+            <div class="form-group"><label data-i18n="login.clinicName" for="regNombre">Nombre de la clínica</label><input type="text" id="regNombre" data-i18n-placeholder="login.clinicNamePh" placeholder="Clínica San José"></div>
             <div class="form-group">
-                <label data-i18n="login.tipoNegocio">Tipo de negocio</label>
+                <label data-i18n="login.tipoNegocio" for="regTipoNegocio">Tipo de negocio</label>
                 <select id="regTipoNegocio" onchange="ppMontarRegistro(this.value)">
                     <option value="clinica_general" data-i18n="tipoNegocio.clinica_general">Clínica General / Consultorio Médico</option>
                     <option value="dental" data-i18n="tipoNegocio.dental">Consultorio Dental</option>
@@ -482,8 +490,8 @@
                 <small class="form-hint" data-i18n="login.esDoctorHint">Solo se define al crear la cuenta. Así vas a ver tu agenda y tus expedientes como los demás doctores.</small>
             </div>
             <div id="regDoctorCampos" style="display:none">
-                <div class="form-group"><label data-i18n="login.doctorNombre">Tu nombre como doctor/a</label><input type="text" id="regDoctorNombre" maxlength="120" data-i18n-placeholder="login.doctorNombrePh" placeholder="Dra. Ana Rodríguez"></div>
-                <div class="form-group"><label data-i18n="login.especialidad">Especialidad</label><input type="text" id="regEspecialidad" maxlength="80" data-i18n-placeholder="login.especialidadPh" placeholder="Medicina general"></div>
+                <div class="form-group"><label data-i18n="login.doctorNombre" for="regDoctorNombre">Tu nombre como doctor/a</label><input type="text" id="regDoctorNombre" maxlength="120" data-i18n-placeholder="login.doctorNombrePh" placeholder="Dra. Ana Rodríguez"></div>
+                <div class="form-group"><label data-i18n="login.especialidad" for="regEspecialidad">Especialidad</label><input type="text" id="regEspecialidad" maxlength="80" data-i18n-placeholder="login.especialidadPh" placeholder="Medicina general"></div>
             </div>
             <div class="form-group" id="regPlanesGrupo" style="max-width:none">
                 <label>Escogé tu plan</label>
@@ -494,8 +502,8 @@
         <!-- Aceptar invitación (llegó por el link del correo de invitación) -->
         <div id="paneAceptarInvitacion" class="auth-pane">
             <p class="card-subtitle" data-i18n="invite.intro" style="margin-bottom:16px">Te invitaron a unirte al equipo. Elegí tu contraseña para activar tu cuenta.</p>
-            <div class="form-group"><label data-i18n="login.password">Contraseña</label><input type="password" id="invitePass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
-            <div class="form-group"><label data-i18n="login.confirmPassword">Confirmar contraseña</label><input type="password" id="invitePass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
+            <div class="form-group"><label data-i18n="login.password" for="invitePass">Contraseña</label><input type="password" id="invitePass" data-i18n-placeholder="login.passwordPh" placeholder="Mín. 10: mayúscula, minúscula y número"></div>
+            <div class="form-group"><label data-i18n="login.confirmPassword" for="invitePass2">Confirmar contraseña</label><input type="password" id="invitePass2" data-i18n-placeholder="login.confirmPasswordPh" placeholder="Repetí la contraseña"></div>
             <button class="btn btn-block" onclick="aceptarInvitacion()" data-i18n="invite.btnActivar">Activar mi cuenta</button>
         </div>
     </div>
@@ -626,12 +634,12 @@
                 <div class="card">
                     <div class="card-title" data-i18n="pac.addTitle">Agregar Paciente</div>
                     <div id="alertPaciente"></div>
-                    <div class="form-group"><label data-i18n="pac.nombre">Nombre</label><input type="text" id="pNombre" data-i18n-placeholder="pac.nombrePh" placeholder="Juan Pérez"></div>
-                    <div class="form-group"><label data-i18n="pac.telefono">Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
-                    <div class="form-group"><label data-i18n="pac.email">Email</label><input type="email" id="pEmail" data-i18n-placeholder="pac.emailPh" placeholder="juan@email.com"></div>
-                    <div class="form-group"><label data-i18n="pac.cedula">Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
+                    <div class="form-group"><label data-i18n="pac.nombre" for="pNombre">Nombre</label><input type="text" id="pNombre" data-i18n-placeholder="pac.nombrePh" placeholder="Juan Pérez"></div>
+                    <div class="form-group"><label data-i18n="pac.telefono" for="pTelefono">Teléfono</label><input type="tel" id="pTelefono" placeholder="+50688001234"></div>
+                    <div class="form-group"><label data-i18n="pac.email" for="pEmail">Email</label><input type="email" id="pEmail" data-i18n-placeholder="pac.emailPh" placeholder="juan@email.com"></div>
+                    <div class="form-group"><label data-i18n="pac.cedula" for="pCedula">Cédula</label><input type="text" id="pCedula" placeholder="1-1234-5678"></div>
                     <div class="form-group">
-                        <label data-i18n="pac.idioma">Idioma preferido</label>
+                        <label data-i18n="pac.idioma" for="pIdioma">Idioma preferido</label>
                         <select id="pIdioma">
                             <option value="es" selected data-i18n="pac.idiomaEs">Español</option>
                             <option value="en" data-i18n="pac.idiomaEn">English</option>
@@ -643,7 +651,7 @@
                         <div id="doctorBubblesPaciente" class="bubble-group"><span style="color:var(--gray-500);font-size:13px" data-i18n="pac.cargandoDoctores">Cargando doctores...</span></div>
                     </div>
                     <div class="form-group" id="fechaVisitaGroup" style="display:none">
-                        <label data-i18n="pac.fechaVisita">Fecha de la visita</label>
+                        <label data-i18n="pac.fechaVisita" for="pFechaVisita">Fecha de la visita</label>
                         <input type="date" id="pFechaVisita" onchange="actualizarResumenBloquePaciente()">
                         <div id="resumenBloquePaciente" style="margin-top:8px;font-size:13px;color:var(--gray-500)"></div>
                     </div>
@@ -652,7 +660,7 @@
                 <div class="card">
                     <div class="card-title" data-i18n="pac.listaTitle">Lista de Pacientes</div>
                     <div class="toolbar">
-                        <input type="text" class="search-input" id="pacientesBuscar" placeholder="Buscar por nombre, teléfono o cédula..." oninput="renderTablaPacientes()">
+                        <input type="text" class="search-input" id="pacientesBuscar" aria-label="Buscar por nombre, teléfono o cédula..." placeholder="Buscar por nombre, teléfono o cédula..." oninput="renderTablaPacientes()">
                         <button class="btn btn-ghost btn-sm" onclick="limpiarFiltroPacientes()" data-i18n="common.limpiar">Limpiar</button>
                         <button class="btn btn-ghost btn-sm" onclick="exportarPacientesCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
                     </div>
@@ -675,11 +683,11 @@
                     <p class="card-subtitle" data-i18n="citas.individualDesc">Un paciente, un doctor, una fecha — elegí la hora entre lo que el doctor realmente tiene libre.</p>
                     <div id="alertIndividual"></div>
                     <div class="form-group">
-                        <label data-i18n="common.paciente">Paciente</label>
+                        <label data-i18n="common.paciente" for="citaPaciente">Paciente</label>
                         <select id="citaPaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.doctor">Doctor</label>
+                        <label data-i18n="common.doctor" for="citaDoctor">Doctor</label>
                         <select id="citaDoctor" onchange="cargarDiasDisponiblesCita()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
@@ -698,11 +706,11 @@
                     <p class="card-subtitle" data-i18n="citas.bloqueDesc">Para cuando el mismo paciente ve a varios doctores el mismo día — cada fila muestra la disponibilidad real de ese doctor.</p>
                     <div id="alertBloque"></div>
                     <div class="form-group">
-                        <label data-i18n="common.paciente">Paciente</label>
+                        <label data-i18n="common.paciente" for="bloquePaciente">Paciente</label>
                         <select id="bloquePaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.fecha">Fecha</label>
+                        <label data-i18n="common.fecha" for="bloqueFecha">Fecha</label>
                         <input type="date" id="bloqueFecha" oninput="renderFilasBloque()">
                     </div>
                     <div id="bloqueFilas"></div>
@@ -714,15 +722,15 @@
                     <p class="card-subtitle" data-i18n="citas.recurrenteDesc">Para tratamientos con seguimiento — ej. fisioterapia una vez por semana durante 6 semanas.</p>
                     <div id="alertRecurrente"></div>
                     <div class="form-group">
-                        <label data-i18n="common.paciente">Paciente</label>
+                        <label data-i18n="common.paciente" for="recurrentePaciente">Paciente</label>
                         <select id="recurrentePaciente"><option value="" data-i18n="common.cargandoPacientes">Cargando pacientes...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.doctor">Doctor</label>
+                        <label data-i18n="common.doctor" for="recurrenteDoctor">Doctor</label>
                         <select id="recurrenteDoctor" onchange="actualizarSlotsRecurrente()"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="citas.fechaPrimera">Fecha de la primera cita</label>
+                        <label data-i18n="citas.fechaPrimera" for="recurrenteFecha">Fecha de la primera cita</label>
                         <input type="date" id="recurrenteFecha" oninput="actualizarSlotsRecurrente()">
                     </div>
                     <div class="form-group">
@@ -731,11 +739,11 @@
                     </div>
                     <div style="display:flex;gap:12px">
                         <div class="form-group" style="flex:1">
-                            <label data-i18n="citas.repetirCada">Repetir cada (semanas)</label>
+                            <label data-i18n="citas.repetirCada" for="recurrenteCadaSemanas">Repetir cada (semanas)</label>
                             <input type="number" id="recurrenteCadaSemanas" value="1" min="1" oninput="actualizarPreviewRecurrente()">
                         </div>
                         <div class="form-group" style="flex:1">
-                            <label data-i18n="citas.cantidad">Cantidad de citas</label>
+                            <label data-i18n="citas.cantidad" for="recurrenteCantidad">Cantidad de citas</label>
                             <input type="number" id="recurrenteCantidad" value="4" min="1" max="52" oninput="actualizarPreviewRecurrente()">
                         </div>
                     </div>
@@ -749,15 +757,15 @@
                         Estas acciones afectan muchas citas a la vez y no avisan a los pacientes automáticamente. Después de usarlas, contactalos por WhatsApp a mano.
                     </p>
                     <div class="form-group">
-                        <label data-i18n="citas.diaModificar">Día a modificar</label>
+                        <label data-i18n="citas.diaModificar" for="emergDia">Día a modificar</label>
                         <input type="date" id="emergDia">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="citas.doctorOpcional">Doctor (opcional — vacío afecta a todos)</label>
+                        <label data-i18n="citas.doctorOpcional" for="emergDoctor">Doctor (opcional — vacío afecta a todos)</label>
                         <select id="emergDoctor"><option value="" data-i18n="common.todosDoctores">Todos los doctores</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="citas.minutosLabel">Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
+                        <label data-i18n="citas.minutosLabel" for="emergMinutos">Correr agenda cuántos minutos (negativo para adelantar, ej: -15)</label>
                         <input type="number" id="emergMinutos" placeholder="30">
                     </div>
                     <button class="btn btn-block" style="background:var(--terracotta)" onclick="correrAgendaDia()" data-i18n="citas.btnCorrer">🕐 Correr agenda del día</button>
@@ -775,17 +783,17 @@
                 <div class="card">
                     <div class="card-title" data-i18n="citas.todasTitle">Todas las Citas</div>
                     <div class="toolbar">
-                        <input type="text" class="search-input" id="citasBuscar" placeholder="Buscar por paciente o teléfono..." oninput="renderTablaCitas()">
-                        <select id="citasFiltroDoctor" onchange="renderTablaCitas()"><option value="" data-i18n="citas.todosDoctores">Todos los doctores</option></select>
-                        <select id="citasFiltroEstado" onchange="renderTablaCitas()">
+                        <input type="text" class="search-input" id="citasBuscar" aria-label="Buscar por paciente o teléfono..." placeholder="Buscar por paciente o teléfono..." oninput="renderTablaCitas()">
+                        <select id="citasFiltroDoctor" aria-label="Doctor" onchange="renderTablaCitas()"><option value="" data-i18n="citas.todosDoctores">Todos los doctores</option></select>
+                        <select id="citasFiltroEstado" aria-label="Estado" onchange="renderTablaCitas()">
                             <option value="" data-i18n="citas.todosEstados">Todos los estados</option>
                             <option value="pendiente" data-i18n="badge.pendiente">Pendiente</option>
                             <option value="confirmada" data-i18n="badge.confirmada">Confirmada</option>
                             <option value="atendida" data-i18n="badge.atendida">Atendida</option>
                             <option value="cancelada" data-i18n="badge.cancelada">Cancelada</option>
                         </select>
-                        <input type="date" id="citasFiltroDesde" onchange="renderTablaCitas()">
-                        <input type="date" id="citasFiltroHasta" onchange="renderTablaCitas()">
+                        <input type="date" id="citasFiltroDesde" aria-label="Desde" onchange="renderTablaCitas()">
+                        <input type="date" id="citasFiltroHasta" aria-label="Hasta" onchange="renderTablaCitas()">
                         <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosCitas()" data-i18n="common.limpiar">Limpiar</button>
                         <button class="btn btn-ghost btn-sm" onclick="exportarCitasCSV()" data-i18n="common.exportarCsv">⬇ Exportar CSV</button>
                     </div>
@@ -808,17 +816,17 @@
                     <div class="card-title" data-i18n="bloq.nuevoTitle">Bloquear un espacio</div>
                     <p class="card-sub" data-i18n="bloq.nuevoSub">Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.</p>
                     <div id="alertBloqueo"></div>
-                    <div class="form-group"><label data-i18n="common.doctor">Doctor</label><select id="bloqDoctor"></select></div>
+                    <div class="form-group"><label data-i18n="common.doctor" for="bloqDoctor">Doctor</label><select id="bloqDoctor"></select></div>
                     <div class="form-row">
-                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.desde">Desde</label><input type="date" id="bloqDesde"></div>
-                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.hasta">Hasta</label><input type="date" id="bloqHasta"></div>
+                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.desde" for="bloqDesde">Desde</label><input type="date" id="bloqDesde"></div>
+                        <div class="form-group" style="flex:1;min-width:150px"><label data-i18n="bloq.hasta" for="bloqHasta">Hasta</label><input type="date" id="bloqHasta"></div>
                     </div>
                     <label class="check-especial"><input type="checkbox" id="bloqSoloHoras" onchange="toggleHorasBloqueo()"><span data-i18n="bloq.soloHoras">Solo unas horas de esos días (si no, se bloquea el día completo)</span></label>
                     <div class="form-row" id="bloqHorasRow" style="display:none">
-                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaDesde">Hora desde</label><select id="bloqHoraDesde"></select></div>
-                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaHasta">Hora hasta</label><select id="bloqHoraHasta"></select></div>
+                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaDesde" for="bloqHoraDesde">Hora desde</label><select id="bloqHoraDesde"></select></div>
+                        <div class="form-group" style="flex:1;min-width:130px"><label data-i18n="bloq.horaHasta" for="bloqHoraHasta">Hora hasta</label><select id="bloqHoraHasta"></select></div>
                     </div>
-                    <div class="form-group"><label data-i18n="bloq.motivo">Motivo (opcional)</label><input type="text" id="bloqMotivo" data-i18n-placeholder="bloq.motivoPh" placeholder="Ej: Vacaciones, congreso, cirugía"></div>
+                    <div class="form-group"><label data-i18n="bloq.motivo" for="bloqMotivo">Motivo (opcional)</label><input type="text" id="bloqMotivo" data-i18n-placeholder="bloq.motivoPh" placeholder="Ej: Vacaciones, congreso, cirugía"></div>
                     <button class="btn btn-block" onclick="crearBloqueo()" data-i18n="bloq.btnCrear">Bloquear</button>
                 </div>
                 <div class="card">
@@ -832,19 +840,19 @@
                     <div class="card-title" data-i18n="le.addTitle">Agregar a la lista de espera</div>
                     <div id="alertListaEspera"></div>
                     <div class="form-group">
-                        <label data-i18n="common.paciente">Paciente</label>
+                        <label data-i18n="common.paciente" for="lePaciente">Paciente</label>
                         <select id="lePaciente"><option value="" data-i18n="common.seleccionarPaciente">Seleccionar paciente...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="common.doctor">Doctor</label>
+                        <label data-i18n="common.doctor" for="leDoctor">Doctor</label>
                         <select id="leDoctor"><option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option></select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="le.fechaDeseada">Fecha deseada (opcional)</label>
+                        <label data-i18n="le.fechaDeseada" for="leFecha">Fecha deseada (opcional)</label>
                         <input type="date" id="leFecha">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="le.notas">Notas</label>
+                        <label data-i18n="le.notas" for="leNotas">Notas</label>
                         <input type="text" id="leNotas" data-i18n-placeholder="le.notasPh" placeholder="Ej: prefiere mañanas">
                     </div>
                     <button class="btn btn-block" onclick="agregarListaEspera()" data-i18n="le.btnAgregar">Agregar a la lista</button>
@@ -863,12 +871,12 @@
                 <div class="card">
                     <div class="card-title" id="doctorFormTitle" data-i18n="doc.addTitle">Agregar Doctor</div>
                     <div id="alertDoctor"></div>
-                    <div class="form-group"><label data-i18n="common.colNombre">Nombre</label><input type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
-                    <div class="form-group"><label data-i18n="doc.especialidad">Especialidad</label><input type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
-                    <div class="form-group"><label data-i18n="doc.duracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
-                    <div class="form-group"><label data-i18n="doc.precio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
+                    <div class="form-group"><label data-i18n="common.colNombre" for="docNombre">Nombre</label><input type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
+                    <div class="form-group"><label data-i18n="doc.especialidad" for="docEspecialidad">Especialidad</label><input type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
+                    <div class="form-group"><label data-i18n="doc.duracion" for="docDuracion">Duración de cita (minutos)</label><input type="number" id="docDuracion" placeholder="30"></div>
+                    <div class="form-group"><label data-i18n="doc.precio" for="docPrecio">Precio de consulta (₡)</label><input type="number" id="docPrecio" placeholder="25000"></div>
                     <div class="form-group" id="docJefeGrupo" style="display:none"><label for="docJefe" data-i18n="doc.jefe">Jefe de área (a quién reporta)</label><select id="docJefe"></select></div>
-                    <div class="form-group"><label data-i18n="doc.telefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
+                    <div class="form-group"><label data-i18n="doc.telefono" for="docTelefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
                     <div class="form-group">
                         <label data-i18n="doc.dias">Días que atiende</label>
                         <div id="docDias" class="dias-chips">
@@ -890,18 +898,18 @@
                         <input type="hidden" id="docHorario">
                     </div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">Hora inicio</label><select id="docHoraInicio"></select></div>
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">Hora fin</label><select id="docHoraFin"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio" for="docHoraInicio">Hora inicio</label><select id="docHoraInicio"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin" for="docHoraFin">Hora fin</label><select id="docHoraFin"></select></div>
                     </div>
                     <p class="card-subtitle" data-i18n="doc.horarioEstructuradoDesc" style="margin-top:-10px;margin-bottom:14px">Esto es lo que usa Sara para calcular las horas disponibles reales. Si lo dejás vacío, usa el horario general de la clínica.</p>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">Almuerzo desde (opcional)</label><select id="docAlmuerzoInicio"></select></div>
-                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">Almuerzo hasta (opcional)</label><select id="docAlmuerzoFin"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio" for="docAlmuerzoInicio">Almuerzo desde (opcional)</label><select id="docAlmuerzoInicio"></select></div>
+                        <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin" for="docAlmuerzoFin">Almuerzo hasta (opcional)</label><select id="docAlmuerzoFin"></select></div>
                     </div>
                     <div id="docSlotsPreview" style="display:none;background:var(--gray-100);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px"></div>
-                    <div class="form-group"><label data-i18n="doc.foto">Foto (enlace https://...)</label><input type="url" id="docFotoUrl" maxlength="500" placeholder="https://..."></div>
-                    <div class="form-group"><label data-i18n="doc.bio">Frase corta para la página pública</label><input type="text" id="docBio" maxlength="160"></div>
-                    <div class="form-group"><label data-i18n="doc.instrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
+                    <div class="form-group"><label data-i18n="doc.foto" for="docFotoUrl">Foto (enlace https://...)</label><input type="url" id="docFotoUrl" maxlength="500" placeholder="https://..."></div>
+                    <div class="form-group"><label data-i18n="doc.bio" for="docBio">Frase corta para la página pública</label><input type="text" id="docBio" maxlength="160"></div>
+                    <div class="form-group"><label data-i18n="doc.instrucciones" for="docInstrucciones">Instrucciones para el paciente (opcional)</label><textarea id="docInstrucciones" data-i18n-placeholder="doc.instruccionesPh" placeholder="Ej: Venga en ayunas de 8 horas. Use ropa cómoda."></textarea></div>
                     <div style="display:flex;gap:10px">
                         <button class="btn" style="flex:1" id="doctorSubmitBtn" onclick="guardarDoctor()" data-i18n="doc.addTitle">Agregar Doctor</button>
                         <button class="btn btn-ghost" style="flex:1" onclick="cancelarEdicionDoctor()" data-i18n="common.cancelar">Cancelar</button>
@@ -929,10 +937,10 @@
                 <div class="card">
                     <div class="card-title" data-i18n="fact.catalogoTitle">Catálogo de servicios y precios</div>
                     <div id="alertServicios"></div>
-                    <div class="form-group"><label data-i18n="fact.servNombre">Nombre del servicio</label><input type="text" id="servNombre" data-i18n-placeholder="fact.servNombrePh" placeholder="Ej: Radiografía"></div>
-                    <div class="form-group"><label data-i18n="doc.precio">Precio (₡)</label><input type="number" id="servPrecio" placeholder="15000"></div>
-                    <div class="form-group"><label data-i18n="serv.duracion">Duración aprox. (minutos, solo informativa)</label><input type="number" id="servDuracion" min="5" max="480" placeholder="30"></div>
-                    <div class="form-group"><label data-i18n="serv.desc">Descripción corta (opcional)</label><input type="text" id="servDescripcion" maxlength="300"></div>
+                    <div class="form-group"><label data-i18n="fact.servNombre" for="servNombre">Nombre del servicio</label><input type="text" id="servNombre" data-i18n-placeholder="fact.servNombrePh" placeholder="Ej: Radiografía"></div>
+                    <div class="form-group"><label data-i18n="doc.precio" for="servPrecio">Precio (₡)</label><input type="number" id="servPrecio" placeholder="15000"></div>
+                    <div class="form-group"><label data-i18n="serv.duracion" for="servDuracion">Duración aprox. (minutos, solo informativa)</label><input type="number" id="servDuracion" min="5" max="480" placeholder="30"></div>
+                    <div class="form-group"><label data-i18n="serv.desc" for="servDescripcion">Descripción corta (opcional)</label><input type="text" id="servDescripcion" maxlength="300"></div>
                     <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="servVisible" checked style="width:auto"> <span data-i18n="serv.visible">Mostrar en la página pública de agendar</span></label></div>
                     <div style="display:flex;gap:10px">
                         <button class="btn" style="flex:1" id="servSubmitBtn" onclick="crearServicio()" data-i18n="fact.btnAgregarCatalogo">Agregar al catálogo</button>
@@ -949,7 +957,7 @@
                 <div class="card">
                     <div class="card-title" data-i18n="fact.facturaTitle">Factura de una cita</div>
                     <div class="form-group">
-                        <select id="facturaCita" onchange="loadFactura()"><option value="" data-i18n="fact.elegirCita">Elegir cita...</option></select>
+                        <select id="facturaCita" aria-label="Cita" onchange="loadFactura()"><option value="" data-i18n="fact.elegirCita">Elegir cita...</option></select>
                     </div>
                     <div id="facturaDetalle"></div>
                 </div>
@@ -959,7 +967,7 @@
                 <h2 style="margin-bottom: 24px;" data-i18n="title.expedientes">Expedientes</h2>
                 <div class="card">
                     <div class="card-title" data-i18n="exp.seleccionarPaciente">Seleccionar paciente</div>
-                    <select id="expedientePaciente" onchange="loadExpediente()"><option value="" data-i18n="exp.elegirPaciente">Elegir paciente...</option></select>
+                    <select id="expedientePaciente" aria-label="Paciente" onchange="loadExpediente()"><option value="" data-i18n="exp.elegirPaciente">Elegir paciente...</option></select>
                 </div>
                 <div class="card" id="odontogramaCard" style="display:none">
                     <div class="card-title">Odontograma</div>
@@ -970,12 +978,12 @@
                 <div class="card" id="expedienteFormCard" style="display:none">
                     <div class="card-title" data-i18n="exp.agregarNotaTitle">Agregar nota</div>
                     <div id="alertExpediente"></div>
-                    <div class="form-group"><label data-i18n="exp.nota">Nota</label><textarea id="expedienteContenido" data-i18n-placeholder="exp.notaPh" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
+                    <div class="form-group"><label data-i18n="exp.nota" for="expedienteContenido">Nota</label><textarea id="expedienteContenido" data-i18n-placeholder="exp.notaPh" placeholder="Diagnóstico, indicaciones, observaciones..."></textarea></div>
                     <div style="display:flex;gap:12px">
-                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorInicial">Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
-                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorActual">Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
+                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorInicial" for="expedienteDolorInicial">Dolor inicial (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorInicial"></div>
+                        <div class="form-group" style="flex:1"><label data-i18n="exp.dolorActual" for="expedienteDolorActual">Dolor actual (0-10, opcional)</label><input type="number" min="0" max="10" id="expedienteDolorActual"></div>
                     </div>
-                    <div class="form-group"><label data-i18n="exp.planTratamiento">Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" data-i18n-placeholder="exp.planTratamientoPh" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
+                    <div class="form-group"><label data-i18n="exp.planTratamiento" for="expedientePlanTratamiento">Plan de tratamiento (opcional)</label><textarea id="expedientePlanTratamiento" data-i18n-placeholder="exp.planTratamientoPh" placeholder="Objetivos, técnicas, frecuencia sugerida..."></textarea></div>
                     <div id="expedienteVozEstado" style="display:none;font-size:13px;color:var(--gray-500);margin-bottom:8px"></div>
                     <div style="display:flex;gap:10px;align-items:center">
                         <button class="btn" style="flex:1" onclick="agregarNotaExpediente()" data-i18n="exp.btnGuardar">Guardar nota</button>
@@ -1020,15 +1028,15 @@
                     <div class="card">
                         <div class="card-title" data-i18n="sop.ayudaTitle">¿Necesitás ayuda?</div>
                         <p class="card-subtitle" data-i18n="sop.ayudaDesc">Contanos qué pasa y te respondemos por correo lo antes posible.</p>
-                        <div class="form-group"><input type="text" id="soporteAsunto" maxlength="150" placeholder="Asunto (opcional)" data-i18n-placeholder="sop.asuntoPh"></div>
-                        <div class="form-group"><textarea id="soporteAyudaMsg" rows="5" maxlength="4000" placeholder="Describí el problema o la duda…" data-i18n-placeholder="sop.ayudaPh" style="width:100%;resize:vertical"></textarea></div>
+                        <div class="form-group"><input type="text" id="soporteAsunto" maxlength="150" aria-label="Asunto (opcional)" placeholder="Asunto (opcional)" data-i18n-placeholder="sop.asuntoPh"></div>
+                        <div class="form-group"><textarea id="soporteAyudaMsg" rows="5" maxlength="4000" aria-label="Describí el problema o la duda…" placeholder="Describí el problema o la duda…" data-i18n-placeholder="sop.ayudaPh" style="width:100%;resize:vertical"></textarea></div>
                         <button class="btn" onclick="enviarSoporte('ayuda', this)" data-i18n="sop.enviarAyuda">Pedir ayuda</button>
                         <div id="soporteAyudaEstado" class="sop-estado"></div>
                     </div>
                     <div class="card">
                         <div class="card-title" data-i18n="sop.sugTitle">Sugerencias</div>
                         <p class="card-subtitle" data-i18n="sop.sugDesc">¿Qué le agregarías o cambiarías a AutoCita? Leemos todas.</p>
-                        <div class="form-group"><textarea id="soporteSugMsg" rows="7" maxlength="4000" placeholder="Tu idea…" data-i18n-placeholder="sop.sugPh" style="width:100%;resize:vertical"></textarea></div>
+                        <div class="form-group"><textarea id="soporteSugMsg" rows="7" maxlength="4000" aria-label="Tu idea…" placeholder="Tu idea…" data-i18n-placeholder="sop.sugPh" style="width:100%;resize:vertical"></textarea></div>
                         <button class="btn" onclick="enviarSoporte('sugerencia', this)" data-i18n="sop.enviarSug">Enviar sugerencia</button>
                         <div id="soporteSugEstado" class="sop-estado"></div>
                     </div>
@@ -1058,7 +1066,7 @@
                     <div class="card-title" data-i18n="set.agendarTitle">Link para agendar en línea</div>
                     <p class="card-subtitle" data-i18n="set.agendarDesc">Compartilo donde quieras — bio de Instagram, grupos de WhatsApp, anuncios. Ahí el paciente elige doctor, día y hora reales y queda agendado solo, sin escribirte primero.</p>
                     <div id="alertAgendar"></div>
-                    <div class="form-group"><label data-i18n="set.agendarLinkLabel">Nombre del link</label><input type="text" id="clSlug" placeholder="ej: clinica-sonrisa"></div>
+                    <div class="form-group"><label data-i18n="set.agendarLinkLabel" for="clSlug">Nombre del link</label><input type="text" id="clSlug" placeholder="ej: clinica-sonrisa"></div>
                     <div id="agendarPreview" style="font-size:13px;color:var(--gray-500);margin-bottom:12px"></div>
                     <button class="btn" onclick="guardarSlugClinica()" data-i18n="set.agendarGuardar">Guardar link</button>
                 </div>
@@ -1070,8 +1078,8 @@
                     <div class="card-title" data-i18n="set.recordatoriosTitle">Configuración de recordatorios</div>
                     <p class="card-subtitle" data-i18n="set.recordatoriosDesc">Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.</p>
                     <div id="alertRecordatorios"></div>
-                    <div class="form-group"><label data-i18n="set.rec1">Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
-                    <div class="form-group"><label data-i18n="set.rec2">Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2" class="campo-bloqueado" disabled><small class="form-hint" data-i18n="set.rec2Nota">Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.</small></div>
+                    <div class="form-group"><label data-i18n="set.rec1" for="recHoras1">Primer recordatorio (horas antes de la cita)</label><input type="number" id="recHoras1" min="1" placeholder="24"></div>
+                    <div class="form-group"><label data-i18n="set.rec2" for="recHoras2">Segundo recordatorio (horas antes de la cita)</label><input type="number" id="recHoras2" min="1" placeholder="2" class="campo-bloqueado" disabled><small class="form-hint" data-i18n="set.rec2Nota">Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.</small></div>
                     <button class="btn btn-block" onclick="guardarConfigRecordatorios()" data-i18n="set.btnGuardar">Guardar</button>
                 </div>
                 <!-- Solo visible para el dueño -->
@@ -1080,11 +1088,11 @@
                         <div class="card-title" data-i18n="set.equipoTitle">Equipo</div>
                         <div id="alertEquipo"></div>
                         <div class="form-group">
-                            <label data-i18n="set.emailNuevo">Email del nuevo miembro</label>
+                            <label data-i18n="set.emailNuevo" for="equipoEmail">Email del nuevo miembro</label>
                             <input type="email" id="equipoEmail" data-i18n-placeholder="set.emailNuevoPh" placeholder="doctor@clinica.com">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="set.rol">Rol</label>
+                            <label data-i18n="set.rol" for="equipoRol">Rol</label>
                             <select id="equipoRol">
                                 <option value="recepcionista" data-i18n="set.rolRecepcionista">Recepcionista</option>
                                 <option value="doctor" data-i18n="set.rolDoctor">Doctor</option>
@@ -1093,7 +1101,7 @@
                             </select>
                         </div>
                         <div class="form-group" id="equipoDoctorGroup" style="display:none">
-                            <label data-i18n="set.doctorAsociado">Doctor asociado (si el rol es Doctor)</label>
+                            <label data-i18n="set.doctorAsociado" for="equipoDoctor">Doctor asociado (si el rol es Doctor)</label>
                             <select id="equipoDoctor">
                                 <option value="" data-i18n="common.elegirDoctor">Elegir doctor...</option>
                             </select>
@@ -1247,7 +1255,7 @@ function renderCalendar() {
             const nombreFull = escapeHtmlPanel(nombrePaciente(c));
             const nombreCorto = nombreFull.split(' ')[0];
             const icono = { pendiente: '⏳', recordatorio_enviado: '🔔', confirmada: '✓' }[c.estado] || '';
-            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull} (${t('badge.' + (c.estado || 'pendiente'))})" onclick="mostrarDetalleCita('${c.id}')">${icono} ${horaStr}<br>${nombreCorto}</div>`;
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull} (${escapeHtmlPanel(t('badge.' + (['pendiente', 'recordatorio_enviado', 'confirmada', 'cancelada', 'atendida'].includes(c.estado) ? c.estado : 'pendiente')))})" onclick="mostrarDetalleCita('${c.id}')">${icono} ${horaStr}<br>${nombreCorto}</div>`;
         });
         dayHtml += `</div>`;
         html += dayHtml;
@@ -1284,19 +1292,29 @@ function cerrarModalCita() {
     if (el) el.classList.remove('open');
 }
 async function apiFetch(path, opts = {}) {
-    const res = await fetch(API + path, { headers: authH(), ...opts });
+    // Fix seguridad (30/10/2026, H-196): sin red o con una respuesta que no es JSON (p. ej. un 502 con HTML) se muestra un mensaje amable, no el texto técnico del navegador.
+    let res;
+    try { res = await fetch(API + path, { headers: authH(), ...opts }); }
+    catch (e) { if (e && e.name === 'AbortError') throw e; throw new Error(t('err.conexion')); }
     if (res.status === 401) {
         sessionExpired();
         throw new Error('Sesión expirada');
     }
     if (res.status === 402) { pagoPendienteGate(() => {}); throw new Error('Cuenta pendiente de pago'); }   // Fix (25/10/2026)
-    const data = await res.json();
+    const data = await leerJsonAmable(res);
     // El backend manda el motivo real de Meta en `detalle` (ej: "Template name
     // does not exist", "Recipient phone number not in allowed list"). Antes se
     // perdía y el usuario solo veía "WhatsApp rechazó el mensaje", que no dice
     // nada y obliga a ir a buscar a los logs de Railway.
     if (!res.ok) throw new Error(data.detalle ? `${data.error}: ${data.detalle}` : (data.error || 'Error'));
     return data;
+}
+async function leerJsonAmable(res) {
+    try { return await res.json(); } catch (e) { throw new Error(t('err.respuesta')); }
+}
+function errAmable(e) {
+    const m = (e && e.message) || '';
+    return (e && e.name === 'TypeError') || /failed to fetch|networkerror|load failed/i.test(m) ? t('err.conexion') : m;
 }
 function sessionExpired() {
     localStorage.removeItem('autocita_token');
@@ -1347,14 +1365,14 @@ async function register() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password: pass, clinica_nombre: nombre, tipo_negocio, es_doctor, doctor_nombre, especialidad, ...datosPlan.campos })
         });
-        const data = await res.json();
+        const data = await leerJsonAmable(res);
         if (!res.ok) throw new Error(data.error || t('login.errCrearCuenta'));
         const token = data.session?.access_token;
         if (!token) { alertEl.innerHTML = `<div class="alert alert-success">${t('login.confirmaCorreo')}</div>`; switchAuthTab('login'); return; }   // (25/10/2026) con "Confirm email" activo no hay sesión hasta confirmar
         setToken(token);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(ClaveSegura.mensajeServidor(e.message)) + '</div>';
+        alertEl.innerHTML = '<div class="alert alert-error">' + escapeHtmlPanel(ClaveSegura.mensajeServidor(errAmable(e))) + '</div>';
     }
 }
 async function login() {
@@ -1367,14 +1385,14 @@ async function login() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password: pass })
         });
-        const json = await data.json();
+        const json = await leerJsonAmable(data);
         if (!data.ok) throw new Error(json.error || t('login.errCredenciales'));
         const token = json.session?.access_token || json.session?.session?.access_token;
         if (!token) throw new Error(t('login.errSinToken'));
         setToken(token);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(errAmable(e))}</div>`;
     }
 }
 // ── ACEPTAR INVITACIÓN ────────────────────────────────────────────
@@ -1625,12 +1643,12 @@ async function aceptarInvitacion() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: inviteAccessToken, password: pass })
         });
-        const data = await res.json();
+        const data = await leerJsonAmable(res);
         if (!res.ok) throw new Error(data.error || t('invite.errActivar'));
         setToken(inviteAccessToken);
         showApp();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(ClaveSegura.mensajeServidor(e.message))}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(ClaveSegura.mensajeServidor(errAmable(e)))}</div>`;
     }
 }
 function logout() {
@@ -2332,7 +2350,7 @@ async function abrirConversacion(id) {
           <div class="msgs">${burbujas || '<div class="loading">Sin mensajes</div>'}</div>
           ${aviso}
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="respTexto" placeholder="Escribí tu respuesta" style="flex:1" ${c?.ventana_abierta ? '' : 'disabled'}>
+            <input id="respTexto" aria-label="Escribí tu respuesta" placeholder="Escribí tu respuesta" style="flex:1" ${c?.ventana_abierta ? '' : 'disabled'}>
             <button class="btn btn-sm" onclick="responderConv('${id}')" ${c?.ventana_abierta ? '' : 'disabled'}>Enviar</button>
           </div>
           <div id="iiHost"></div>`;
@@ -3199,7 +3217,7 @@ async function loadFactura() {
                 <span>${t('fact.total')}</span><span>₡${Number(data.total).toLocaleString(getLocale())}</span>
             </div>
             <div style="display:flex;gap:8px;margin-top:12px">
-                <select id="facturaServicioNuevo" style="flex:1">
+                <select id="facturaServicioNuevo" aria-label="Servicio" style="flex:1">
                     <option value="">${t('fact.agregarServicio')}</option>
                     ${opcionesServicio}
                 </select>
@@ -3583,7 +3601,7 @@ async function renderFilasBloque() {
         return `
         <div style="padding:10px;background:var(--gray-50);border-radius:var(--radius-sm);margin-bottom:10px">
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-                <select onchange="actualizarFilaBloque(${idx}, this.value)" style="flex:1">
+                <select aria-label="${t('common.elegirDoctor')}" onchange="actualizarFilaBloque(${idx}, this.value)" style="flex:1">
                     <option value="">${t('common.elegirDoctor')}</option>${opciones}
                 </select>
                 <button type="button" class="btn btn-danger btn-sm" style="box-shadow:none" onclick="quitarFilaBloque(${idx})">✕</button>
@@ -4007,9 +4025,9 @@ function renderHorariosPorDia(guardados) {
     cont.innerHTML = dias.map((d) => {
         const g = (guardados || {})[String(d)] || {};
         return `<div class="fila"><span>${NOM_DIA_LARGO[d]}</span>
-            <select data-dia="${d}" data-campo="inicio">${opcionesHora(g.inicio)}</select>
+            <select data-dia="${d}" data-campo="inicio" aria-label="${d} · inicio">${opcionesHora(g.inicio)}</select>
             <span style="min-width:12px">a</span>
-            <select data-dia="${d}" data-campo="fin">${opcionesHora(g.fin)}</select></div>`;
+            <select data-dia="${d}" data-campo="fin" aria-label="${d} · fin">${opcionesHora(g.fin)}</select></div>`;
     }).join('');
 }
 function toggleHorariosEspeciales() { renderHorariosPorDia(horariosDiaCache); }
@@ -4157,32 +4175,32 @@ async function loadSettings() {
         document.getElementById('clSlug').value = clinica.slug || '';
         actualizarAgendarPreview();
         infoEl.innerHTML = `
-            <div class="form-group"><label>${t('common.colNombre')}</label><input type="text" id="clNombre" value="${escapeHtmlPanel(clinica.nombre || '')}"></div>
-            <div class="form-group"><label>${escapeHtmlPanel(t('pac.telefono'))}</label><input type="text" id="clTelefono" value="${escapeHtmlPanel(clinica.telefono || '')}"></div>
-            <div class="form-group"><label>${escapeHtmlPanel(t('set.direccion'))}</label><input type="text" id="clDireccion" value="${escapeHtmlPanel(clinica.direccion || '')}"></div>
+            <div class="form-group"><label for="clNombre">${t('common.colNombre')}</label><input type="text" id="clNombre" value="${escapeHtmlPanel(clinica.nombre || '')}"></div>
+            <div class="form-group"><label for="clTelefono">${escapeHtmlPanel(t('pac.telefono'))}</label><input type="text" id="clTelefono" value="${escapeHtmlPanel(clinica.telefono || '')}"></div>
+            <div class="form-group"><label for="clDireccion">${escapeHtmlPanel(t('set.direccion'))}</label><input type="text" id="clDireccion" value="${escapeHtmlPanel(clinica.direccion || '')}"></div>
             <div class="card-title" style="margin-top:18px">${escapeHtmlPanel(t('pub.titulo'))}</div>
-            <div class="form-group"><label>${escapeHtmlPanel(t('pub.desc'))}</label><input type="text" id="clDescripcionCorta" maxlength="200" value="${escapeHtmlPanel(clinica.descripcion_corta || '')}"></div>
-            <div class="form-group"><label>${escapeHtmlPanel(t('pub.mapa'))}</label><input type="url" id="clMapsUrl" maxlength="500" placeholder="https://maps.google.com/..." value="${escapeHtmlPanel(clinica.maps_url || '')}"></div>
-            <div class="form-group"><label>${escapeHtmlPanel(t('pub.tel'))}</label><input type="text" id="clTelefonoPublico" maxlength="30" value="${escapeHtmlPanel(clinica.telefono_publico || '')}"><p class="card-subtitle" style="margin-top:6px;margin-bottom:0">${escapeHtmlPanel(t('pub.telAyuda'))}</p></div>
-            <div class="form-group"><label>Tipo de negocio</label>
+            <div class="form-group"><label for="clDescripcionCorta">${escapeHtmlPanel(t('pub.desc'))}</label><input type="text" id="clDescripcionCorta" maxlength="200" value="${escapeHtmlPanel(clinica.descripcion_corta || '')}"></div>
+            <div class="form-group"><label for="clMapsUrl">${escapeHtmlPanel(t('pub.mapa'))}</label><input type="url" id="clMapsUrl" maxlength="500" placeholder="https://maps.google.com/..." value="${escapeHtmlPanel(clinica.maps_url || '')}"></div>
+            <div class="form-group"><label for="clTelefonoPublico">${escapeHtmlPanel(t('pub.tel'))}</label><input type="text" id="clTelefonoPublico" maxlength="30" value="${escapeHtmlPanel(clinica.telefono_publico || '')}"><p class="card-subtitle" style="margin-top:6px;margin-bottom:0">${escapeHtmlPanel(t('pub.telAyuda'))}</p></div>
+            <div class="form-group"><label for="clTipoNegocio">Tipo de negocio</label>
                 <select id="clTipoNegocio">
                     ${['clinica_general','dental','fisioterapia','psicologia','nutricion','spa_estetica','barberia_salon','otro'].map(v => `<option value="${v}" ${clinica.tipo_negocio === v ? 'selected' : ''}>${v.replace('_', ' ')}</option>`).join('')}
                 </select>
                 <p class="card-subtitle" style="margin-top:6px;margin-bottom:0">Solo "dental" activa el odontograma en Expedientes por ahora.</p>
             </div>
-            <div class="form-group"><label data-i18n="set.whatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" class="campo-bloqueado" value="${escapeHtmlPanel(clinica.meta_phone_id || '')}" placeholder="${t('set.whatsappPhoneIdPh')}" readonly><small class="form-hint">${t('set.whatsappPhoneIdNota')}</small></div>
-            <div class="form-group"><label>${t('set.horario')} (${t('set.horarioTextoDesc')})</label><input type="text" id="clHorario" value="${escapeHtmlPanel(clinica.horario || '')}"></div>
+            <div class="form-group"><label data-i18n="set.whatsappPhoneId" for="clWhatsappPhoneId">${t('set.whatsappPhoneId')}</label><input type="text" id="clWhatsappPhoneId" class="campo-bloqueado" value="${escapeHtmlPanel(clinica.meta_phone_id || '')}" placeholder="${t('set.whatsappPhoneIdPh')}" readonly><small class="form-hint">${t('set.whatsappPhoneIdNota')}</small></div>
+            <div class="form-group"><label for="clHorario">${t('set.horario')} (${t('set.horarioTextoDesc')})</label><input type="text" id="clHorario" value="${escapeHtmlPanel(clinica.horario || '')}"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio">${t('doc.horaInicio')}</label><select id="clHoraInicio">${opcionesHora(clinica.hora_inicio)}</select></div>
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin">${t('doc.horaFin')}</label><select id="clHoraFin">${opcionesHora(clinica.hora_fin)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaInicio" for="clHoraInicio">${t('doc.horaInicio')}</label><select id="clHoraInicio">${opcionesHora(clinica.hora_inicio)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.horaFin" for="clHoraFin">${t('doc.horaFin')}</label><select id="clHoraFin">${opcionesHora(clinica.hora_fin)}</select></div>
             </div>
             <p class="card-subtitle" style="margin-top:-10px;margin-bottom:14px">${t('set.horarioGeneralDesc')}</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio">${t('doc.almuerzoInicio')}</label><select id="clAlmuerzoInicio">${opcionesHora(clinica.almuerzo_inicio)}</select></div>
-                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin">${t('doc.almuerzoFin')}</label><select id="clAlmuerzoFin">${opcionesHora(clinica.almuerzo_fin)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoInicio" for="clAlmuerzoInicio">${t('doc.almuerzoInicio')}</label><select id="clAlmuerzoInicio">${opcionesHora(clinica.almuerzo_inicio)}</select></div>
+                <div class="form-group" style="flex:1;min-width:120px"><label data-i18n="doc.almuerzoFin" for="clAlmuerzoFin">${t('doc.almuerzoFin')}</label><select id="clAlmuerzoFin">${opcionesHora(clinica.almuerzo_fin)}</select></div>
             </div>
-            <div class="form-group"><label>${t('set.plan')}</label><input type="text" value="${escapeHtmlPanel(clinica.plan || '—')}" disabled></div>
-            <div class="form-group"><label>${t('common.colEstado')}</label><input type="text" value="${escapeHtmlPanel(clinica.status || '—')}" disabled></div>
+            <div class="form-group"><label>${t('set.plan')}</label><input type="text" aria-label="${t('set.plan')}" value="${escapeHtmlPanel(clinica.plan || '—')}" disabled></div>
+            <div class="form-group"><label>${t('common.colEstado')}</label><input type="text" aria-label="${t('common.colEstado')}" value="${escapeHtmlPanel(clinica.status || '—')}" disabled></div>
             <button class="btn btn-block" onclick="guardarConfigClinica()" data-i18n="set.btnGuardar">${t('set.btnGuardar')}</button>
         `;
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
@@ -4435,10 +4453,10 @@ async function reproducirAudioNota(notaId) {
 const ESTADOS_DIENTE = {
     sano:       { label: 'Sano',       bg: 'var(--gray-100)',     color: 'var(--gray-500)',     border: 'var(--gray-300)' },
     caries:     { label: 'Caries',     bg: 'var(--danger-soft)',  color: 'var(--danger)',              border: 'var(--danger)' },
-    obturado:   { label: 'Obturado',   bg: 'var(--primary-soft)', color: 'var(--primary-dark)',  border: 'var(--primary)' },
+    obturado:   { label: 'Obturado',   bg: 'var(--primary-soft)', color: 'var(--primary-text)',  border: 'var(--primary)' },
     corona:     { label: 'Corona',     bg: 'var(--warning-soft)', color: 'var(--warning)',              border: 'var(--warning)' },
     endodoncia: { label: 'Endodoncia', bg: '#F4E7DF',             color: 'var(--terracotta)',    border: 'var(--terracotta)' },
-    implante:   { label: 'Implante',   bg: 'var(--primary-soft)',             color: 'var(--primary-dark)',              border: 'var(--success)' },
+    implante:   { label: 'Implante',   bg: 'var(--primary-soft)',             color: 'var(--primary-text)',              border: 'var(--success)' },
     extraido:   { label: 'Extraído',   bg: 'var(--gray-200)',     color: 'var(--gray-500)',      border: 'var(--gray-300)' },
     ausente:    { label: 'Ausente',    bg: 'var(--gray-200)',     color: 'var(--gray-500)',      border: 'var(--gray-300)' },
 };
@@ -4579,10 +4597,10 @@ function renderOdontogramaEditor() {
     const d = odontogramaCache[dienteSeleccionado];
     el.innerHTML = `
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-            <div class="form-group" style="margin-bottom:0"><label>Diente ${dienteSeleccionado}</label>
+            <div class="form-group" style="margin-bottom:0"><label for="odEstado">Diente ${dienteSeleccionado}</label>
                 <select id="odEstado">${Object.entries(ESTADOS_DIENTE).map(([k, v]) => `<option value="${k}" ${((d?.estado || 'sano') === k) ? 'selected' : ''}>${v.label}</option>`).join('')}</select>
             </div>
-            <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px"><label>Notas (opcional)</label>
+            <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px"><label for="odNotas">Notas (opcional)</label>
                 <input type="text" id="odNotas" value="${d?.notas ? escapeHtmlPanel(d.notas) : ''}" placeholder="Ej: sensibilidad al frío">
             </div>
             <button class="btn" onclick="guardarDiente()">Guardar</button>
@@ -4995,7 +5013,7 @@ async function enviarSoporte(tipo, btn) {
     msgEl.value = '';
     if (asuntoEl) asuntoEl.value = '';
     if (esAyuda) { sopAdjuntos.forEach((a) => URL.revokeObjectURL(a.url)); sopAdjuntos = []; sopPintarPrevias(); }
-    est.style.color = 'var(--primary-dark, #1f5c40)'; est.textContent = sopT('enviado');
+    est.style.color = 'var(--primary-text, var(--primary-dark, #1f5c40))'; est.textContent = sopT('enviado');
     cargarSoporte();
   } catch (e) {
     est.style.color = 'var(--danger)'; est.textContent = sopT('error') + e.message;
@@ -5511,7 +5529,7 @@ function mdaIniciar() {
 function mdaHtml() {
   return `<div class="mda-fila" style="display:flex;flex-direction:column;gap:6px">
     <label style="display:flex;align-items:center;gap:6px;flex-direction:row"><input type="checkbox" class="mda-activa" onchange="mdaGuardar(this)"> ${PIEZA_CFG.esc(piezaT('pieza.marcaAgua', 'Marca de agua'))}</label>
-    <input class="mda-texto" maxlength="40" placeholder="${PIEZA_CFG.esc(piezaT('pieza.marcaAguaNombre', 'Nombre (vacío = nombre del negocio)'))}" oninput="mdaGuardar(this)">
+    <input class="mda-texto" maxlength="40" aria-label="${PIEZA_CFG.esc(piezaT('pieza.marcaAguaNombre', 'Nombre (vacío = nombre del negocio)'))}" placeholder="${PIEZA_CFG.esc(piezaT('pieza.marcaAguaNombre', 'Nombre (vacío = nombre del negocio)'))}" oninput="mdaGuardar(this)">
   </div>`;
 }
 function mdaZona(ctx, x, y, w, h) {
@@ -5852,7 +5870,7 @@ const translations = {
         'invite.btnActivar': 'Activar mi cuenta', 'invite.errActivar': 'No se pudo activar la cuenta. Pedile al dueño que te reenvíe la invitación.',
         'login.errCampos': 'Completá todos los campos', 'login.errPassMatch': 'Las contraseñas no coinciden',
         'login.errPassLen': 'La contraseña debe tener al menos 10 caracteres, con mayúsculas, minúsculas y números', 'login.errCrearCuenta': 'No pudimos crear tu cuenta. Intentá de nuevo en un momento.',
-        'login.errSinToken': 'No se recibió token', 'login.confirmaCorreo': 'Cuenta creada. Te enviamos un correo para confirmar tu dirección: tocá el enlace e iniciá sesión; ahí vas a ver cómo activar tu plan.', 'login.errCredenciales': 'Credenciales inválidas',
+        'login.errSinToken': 'No pudimos iniciar tu sesión. Intentá de nuevo en un momento.', 'err.conexion': 'No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo en un momento.', 'err.respuesta': 'El servicio no respondió como esperábamos. Intentá de nuevo en un momento.', 'login.confirmaCorreo': 'Cuenta creada. Te enviamos un correo para confirmar tu dirección: tocá el enlace e iniciá sesión; ahí vas a ver cómo activar tu plan.', 'login.errCredenciales': 'Credenciales inválidas',
         'login.sesionExpirada': 'Tu sesión expiró. Ingresá de nuevo.',
         'common.loading': 'Cargando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Fecha', 'common.colHora': 'Hora',
         'common.colEstado': 'Estado', 'common.colNombre': 'Nombre', 'common.colAccion': 'Acción', 'common.paciente': 'Paciente',
@@ -5992,7 +6010,7 @@ const translations = {
         'invite.btnActivar': 'Activate my account', 'invite.errActivar': 'Could not activate the account. Ask the owner to resend the invitation.',
         'login.errCampos': 'Fill in all fields', 'login.errPassMatch': 'Passwords do not match',
         'login.errPassLen': 'Password must be at least 10 characters, with uppercase, lowercase letters and digits', 'login.errCrearCuenta': 'Error creating account',
-        'login.errSinToken': 'No token received', 'login.confirmaCorreo': 'Account created. We sent you an email to confirm your address: tap the link, then sign in.', 'login.errCredenciales': 'Invalid credentials',
+        'login.errSinToken': 'We could not sign you in. Please try again in a moment.', 'err.conexion': 'We could not reach the server. Check your connection and try again in a moment.', 'err.respuesta': 'The service did not respond as expected. Please try again in a moment.', 'login.confirmaCorreo': 'Account created. We sent you an email to confirm your address: tap the link, then sign in.', 'login.errCredenciales': 'Invalid credentials',
         'login.sesionExpirada': 'Your session expired. Please log in again.',
         'common.loading': 'Loading...', 'common.colPaciente': 'Patient', 'common.colFecha': 'Date', 'common.colHora': 'Time',
         'common.colEstado': 'Status', 'common.colNombre': 'Name', 'common.colAccion': 'Action', 'common.paciente': 'Patient',
@@ -6132,7 +6150,7 @@ const translations = {
         'invite.btnActivar': 'Ativar minha conta', 'invite.errActivar': 'Não foi possível ativar a conta. Peça ao dono para reenviar o convite.',
         'login.errCampos': 'Preencha todos os campos', 'login.errPassMatch': 'As senhas não coincidem',
         'login.errPassLen': 'A senha deve ter pelo menos 10 caracteres, com maiúsculas, minúsculas e números', 'login.errCrearCuenta': 'Erro ao criar a conta',
-        'login.errSinToken': 'Nenhum token recebido', 'login.confirmaCorreo': 'Conta criada. Enviamos um e-mail para confirmar o seu endereço: toque no link e depois entre.', 'login.errCredenciales': 'Credenciais inválidas',
+        'login.errSinToken': 'Não foi possível iniciar a sua sessão. Tente novamente em instantes.', 'err.conexion': 'Não foi possível conectar ao servidor. Verifique a sua conexão e tente novamente em instantes.', 'err.respuesta': 'O serviço não respondeu como esperado. Tente novamente em instantes.', 'login.confirmaCorreo': 'Conta criada. Enviamos um e-mail para confirmar o seu endereço: toque no link e depois entre.', 'login.errCredenciales': 'Credenciais inválidas',
         'login.sesionExpirada': 'Sua sessão expirou. Entre novamente.',
         'common.loading': 'Carregando...', 'common.colPaciente': 'Paciente', 'common.colFecha': 'Data', 'common.colHora': 'Hora',
         'common.colEstado': 'Status', 'common.colNombre': 'Nome', 'common.colAccion': 'Ação', 'common.paciente': 'Paciente',
@@ -6256,6 +6274,7 @@ function applyPanelLang(lang, opts) {
     opts = opts || {};
     currentLang = lang;
     localStorage.setItem('autocita_lang', lang);
+    document.documentElement.lang = lang; // Fix accesibilidad (30/10/2026, H-188)
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         el.textContent = t(key);
@@ -6263,6 +6282,8 @@ function applyPanelLang(lang, opts) {
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         el.placeholder = t(key);
+        // Fix accesibilidad (30/10/2026, H-188): si el control no tiene un label asociado, su nombre accesible sigue al placeholder traducido.
+        if (!el.labels || !el.labels.length) el.setAttribute('aria-label', el.placeholder);
     });
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const key = el.getAttribute('data-i18n-title');
