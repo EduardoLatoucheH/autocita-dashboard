@@ -25,8 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Fix (13/10/2026): cdnjs NO publica Chart.js 4.4.4 (da 404) y el gráfico de citas fallaba en silencio por el `typeof Chart` de abajo. 4.4.1 sí existe; se agrega SRI porque esta página maneja datos de salud. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- (05/11/2026, Fase 4) Se quitó Chart.js: el gráfico de citas usa el SVG compartido (DSGraf), sin CDN ni SRI que mantener. -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -119,6 +118,290 @@
         .theme-toggle { display: flex; align-items: center; gap: 6px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 999px; padding: 4px; cursor: pointer; }
         .theme-toggle button { border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; color: var(--gray-500); display: flex; align-items: center; gap: 5px; }
         .theme-toggle button.activo { background: var(--white); color: var(--primary-text); box-shadow: var(--shadow-sm); }
+/* <compartido:diseno> */
+/* Sistema de diseño de AutomatIA — Fase 4 (05/11/2026)
+   FUENTE ÚNICA. build-compartido.py lo inyecta en admin-panel.html, autocita-dashboard.html
+   y autoventas-dashboard.html, y lo copia a pluggs-app/css/diseno.css. Editar SOLO acá.
+
+   Reglas:
+   - Todo lo nuevo usa prefijo `ds-` (clases) y `--ds-` (tokens). No se pisan tokens existentes.
+   - Ningún selector global de elementos: este archivo no debe cambiar nada por sí solo.
+   - Tema claro por defecto. Oscuro con [data-theme="dark"] o con la clase .ds-tema-oscuro
+     en el contenedor (AutoCita arranca oscuro sin atributo).
+   - Contraste mínimo 4.5:1 en texto normal y 3:1 en texto grande (AA). */
+
+:root {
+  /* Marca */
+  --ds-verde: #2f6b4f;
+  --ds-verde-oscuro: #234f3b;
+  --ds-verde-claro: #e7f2ec;
+  --ds-terracota: #b65c28;
+  --ds-terracota-claro: #fbe9df;
+  --ds-sobre-verde: #ffffff;
+
+  /* Neutros */
+  --ds-tinta: #23241f;
+  --ds-tinta-suave: #5b5851;
+  --ds-fondo: #f5f4f1;
+  --ds-superficie: #ffffff;
+  --ds-superficie-2: #faf9f6;
+  --ds-borde: #e3e0d9;
+  --ds-borde-fuerte: #cfccc3;
+
+  /* Semánticos */
+  --ds-ok: #2f6b4f;
+  --ds-ok-soft: #e7f2ec;
+  --ds-ok-tinta: #23543c;
+  --ds-aviso: #a5541f;
+  --ds-aviso-soft: #fbe9df;
+  --ds-aviso-tinta: #7a3d15;
+  --ds-error: #a33434;
+  --ds-error-soft: #f7e3e3;
+  --ds-error-tinta: #7c2626;
+  --ds-info: #2f5f8f;
+  --ds-info-soft: #e6eef7;
+  --ds-info-tinta: #234a70;
+
+  /* Tipografía */
+  --ds-fuente: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ds-t-xs: 11px;
+  --ds-t-sm: 12.5px;
+  --ds-t-base: 14px;
+  --ds-t-md: 16px;
+  --ds-t-lg: 20px;
+  --ds-t-xl: 26px;
+  --ds-t-2xl: 34px;
+  --ds-linea: 1.45;
+  --ds-linea-titulo: 1.12;
+
+  /* Espaciado (base 4) */
+  --ds-esp-1: 4px;
+  --ds-esp-2: 8px;
+  --ds-esp-3: 12px;
+  --ds-esp-4: 16px;
+  --ds-esp-5: 20px;
+  --ds-esp-6: 24px;
+  --ds-esp-8: 32px;
+  --ds-esp-10: 40px;
+  --ds-esp-12: 48px;
+
+  /* Forma */
+  --ds-r-sm: 8px;
+  --ds-r-md: 12px;
+  --ds-r-lg: 18px;
+  --ds-r-pill: 999px;
+
+  /* Sombras */
+  --ds-sombra-1: 0 1px 2px rgba(22, 33, 27, .05), 0 1px 1px rgba(22, 33, 27, .03);
+  --ds-sombra-2: 0 3px 12px rgba(22, 33, 27, .07), 0 1px 3px rgba(22, 33, 27, .04);
+  --ds-sombra-3: 0 14px 38px rgba(22, 33, 27, .12), 0 3px 10px rgba(22, 33, 27, .05);
+
+  /* Movimiento */
+  --ds-trans: 160ms ease;
+}
+
+[data-theme="dark"],
+.ds-tema-oscuro {
+  --ds-verde: #4ade9b;
+  --ds-verde-oscuro: #7be8b8;
+  --ds-verde-claro: #1c2b23;
+  --ds-terracota: #e08a5f;
+  --ds-terracota-claro: #2e211a;
+  --ds-sobre-verde: #10201a;
+
+  --ds-tinta: #f1f0ea;
+  --ds-tinta-suave: #a9a79f;
+  --ds-fondo: #141815;
+  --ds-superficie: #1c211d;
+  --ds-superficie-2: #232a25;
+  --ds-borde: #333a33;
+  --ds-borde-fuerte: #4a524a;
+
+  --ds-ok: #4ade9b;
+  --ds-ok-soft: #1c2b23;
+  --ds-ok-tinta: #8ff0c2;
+  --ds-aviso: #e0a355;
+  --ds-aviso-soft: #2e2519;
+  --ds-aviso-tinta: #f0c48d;
+  --ds-error: #f07171;
+  --ds-error-soft: #2e1a1a;
+  --ds-error-tinta: #f7a6a6;
+  --ds-info: #7fb0e0;
+  --ds-info-soft: #1b2530;
+  --ds-info-tinta: #a9cdf0;
+
+  --ds-sombra-1: 0 1px 2px rgba(0, 0, 0, .30);
+  --ds-sombra-2: 0 2px 10px rgba(0, 0, 0, .35);
+  --ds-sombra-3: 0 8px 28px rgba(0, 0, 0, .45);
+}
+
+/* ── Contenedor ─────────────────────────────────────────────────────── */
+.ds {
+  font-family: var(--ds-fuente);
+  color: var(--ds-tinta);
+  line-height: var(--ds-linea);
+  -webkit-font-smoothing: antialiased;
+}
+.ds *,
+.ds *::before,
+.ds *::after { box-sizing: border-box; }
+
+.ds-seccion { margin-bottom: var(--ds-esp-6); }
+.ds-cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--ds-esp-3); flex-wrap: wrap; margin-bottom: var(--ds-esp-4); }
+.ds-cabecera h2 { margin: 0; font-size: var(--ds-t-xl); line-height: var(--ds-linea-titulo); letter-spacing: -.02em; font-weight: 700; }
+.ds-cabecera p { margin: 4px 0 0; font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-eyebrow { display: block; font-size: var(--ds-t-xs); font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ds-verde); margin-bottom: 6px; }
+
+/* ── Tarjeta ────────────────────────────────────────────────────────── */
+.ds-card {
+  background: var(--ds-superficie);
+  border: 1px solid var(--ds-borde);
+  border-radius: var(--ds-r-md);
+  box-shadow: var(--ds-sombra-1);
+  padding: var(--ds-esp-5);
+}
+.ds-card-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-esp-3); flex-wrap: wrap; margin-bottom: var(--ds-esp-4); }
+.ds-card-titulo { margin: 0; font-size: var(--ds-t-md); font-weight: 700; letter-spacing: -.01em; }
+.ds-card-sub { margin: 3px 0 0; font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-card-pie { margin: var(--ds-esp-4) 0 0; padding-top: var(--ds-esp-3); border-top: 1px solid var(--ds-borde); font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-grid-2 { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--ds-esp-4); align-items: start; }
+@media (max-width: 860px) { .ds-grid-2 { grid-template-columns: 1fr; } }
+
+/* ── KPIs ───────────────────────────────────────────────────────────── */
+.ds-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: var(--ds-esp-4); margin-bottom: var(--ds-esp-6); }
+.ds-kpi {
+  position: relative;
+  background: var(--ds-superficie);
+  border: 1px solid var(--ds-borde);
+  border-radius: var(--ds-r-md);
+  box-shadow: var(--ds-sombra-1);
+  padding: var(--ds-esp-4) var(--ds-esp-5);
+  min-width: 0;
+}
+.ds-kpi-etiqueta { display: flex; align-items: center; gap: 6px; margin: 0 0 var(--ds-esp-2); font-size: var(--ds-t-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ds-tinta-suave); }
+.ds-kpi-valor { margin: 0; font-size: var(--ds-t-2xl); line-height: 1; font-weight: 700; letter-spacing: -.025em; color: var(--ds-tinta); font-variant-numeric: tabular-nums; }
+.ds-kpi-valor small { font-size: .5em; font-weight: 600; color: var(--ds-tinta-suave); letter-spacing: 0; }
+.ds-kpi-pie { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: var(--ds-esp-2) 0 0; font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-kpi-acento { position: absolute; inset: 0 auto 0 0; width: 4px; border-radius: var(--ds-r-md) 0 0 var(--ds-r-md); background: var(--ds-verde); }
+.ds-delta { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--ds-r-pill); font-size: var(--ds-t-xs); font-weight: 700; background: var(--ds-superficie-2); color: var(--ds-tinta-suave); }
+.ds-delta.sube { background: var(--ds-ok-soft); color: var(--ds-ok-tinta); }
+.ds-delta.baja { background: var(--ds-error-soft); color: var(--ds-error-tinta); }
+.ds-delta.neutro { background: var(--ds-superficie-2); color: var(--ds-tinta-suave); }
+
+/* ── Gráficos ───────────────────────────────────────────────────────── */
+.ds-grafico { position: relative; width: 100%; min-height: 190px; }
+.ds-grafico > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ds-grafico .ds-gr-eje { stroke: var(--ds-borde); stroke-width: 1; }
+.ds-grafico .ds-gr-texto { fill: var(--ds-tinta-suave); font-size: 11px; font-family: var(--ds-fuente); }
+.ds-grafico .ds-gr-valor { fill: var(--ds-tinta); font-size: 11px; font-weight: 700; font-family: var(--ds-fuente); font-variant-numeric: tabular-nums; }
+.ds-grafico .ds-gr-linea { fill: none; stroke: var(--ds-verde); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.ds-grafico .ds-gr-punto { fill: var(--ds-superficie); stroke: var(--ds-verde); stroke-width: 2; }
+.ds-grafico .ds-gr-barra { fill: var(--ds-verde); }
+.ds-grafico .ds-gr-barra-suave { fill: var(--ds-verde-claro); }
+
+/* ── Dona + leyenda ─────────────────────────────────────────────────── */
+.ds-dona { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: var(--ds-esp-5); align-items: center; }
+.ds-dona-svg { width: 168px; height: 168px; display: block; }
+.ds-dona-centro { fill: var(--ds-tinta); font-family: var(--ds-fuente); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ds-dona-sub { fill: var(--ds-tinta-suave); font-family: var(--ds-fuente); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.ds-leyenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ds-leyenda li { display: flex; align-items: center; gap: 9px; min-width: 0; font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-leyenda .ds-punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.ds-leyenda .ds-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-leyenda .ds-valor { margin-left: auto; font-weight: 700; color: var(--ds-tinta); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 520px) { .ds-dona { grid-template-columns: 1fr; justify-items: center; } .ds-dona-svg { width: 150px; height: 150px; } }
+
+/* ── Meta con barra ─────────────────────────────────────────────────── */
+.ds-metas { display: grid; gap: var(--ds-esp-4); }
+.ds-meta { display: grid; gap: 7px; }
+.ds-meta-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: var(--ds-t-sm); color: var(--ds-tinta-suave); }
+.ds-meta-cab strong { color: var(--ds-tinta); font-variant-numeric: tabular-nums; }
+.ds-meta-barra { height: 8px; border-radius: var(--ds-r-pill); background: var(--ds-superficie-2); border: 1px solid var(--ds-borde); overflow: hidden; }
+.ds-meta-relleno { display: block; height: 100%; border-radius: var(--ds-r-pill); background: var(--ds-verde); transition: width 480ms cubic-bezier(.2, .7, .3, 1); }
+.ds-meta-relleno.aviso { background: var(--ds-aviso); }
+.ds-meta-relleno.error { background: var(--ds-error); }
+
+/* ── Alertas ────────────────────────────────────────────────────────── */
+.ds-alertas { display: grid; gap: 10px; }
+.ds-alerta {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--ds-borde);
+  border-left: 4px solid var(--ds-borde-fuerte);
+  border-radius: var(--ds-r-sm);
+  background: var(--ds-superficie);
+  font-size: var(--ds-t-sm);
+  color: var(--ds-tinta);
+}
+.ds-alerta strong { font-weight: 700; }
+.ds-alerta .ds-alerta-txt { min-width: 0; }
+.ds-alerta .ds-alerta-txt p { margin: 2px 0 0; color: var(--ds-tinta-suave); }
+.ds-alerta.ok { border-left-color: var(--ds-ok); background: var(--ds-ok-soft); }
+.ds-alerta.aviso { border-left-color: var(--ds-aviso); background: var(--ds-aviso-soft); }
+.ds-alerta.error { border-left-color: var(--ds-error); background: var(--ds-error-soft); }
+.ds-alerta.info { border-left-color: var(--ds-info); background: var(--ds-info-soft); }
+.ds-alerta-icono { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: currentColor; color: var(--ds-superficie); font-size: 12px; font-weight: 800; }
+.ds-alerta.ok .ds-alerta-icono { background: var(--ds-ok); }
+.ds-alerta.aviso .ds-alerta-icono { background: var(--ds-aviso); }
+.ds-alerta.error .ds-alerta-icono { background: var(--ds-error); }
+.ds-alerta.info .ds-alerta-icono { background: var(--ds-info); }
+
+/* ── Etiquetas ──────────────────────────────────────────────────────── */
+.ds-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: var(--ds-r-pill); border: 1px solid var(--ds-borde); background: var(--ds-superficie-2); color: var(--ds-tinta-suave); font-size: var(--ds-t-xs); font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+.ds-badge.ok { background: var(--ds-ok-soft); border-color: transparent; color: var(--ds-ok-tinta); }
+.ds-badge.aviso { background: var(--ds-aviso-soft); border-color: transparent; color: var(--ds-aviso-tinta); }
+.ds-badge.error { background: var(--ds-error-soft); border-color: transparent; color: var(--ds-error-tinta); }
+.ds-badge.info { background: var(--ds-info-soft); border-color: transparent; color: var(--ds-info-tinta); }
+.ds-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .9; }
+.ds-badge.sin-punto::before { display: none; }
+
+/* ── Tablas ─────────────────────────────────────────────────────────── */
+.ds-tabla-envoltura { overflow-x: auto; border: 1px solid var(--ds-borde); border-radius: var(--ds-r-md); background: var(--ds-superficie); }
+.ds-tabla { width: 100%; border-collapse: collapse; font-size: var(--ds-t-sm); }
+.ds-tabla th { padding: 9px 12px; text-align: left; font-size: var(--ds-t-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ds-tinta-suave); background: var(--ds-superficie-2); border-bottom: 1px solid var(--ds-borde); white-space: nowrap; }
+.ds-tabla td { padding: 11px 12px; border-bottom: 1px solid var(--ds-borde); color: var(--ds-tinta); vertical-align: middle; }
+.ds-tabla tbody tr:last-child td { border-bottom: none; }
+.ds-tabla tbody tr:hover { background: var(--ds-superficie-2); }
+.ds-tabla .ds-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-tabla .ds-suave { color: var(--ds-tinta-suave); }
+
+/* ── Botones ────────────────────────────────────────────────────────── */
+.ds-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 40px; padding: 0 16px;
+  border: 1px solid transparent; border-radius: var(--ds-r-sm);
+  background: var(--ds-verde); color: var(--ds-sobre-verde);
+  font: inherit; font-size: var(--ds-t-sm); font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: background var(--ds-trans), box-shadow var(--ds-trans), transform var(--ds-trans);
+  box-shadow: var(--ds-sombra-1);
+}
+.ds-btn:hover { background: var(--ds-verde-oscuro); }
+.ds-btn:active { transform: translateY(1px); }
+.ds-btn.sec { background: var(--ds-superficie); color: var(--ds-tinta); border-color: var(--ds-borde-fuerte); box-shadow: none; }
+.ds-btn.sec:hover { background: var(--ds-superficie-2); }
+.ds-btn.fantasma { background: transparent; color: var(--ds-verde); border-color: transparent; box-shadow: none; }
+.ds-btn.fantasma:hover { background: var(--ds-verde-claro); }
+.ds-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Toolbar / vacío / esqueleto ────────────────────────────────────── */
+.ds-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ds-toolbar .ds-sep { flex: 1; }
+.ds-vacio { display: grid; place-items: center; gap: 6px; padding: var(--ds-esp-10) var(--ds-esp-4); text-align: center; color: var(--ds-tinta-suave); font-size: var(--ds-t-sm); }
+.ds-vacio strong { color: var(--ds-tinta); font-size: var(--ds-t-md); }
+.ds-esqueleto { border-radius: var(--ds-r-sm); background: linear-gradient(90deg, var(--ds-superficie-2) 25%, var(--ds-borde) 37%, var(--ds-superficie-2) 63%); background-size: 400% 100%; animation: ds-brillo 1.4s ease infinite; min-height: 14px; }
+@keyframes ds-brillo { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+/* ── Foco y accesibilidad ───────────────────────────────────────────── */
+.ds a:focus-visible,
+.ds button:focus-visible,
+.ds [tabindex]:focus-visible { outline: 3px solid var(--ds-terracota); outline-offset: 2px; border-radius: 4px; }
+.ds .ds-solo-lector { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds *, .ds *::before, .ds *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+/* </compartido:diseno> */
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--gray-50); color: var(--gray-900); -webkit-font-smoothing: antialiased; }
         .container { display: flex; min-height: 100vh; }
 
@@ -576,47 +859,65 @@
             </div>
         </header>
         <div class="content">
-            <!-- Dashboard -->
+            <!-- Dashboard (Fase 4, 05/11/2026): sistema de diseño compartido -->
             <section class="section active" id="dashboard">
-                <h2 style="margin-bottom: 24px;" data-i18n="title.dashboard">Dashboard</h2>
-                <div id="resumenHoy" class="resumen-hoy"></div>
-                <div class="kpis">
-                    <div class="kpi"><div class="kpi-label" data-i18n="dash.citasHoy">Citas Hoy</div><div class="kpi-value" id="kpiCitasHoy">—</div></div>
-                    <div class="kpi"><div class="kpi-label" data-i18n="dash.totalCitas">Total Citas</div><div class="kpi-value" id="kpiCitasTotal">—</div></div>
-                    <div class="kpi"><div class="kpi-label" data-i18n="dash.pacientes">Pacientes</div><div class="kpi-value" id="kpiPacientes">—</div></div>
-                    <div class="kpi"><div class="kpi-label" data-i18n="dash.doctores">Doctores</div><div class="kpi-value" id="kpiDoctores">—</div></div>
-                    <div class="kpi"><div class="kpi-label" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</div><div class="kpi-value" id="kpiTasaConfirmacion">—</div></div>
-                </div>
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <div class="card-title" data-i18n="dash.citasPorDia">Citas por día (últimos 7 días)</div>
-                        <div class="chart-wrap"><canvas id="chartCitasPorDia"></canvas></div>
+                <div class="ds ds-tema-oscuro" id="dashDS">
+                    <div class="ds-cabecera">
+                        <div>
+                            <span class="ds-eyebrow">Hoy</span>
+                            <h2 data-i18n="title.dashboard">Dashboard</h2>
+                            <p data-i18n="dash.subtitulo">La agenda, la confirmación y lo que pide atención.</p>
+                        </div>
+                        <span class="ds-badge ok" id="dashEstadoCita" data-i18n="dash.alDia">Al día</span>
                     </div>
-                    <div class="card">
-                        <div class="card-title" data-i18n="dash.actividadReciente">Actividad reciente</div>
-                        <div class="actividad-lista" id="actividadLista">
-                            <div class="actividad-item"><div class="actividad-texto loading" data-i18n="common.loading">Cargando...</div></div>
+                    <div class="ds-kpis">
+                        <div class="ds-kpi"><span class="ds-kpi-acento"></span><p class="ds-kpi-etiqueta" data-i18n="dash.citasHoy">Citas hoy</p><p class="ds-kpi-valor" id="kpiCitasHoy">—</p><p class="ds-kpi-pie" data-i18n="dash.enAgendaHoy">En la agenda de hoy</p></div>
+                        <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.totalCitas">Citas de la semana</p><p class="ds-kpi-valor" id="kpiCitasTotal">—</p><p class="ds-kpi-pie" data-i18n="dash.semanaLunesDomingo">Lunes a domingo</p></div>
+                        <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.pacientes">Pacientes</p><p class="ds-kpi-valor" id="kpiPacientes">—</p><p class="ds-kpi-pie" data-i18n="dash.registradosClinica">Registrados en la clínica</p></div>
+                        <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</p><p class="ds-kpi-valor" id="kpiTasaConfirmacion">—</p><p class="ds-kpi-pie" data-i18n="dash.confirmadasActivas">Citas confirmadas sobre las activas</p></div>
+                    </div>
+                    <div id="resumenHoy" class="ds-alertas ds-seccion"></div>
+                    <div class="ds-grid-2 ds-seccion">
+                        <div class="ds-card">
+                            <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.citasPorDia">Citas por día</h3><p class="ds-card-sub" data-i18n="dash.ultimos7">Últimos 7 días</p></div></div>
+                            <div class="ds-grafico" id="chartCitasPorDia"></div>
+                        </div>
+                        <div class="ds-card">
+                            <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.porEstado">Por estado</h3><p class="ds-card-sub" data-i18n="dash.todasCargadas">Todas las citas cargadas</p></div></div>
+                            <div class="ds-grafico" id="estadoDona"></div>
                         </div>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-title" data-i18n="dash.proximasCitas">Próximas Citas</div>
-                    <div class="table-wrap"><table>
-                        <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
-                        <tbody id="tablaCitasProximas"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
-                    </table></div>
-                </div>
-                <div class="card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-                        <div class="card-title" style="margin:0" data-i18n="title.calendario">Calendario</div>
-                        <div style="display:flex;align-items:center;gap:12px">
-                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(-1)">←</button>
-                            <strong id="calRangoSemana">—</strong>
-                            <button class="btn btn-ghost" style="padding:8px 14px" onclick="cambiarSemana(1)">→</button>
+                    <div class="ds-grid-2 ds-seccion">
+                        <div class="ds-card">
+                            <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.actividadReciente">Actividad reciente</h3><p class="ds-card-sub" data-i18n="dash.loUltimoClinica">Lo último que pasó en la clínica</p></div></div>
+                            <div class="actividad-lista" id="actividadLista">
+                                <div class="actividad-item"><div class="actividad-texto loading" data-i18n="common.loading">Cargando...</div></div>
+                            </div>
                         </div>
-                        <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
+                        <div class="ds-card">
+                            <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.metasSemana">Metas de la semana</h3><p class="ds-card-sub" data-i18n="dash.seCero">Se pueden llegar a cero.</p></div></div>
+                            <div class="ds-metas" id="metasCitaDS"></div>
+                        </div>
                     </div>
-                    <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
+                    <div class="ds-card ds-seccion">
+                        <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.proximasCitas">Próximas citas</h3><p class="ds-card-sub" data-i18n="dash.proximasSub">Las siguientes de la agenda</p></div></div>
+                        <div class="ds-tabla-envoltura"><table class="ds-tabla">
+                            <thead><tr><th data-i18n="common.colPaciente">Paciente</th><th data-i18n="common.colFecha">Fecha</th><th data-i18n="common.colHora">Hora</th><th data-i18n="common.colEstado">Estado</th><th data-i18n="common.colAccion">Acción</th></tr></thead>
+                            <tbody id="tablaCitasProximas"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                        </table></div>
+                    </div>
+                    <div class="ds-card ds-seccion">
+                        <div class="ds-card-cab" style="align-items:center">
+                            <div><h3 class="ds-card-titulo" data-i18n="title.calendario">Calendario</h3><p class="ds-card-sub" data-i18n="dash.semanaClinica">La semana de la clínica</p></div>
+                            <div class="ds-toolbar">
+                                <button class="ds-btn sec" type="button" style="min-height:34px;padding:0 11px" onclick="cambiarSemana(-1)">←</button>
+                                <strong id="calRangoSemana">—</strong>
+                                <button class="ds-btn sec" type="button" style="min-height:34px;padding:0 11px" onclick="cambiarSemana(1)">→</button>
+                            </div>
+                            <div id="calLeyenda" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px"></div>
+                        </div>
+                        <div style="overflow-x:auto"><div id="calGrid" class="cal-grid"></div></div>
+                    </div>
                 </div>
             </section>
             <!-- Inbox -->
@@ -2170,13 +2471,14 @@ function filtrarCitasPorRol(lista) {
     }
     return lista || [];
 }
+// (05/11/2026, Fase 4) 'YYYY-MM-DD' se interpreta como fecha LOCAL; new Date('YYYY-MM-DD') la toma como UTC
+// y en Costa Rica corría un día las citas de la tarde/noche.
+function claveFechaLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fechaLocal(f) { const m = String(f || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(f); }
 // ── DASHBOARD ─────────────────────────────────────────────────────
 async function loadDashboard() {
     try {
-        const [dashboard, doctores] = await Promise.all([
-            apiFetch('/dashboard'),
-            apiFetch('/doctores')
-        ]);
+        const dashboard = await apiFetch('/dashboard');
         const citasTodas = await apiFetch('/citas');
         const citas = filtrarCitasPorRol(citasTodas);
         // Semana actual (lunes a domingo), no el total histórico de citas.
@@ -2186,13 +2488,12 @@ async function loadDashboard() {
         const finSemana = new Date(inicioSemana); finSemana.setDate(inicioSemana.getDate() + 7);
         const citasSemana = citas.filter(c => {
             if (!c.fecha || c.estado === 'cancelada') return false;
-            const f = new Date(c.fecha);
+            const f = fechaLocal(c.fecha);
             return f >= inicioSemana && f < finSemana;
         });
         document.getElementById('kpiCitasTotal').textContent = citasSemana.length ?? '—';
         document.getElementById('kpiPacientes').textContent = dashboard.pacientes ?? '—';
-        document.getElementById('kpiDoctores').textContent = doctores.length ?? '—';
-        const hoy = new Date().toISOString().split('T')[0];
+        const hoy = claveFechaLocal(new Date());
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
         const citasHoySinConfirmar = citasHoy.filter(c => c.estado !== 'confirmada' && c.estado !== 'cancelada' && c.estado !== 'atendida').length;
@@ -2228,45 +2529,55 @@ async function loadDashboard() {
             : 0;
         document.getElementById('kpiTasaConfirmacion').textContent = noCanceladas.length ? `${tasaConfirmacion}%` : '—';
         renderCitasChart(citas);
+        renderDashboardDS(citas);
         loadActividad();
     } catch (e) { console.error('Dashboard:', e); }
 }
 
-let chartCitasPorDia = null;
+// (05/11/2026, Fase 4) Gráfico con el sistema compartido: SVG propio, sin Chart.js.
 function renderCitasChart(citas) {
-    const canvas = document.getElementById('chartCitasPorDia');
-    if (!canvas || typeof Chart === 'undefined') return;
-    const dias = [];
-    const conteos = [];
+    const cont = document.getElementById('chartCitasPorDia');
+    if (!cont || !window.DSGraf) return;
+    const dias = [], conteos = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().split('T')[0];
+        const key = claveFechaLocal(d);
         dias.push(d.toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric' }));
         conteos.push(citas.filter(c => c.fecha && c.fecha.startsWith(key) && c.estado !== 'cancelada').length);
     }
-    if (chartCitasPorDia) chartCitasPorDia.destroy();
-    chartCitasPorDia = new Chart(canvas.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: dias,
-            datasets: [{
-                data: conteos,
-                backgroundColor: 'var(--primary)',
-                borderRadius: 6,
-                maxBarThickness: 36
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f0f0f0' } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
+    DSGraf.barras(cont, { etiquetas: dias, valores: conteos, etiqueta: 'Citas por día de los últimos 7 días' });
+}
+
+// (05/11/2026, Fase 4) Dona por estado y metas de la semana.
+function renderDashboardDS(citas) {
+    if (!window.DSGraf) return;
+    const dona = document.getElementById('estadoDona');
+    const metas = document.getElementById('metasCitaDS');
+    if (dona) {
+        const cuenta = { confirmada: 0, pendiente: 0, cancelada: 0, atendida: 0 };
+        (citas || []).forEach((c) => {
+            if (!c.estado) return;
+            if (cuenta[c.estado] != null) cuenta[c.estado]++;
+            else if (c.estado !== 'cancelada') cuenta.pendiente++;
+        });
+        const COLORES = { confirmada: 'var(--ds-verde)', pendiente: 'var(--ds-aviso)', cancelada: 'var(--ds-error)', atendida: 'var(--ds-info)' };
+        const ETIQUETAS = { confirmada: 'Confirmadas', pendiente: 'Pendientes', cancelada: 'Canceladas', atendida: 'Atendidas' };
+        const partes = Object.keys(cuenta).filter((k) => cuenta[k] > 0).map((k) => ({ etiqueta: ETIQUETAS[k], valor: cuenta[k], color: COLORES[k] }));
+        DSGraf.dona(dona, { centro: String((citas || []).length), sub: 'citas', partes, etiqueta: 'Citas por estado' });
+    }
+    if (metas) {
+        const ahora = new Date();
+        const diaSemana = (ahora.getDay() + 6) % 7;
+        const ini = new Date(ahora); ini.setHours(0, 0, 0, 0); ini.setDate(ahora.getDate() - diaSemana);
+        const fin = new Date(ini); fin.setDate(ini.getDate() + 7);
+        const semana = (citas || []).filter((c) => { const f = c.fecha ? fechaLocal(c.fecha) : null; return f && f >= ini && f < fin && c.estado !== 'cancelada'; });
+        const hoy = claveFechaLocal(new Date());
+        const deHoy = (citas || []).filter((c) => c.fecha && c.fecha.startsWith(hoy) && c.estado !== 'cancelada');
+        DSGraf.vaciar(metas);
+        DSGraf.meta(metas, { etiqueta: 'Citas de la semana confirmadas', valor: semana.filter((c) => c.estado === 'confirmada').length, meta: semana.length });
+        DSGraf.meta(metas, { etiqueta: 'Citas de hoy confirmadas', valor: deHoy.filter((c) => c.estado === 'confirmada').length, meta: deHoy.length });
+    }
 }
 
 function tiempoRelativo(fechaIso) {
@@ -4852,6 +5163,201 @@ async function borrarBloqueo(id) {
         document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
     }
 }
+// <compartido:graficos>
+// Gráficos del sistema de diseño de AutomatIA — Fase 4 (05/11/2026)
+// FUENTE ÚNICA. build-compartido.py lo inyecta en admin-panel.html, autocita-dashboard.html y
+// autoventas-dashboard.html, y lo copia a pluggs-app/js/graficos.js. Editar SOLO acá.
+//
+// Todo se dibuja con SVG del propio navegador: no carga librerías, no usa innerHTML con datos
+// y no necesita permisos nuevos de CSP. API:
+//   DSGraf.linea(contenedor, { etiquetas, valores, formato, alto })
+//   DSGraf.barras(contenedor, { etiquetas, valores, formato, alto })
+//   DSGraf.dona(contenedor, { partes: [{ etiqueta, valor, color }], centro, sub })
+//   DSGraf.meta(contenedor, { etiqueta, valor, meta, formato })
+//   DSGraf.vaciar(contenedor)
+(function (root) {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var ids = 0;
+
+  function el(tag, clase, texto) {
+    var n = document.createElement(tag);
+    if (clase) n.className = clase;
+    if (texto != null) n.textContent = String(texto);
+    return n;
+  }
+  function svg(tag, attrs) {
+    var n = document.createElementNS(NS, tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { n.setAttribute(k, String(attrs[k])); });
+    return n;
+  }
+  function vaciar(cont) { while (cont && cont.firstChild) cont.removeChild(cont.firstChild); }
+  function num(v) { var n = Number(v); return Number.isFinite(n) ? n : 0; }
+  function fmt(v, f) { return typeof f === 'function' ? String(f(num(v))) : String(Math.round(num(v))); }
+  // Redondea el tope a 1, 2 o 5 × 10^n para que las guías den números legibles (20 000, no 16 833).
+  function tope(max, pasos) {
+    if (!(max > 0)) return 1;
+    var bruto = max / pasos;
+    var mag = Math.pow(10, Math.floor(Math.log(bruto) / Math.LN10));
+    var norm = bruto / mag;
+    var paso = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+    if (paso < 1) paso = 1;   // conteos: guías enteras (0, 1, 2, 3), nunca fracciones
+    return paso * pasos;
+  }
+  function svgBase(cont, alto, etiqueta) {
+    var H = alto || 210, W = 620;
+    var s = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': etiqueta || 'Gráfico', focusable: 'false' });
+    s.style.width = '100%';
+    s.style.height = 'auto';
+    cont.appendChild(s);
+    return { s: s, W: W, H: H };
+  }
+  function preparar(cont) {
+    if (!cont) return false;
+    vaciar(cont);
+    if (!cont.classList.contains('ds-grafico')) cont.classList.add('ds-grafico');
+    return true;
+  }
+  function resumen(etiquetas, valores, f) {
+    return (etiquetas || []).map(function (e, i) { return e + ': ' + fmt(valores[i], f); }).join(', ');
+  }
+
+  // ── Línea con área suave ─────────────────────────────────────────────
+  function linea(cont, op) {
+    if (!preparar(cont)) return;
+    op = op || {};
+    var et = op.etiquetas || [], vs = (op.valores || []).map(num), f = op.formato;
+    var g = svgBase(cont, op.alto, op.etiqueta || ('Serie: ' + resumen(et, vs, f)));
+    var W = g.W, H = g.H, L = 38, R = 12, T = 18, B = 30;
+    var max = tope(Math.max.apply(null, vs.concat([1])), 3);
+    var idGrad = 'dsg' + (++ids);
+    var defs = svg('defs');
+    var grad = svg('linearGradient', { id: idGrad, x1: '0', y1: '0', x2: '0', y2: '1' });
+    grad.appendChild(svg('stop', { offset: '0%', 'stop-color': 'var(--ds-verde)', 'stop-opacity': '.22' }));
+    grad.appendChild(svg('stop', { offset: '100%', 'stop-color': 'var(--ds-verde)', 'stop-opacity': '0' }));
+    defs.appendChild(grad); g.s.appendChild(defs);
+
+    var px = function (i) { return L + (vs.length <= 1 ? 0 : (i * (W - L - R)) / (vs.length - 1)); };
+    var py = function (v) { return T + (H - T - B) * (1 - v / max); };
+
+    for (var k = 0; k <= 3; k++) {
+      var yv = (max * k) / 3, y = py(yv);
+      g.s.appendChild(svg('line', { x1: L, y1: y, x2: W - R, y2: y, class: 'ds-gr-eje' }));
+      var t = svg('text', { x: L - 7, y: y + 4, 'text-anchor': 'end', class: 'ds-gr-texto' });
+      t.textContent = fmt(yv, f); g.s.appendChild(t);
+    }
+    if (!vs.length) return;
+    var puntos = vs.map(function (v, i) { return px(i) + ',' + py(v); });
+    var area = 'M' + px(0) + ',' + py(0) + ' L' + puntos.join(' L') + ' L' + px(vs.length - 1) + ',' + py(0) + ' Z';
+    g.s.appendChild(svg('path', { d: area, fill: 'url(#' + idGrad + ')', stroke: 'none' }));
+    g.s.appendChild(svg('polyline', { points: puntos.join(' '), class: 'ds-gr-linea' }));
+    var paso = et.length > 8 ? Math.ceil(et.length / 6) : 1;
+    vs.forEach(function (v, i) {
+      g.s.appendChild(svg('circle', { cx: px(i), cy: py(v), r: 3, class: 'ds-gr-punto' }));
+      if (et[i] && (i % paso === 0 || i === vs.length - 1)) {
+        var tx = svg('text', { x: px(i), y: H - 9, 'text-anchor': 'middle', class: 'ds-gr-texto' });
+        tx.textContent = et[i]; g.s.appendChild(tx);
+      }
+    });
+    // Valor del último punto, para leer el dato sin pasar el mouse.
+    if (vs.length) {
+      var vt = svg('text', { x: Math.min(px(vs.length - 1), W - 30), y: Math.max(py(vs[vs.length - 1]) - 9, 11), 'text-anchor': 'end', class: 'ds-gr-valor' });
+      vt.textContent = fmt(vs[vs.length - 1], f); g.s.appendChild(vt);
+    }
+  }
+
+  // ── Barras ───────────────────────────────────────────────────────────
+  function barras(cont, op) {
+    if (!preparar(cont)) return;
+    op = op || {};
+    var et = op.etiquetas || [], vs = (op.valores || []).map(num), f = op.formato;
+    var g = svgBase(cont, op.alto, op.etiqueta || ('Barras: ' + resumen(et, vs, f)));
+    var W = g.W, H = g.H, L = 38, R = 12, T = 18, B = 30;
+    var max = tope(Math.max.apply(null, vs.concat([1])), 3);
+    for (var k = 0; k <= 3; k++) {
+      var yv = (max * k) / 3, y = T + (H - T - B) * (1 - k / 3);
+      g.s.appendChild(svg('line', { x1: L, y1: y, x2: W - R, y2: y, class: 'ds-gr-eje' }));
+      var t = svg('text', { x: L - 7, y: y + 4, 'text-anchor': 'end', class: 'ds-gr-texto' });
+      t.textContent = fmt(yv, f); g.s.appendChild(t);
+    }
+    if (!vs.length) return;
+    var ancho = (W - L - R) / vs.length, bw = Math.min(38, ancho * .58);
+    var paso = et.length > 8 ? Math.ceil(et.length / 7) : 1;
+    vs.forEach(function (v, i) {
+      var x = L + ancho * i + (ancho - bw) / 2, alto = (H - T - B) * (v / max), y = H - B - alto;
+      g.s.appendChild(svg('rect', { x: x, y: y, width: bw, height: Math.max(alto, 0), rx: 5, class: 'ds-gr-barra' }));
+      if (et[i] && (i % paso === 0 || i === vs.length - 1)) {
+        var tx = svg('text', { x: x + bw / 2, y: H - 9, 'text-anchor': 'middle', class: 'ds-gr-texto' });
+        tx.textContent = et[i]; g.s.appendChild(tx);
+      }
+    });
+  }
+
+  // ── Dona con leyenda ─────────────────────────────────────────────────
+  function dona(cont, op) {
+    if (!preparar(cont)) return;
+    op = op || {};
+    var partes = (op.partes || []).map(function (p) { return { etiqueta: String(p.etiqueta || ''), valor: num(p.valor), color: p.color || 'var(--ds-verde)' }; });
+    var total = partes.reduce(function (s, p) { return s + p.valor; }, 0);
+    var caja = el('div', 'ds-dona');
+    var S = 168, r = 62, cx = S / 2, cy = S / 2, circ = 2 * Math.PI * r;
+    var s = svg('svg', { viewBox: '0 0 ' + S + ' ' + S, class: 'ds-dona-svg', role: 'img', 'aria-label': op.etiqueta || ('Distribución: ' + partes.map(function (p) { return p.etiqueta + ' ' + fmt(p.valor, op.formato); }).join(', ')) });
+    s.appendChild(svg('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: 'var(--ds-borde)', 'stroke-width': 18 }));
+    var offset = 0;
+    partes.forEach(function (p) {
+      if (p.valor <= 0 || !total) return;
+      var largo = (p.valor / total) * circ;
+      var c = svg('circle', {
+        cx: cx, cy: cy, r: r, fill: 'none', stroke: p.color, 'stroke-width': 18,
+        'stroke-dasharray': Math.max(largo - 2, .5) + ' ' + (circ - Math.max(largo - 2, .5)),
+        'stroke-dashoffset': -offset, 'stroke-linecap': 'butt', transform: 'rotate(-90 ' + cx + ' ' + cy + ')'
+      });
+      s.appendChild(c); offset += largo;
+    });
+    var ct = svg('text', { x: cx, y: cy + 2, 'text-anchor': 'middle', class: 'ds-dona-centro' });
+    ct.textContent = op.centro != null ? String(op.centro) : (total ? String(Math.round(total)) : '0');
+    s.appendChild(ct);
+    if (op.sub) {
+      var st = svg('text', { x: cx, y: cy + 20, 'text-anchor': 'middle', class: 'ds-dona-sub' });
+      st.textContent = String(op.sub); s.appendChild(st);
+    }
+    caja.appendChild(s);
+    var ul = el('ul', 'ds-leyenda');
+    partes.forEach(function (p) {
+      var li = el('li');
+      var pt = el('span', 'ds-punto'); pt.style.background = p.color;
+      li.appendChild(pt);
+      li.appendChild(el('span', 'ds-nombre', p.etiqueta));
+      var pct = total ? Math.round((p.valor / total) * 100) : 0;
+      li.appendChild(el('span', 'ds-valor', fmt(p.valor, op.formato) + ' · ' + pct + '%'));
+      ul.appendChild(li);
+    });
+    caja.appendChild(ul);
+    cont.appendChild(caja);
+  }
+
+  // ── Meta con barra ───────────────────────────────────────────────────
+  function meta(cont, op) {
+    if (!cont) return;
+    op = op || {};
+    var valor = num(op.valor), meta = num(op.meta);
+    var pct = meta > 0 ? Math.min(100, Math.round((valor / meta) * 100)) : 0;
+    var caja = el('div', 'ds-meta');
+    var cab = el('div', 'ds-meta-cab');
+    cab.appendChild(el('span', null, op.etiqueta || 'Meta'));
+    var fuerte = el('strong', null, fmt(valor, op.formato) + ' / ' + fmt(meta, op.formato) + ' · ' + pct + '%');
+    cab.appendChild(fuerte);
+    caja.appendChild(cab);
+    var barra = el('div', 'ds-meta-barra');
+    var relleno = el('span', 'ds-meta-relleno' + (op.estado ? ' ' + op.estado : ''));
+    relleno.style.width = pct + '%';
+    barra.appendChild(relleno); caja.appendChild(barra);
+    cont.appendChild(caja);
+  }
+
+  root.DSGraf = { linea: linea, barras: barras, dona: dona, meta: meta, vaciar: vaciar };
+})(typeof window !== 'undefined' ? window : this);
+// </compartido:graficos>
 function showSection(id, btn) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -4895,6 +5401,9 @@ function marcarBotonTema() {
     var btnOscuro = document.getElementById('btnTemaOscuro');
     if (btnClaro) btnClaro.classList.toggle('activo', claro);
     if (btnOscuro) btnOscuro.classList.toggle('activo', !claro);
+    // (05/11/2026, Fase 4) El sistema de diseño sigue el tema del panel: AutoCita arranca oscuro sin atributo.
+    var dash = document.getElementById('dashDS');
+    if (dash) dash.classList.toggle('ds-tema-oscuro', !claro);
 }
 document.addEventListener('DOMContentLoaded', marcarBotonTema);
 
@@ -5614,33 +6123,38 @@ function renderResumenHoy(citasHoySinConfirmar) {
     const items = [];
     if (citasHoySinConfirmar > 0) {
         items.push({
-            icono: '📅',
-            texto: citasHoySinConfirmar + (citasHoySinConfirmar === 1 ? piezaT('resumen.citaSinConfirmar', ' cita de hoy sin confirmar') : piezaT('resumen.citasSinConfirmar', ' citas de hoy sin confirmar')),
+            nivel: 'aviso',
+            titulo: citasHoySinConfirmar + (citasHoySinConfirmar === 1 ? piezaT('resumen.citaSinConfirmar', ' cita de hoy sin confirmar') : piezaT('resumen.citasSinConfirmar', ' citas de hoy sin confirmar')),
+            detalle: piezaT('dash.revisarHoy', 'Revisá la agenda de hoy.'),
             ir: 'listaCitas',
         });
     }
     const sinResponder = conversacionesCache.reduce((s, c) => s + (c.no_leidos || 0), 0);
     if (sinResponder > 0) {
         items.push({
-            icono: '💬',
-            texto: sinResponder + (sinResponder === 1 ? piezaT('resumen.msjSinResponder', ' mensaje esperando respuesta') : piezaT('resumen.msjsSinResponder', ' mensajes esperando respuesta')),
+            nivel: 'info',
+            titulo: sinResponder + (sinResponder === 1 ? piezaT('resumen.msjSinResponder', ' mensaje esperando respuesta') : piezaT('resumen.msjsSinResponder', ' mensajes esperando respuesta')),
+            detalle: piezaT('dash.inboxResponder', 'Entrá al Inbox para responder.'),
             ir: 'inbox',
         });
     }
+    const estado = document.getElementById('dashEstadoCita');
+    if (estado) {
+        estado.textContent = items.length ? items.length + ' ' + (items.length === 1 ? piezaT('dash.pendiente1', 'pendiente') : piezaT('dash.pendienteN', 'pendientes')) : piezaT('dash.alDia', 'Al día');
+        estado.className = 'ds-badge ' + (items.length ? 'aviso' : 'ok');
+    }
     if (!items.length) {
-        caja.innerHTML = `<div class="resumen-vacio">✅ ${escapeHtmlPanel(piezaT('resumen.vacio', 'Nada pendiente por ahora.'))}</div>`;
+        caja.innerHTML = '<div class="ds-alerta ok"><span class="ds-alerta-icono">✓</span><div class="ds-alerta-txt"><strong>' + escapeHtmlPanel(piezaT('dash.todoAlDia', 'Todo al día')) + '</strong><p>' + escapeHtmlPanel(piezaT('dash.sinPendientes', 'No hay citas sin confirmar ni mensajes esperando.')) + '</p></div></div>';
         return;
     }
-    caja.innerHTML = '';
-    items.forEach((it) => {
-        const div = document.createElement('div');
-        div.className = 'resumen-item';
-        div.innerHTML = `<span>${it.icono}</span><span>${escapeHtmlPanel(it.texto)}</span>`;
-        div.addEventListener('click', () => {
-            const btn = document.querySelector(`.nav-link[data-section="${it.ir}"]`);
-            showSection(it.ir, btn);
-        });
-        caja.appendChild(div);
+    caja.innerHTML = items.map((it) => '<div class="ds-alerta ' + it.nivel + '" role="button" tabindex="0" data-ir="' + it.ir + '"><span class="ds-alerta-icono">' + (it.nivel === 'aviso' ? '!' : 'i') + '</span><div class="ds-alerta-txt"><strong>' + escapeHtmlPanel(it.titulo) + '</strong><p>' + escapeHtmlPanel(it.detalle) + '</p></div></div>').join('');
+    caja.querySelectorAll('[data-ir]').forEach((el) => {
+        const ir = () => {
+            const btn = document.querySelector('.nav-link[data-section="' + el.getAttribute('data-ir') + '"]');
+            showSection(el.getAttribute('data-ir'), btn);
+        };
+        el.addEventListener('click', ir);
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ir(); } });
     });
 }
 // ── Sección Redes ──────────────────────────────────────────────────
@@ -5883,6 +6397,14 @@ const translations = {
         'dash.proximasCitas': 'Próximas Citas', 'dash.noCitas': 'No hay citas próximas',
         'dash.tasaConfirmacion': 'Tasa de confirmación', 'dash.citasPorDia': 'Citas por día (últimos 7 días)',
         'dash.actividadReciente': 'Actividad reciente', 'dash.sinActividad': 'Sin actividad reciente', 'dash.ahora': 'ahora',
+        'dash.subtitulo': 'La agenda, la confirmación y lo que pide atención.', 'dash.enAgendaHoy': 'En la agenda de hoy',
+        'dash.semanaLunesDomingo': 'Lunes a domingo', 'dash.registradosClinica': 'Registrados en la clínica',
+        'dash.confirmadasActivas': 'Citas confirmadas sobre las activas', 'dash.ultimos7': 'Últimos 7 días',
+        'dash.porEstado': 'Por estado', 'dash.todasCargadas': 'Todas las citas cargadas', 'dash.loUltimoClinica': 'Lo último que pasó en la clínica',
+        'dash.metasSemana': 'Metas de la semana', 'dash.seCero': 'Se pueden llegar a cero.', 'dash.proximasSub': 'Las siguientes de la agenda',
+        'dash.semanaClinica': 'La semana de la clínica', 'dash.revisarHoy': 'Revisá la agenda de hoy.', 'dash.inboxResponder': 'Entrá al Inbox para responder.',
+        'dash.todoAlDia': 'Todo al día', 'dash.sinPendientes': 'No hay citas sin confirmar ni mensajes esperando.',
+        'dash.pendiente1': 'pendiente', 'dash.pendienteN': 'pendientes', 'dash.alDia': 'Al día',
         'pac.addTitle': 'Agregar Paciente', 'pac.nombre': 'Nombre', 'pac.nombrePh': 'Juan Pérez', 'pac.telefono': 'Teléfono',
         'pac.email': 'Email', 'pac.emailPh': 'juan@email.com', 'pac.cedula': 'Cédula', 'pac.idioma': 'Idioma preferido',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
@@ -6023,6 +6545,14 @@ const translations = {
         'dash.proximasCitas': 'Upcoming Appointments', 'dash.noCitas': 'No upcoming appointments',
         'dash.tasaConfirmacion': 'Confirmation rate', 'dash.citasPorDia': 'Appointments by day (last 7 days)',
         'dash.actividadReciente': 'Recent activity', 'dash.sinActividad': 'No recent activity', 'dash.ahora': 'just now',
+        'dash.subtitulo': 'The schedule, confirmations and what needs attention.', 'dash.enAgendaHoy': "On today's schedule",
+        'dash.semanaLunesDomingo': 'Monday to Sunday', 'dash.registradosClinica': 'Registered at the clinic',
+        'dash.confirmadasActivas': 'Confirmed over active appointments', 'dash.ultimos7': 'Last 7 days',
+        'dash.porEstado': 'By status', 'dash.todasCargadas': 'All loaded appointments', 'dash.loUltimoClinica': 'The latest at the clinic',
+        'dash.metasSemana': 'Weekly goals', 'dash.seCero': 'They can reach zero.', 'dash.proximasSub': 'The next ones on the schedule',
+        'dash.semanaClinica': "The clinic's week", 'dash.revisarHoy': "Check today's schedule.", 'dash.inboxResponder': 'Open the Inbox to reply.',
+        'dash.todoAlDia': 'All caught up', 'dash.sinPendientes': 'No unconfirmed appointments or waiting messages.',
+        'dash.pendiente1': 'pending', 'dash.pendienteN': 'pending', 'dash.alDia': 'Up to date',
         'pac.addTitle': 'Add Patient', 'pac.nombre': 'Name', 'pac.nombrePh': 'John Smith', 'pac.telefono': 'Phone',
         'pac.email': 'Email', 'pac.emailPh': 'john@email.com', 'pac.cedula': 'ID number', 'pac.idioma': 'Preferred language',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
@@ -6163,6 +6693,14 @@ const translations = {
         'dash.proximasCitas': 'Próximas Consultas', 'dash.noCitas': 'Nenhuma consulta próxima',
         'dash.tasaConfirmacion': 'Taxa de confirmação', 'dash.citasPorDia': 'Consultas por dia (últimos 7 dias)',
         'dash.actividadReciente': 'Atividade recente', 'dash.sinActividad': 'Sem atividade recente', 'dash.ahora': 'agora',
+        'dash.subtitulo': 'A agenda, as confirmações e o que pede atenção.', 'dash.enAgendaHoy': 'Na agenda de hoje',
+        'dash.semanaLunesDomingo': 'Segunda a domingo', 'dash.registradosClinica': 'Registrados na clínica',
+        'dash.confirmadasActivas': 'Consultas confirmadas sobre as ativas', 'dash.ultimos7': 'Últimos 7 dias',
+        'dash.porEstado': 'Por status', 'dash.todasCargadas': 'Todas as consultas carregadas', 'dash.loUltimoClinica': 'O último que aconteceu na clínica',
+        'dash.metasSemana': 'Metas da semana', 'dash.seCero': 'Podem chegar a zero.', 'dash.proximasSub': 'As próximas da agenda',
+        'dash.semanaClinica': 'A semana da clínica', 'dash.revisarHoy': 'Revisá a agenda de hoje.', 'dash.inboxResponder': 'Entrá no Inbox para responder.',
+        'dash.todoAlDia': 'Tudo em dia', 'dash.sinPendientes': 'Não há consultas sem confirmar nem mensagens esperando.',
+        'dash.pendiente1': 'pendente', 'dash.pendienteN': 'pendentes', 'dash.alDia': 'Em dia',
         'pac.addTitle': 'Adicionar Paciente', 'pac.nombre': 'Nome', 'pac.nombrePh': 'João Silva', 'pac.telefono': 'Telefone',
         'pac.email': 'Email', 'pac.emailPh': 'joao@email.com', 'pac.cedula': 'Documento', 'pac.idioma': 'Idioma preferido',
         'pac.idiomaEs': 'Español', 'pac.idiomaEn': 'English', 'pac.idiomaPt': 'Português',
