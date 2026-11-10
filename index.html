@@ -891,13 +891,13 @@
 <div class="container" id="appContainer" style="display:none">
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
     <div class="modal-overlay" id="citaModalOverlay" onclick="if(event.target===this) cerrarModalCita()">
-        <div class="modal-box" id="citaModalBox"></div>
+        <div class="modal-box" id="citaModalBox" role="dialog" aria-modal="true" aria-labelledby="citaModalTitulo"></div>
     </div>
     <!-- Condiciones del Servicio: no se cierra clickeando afuera ni tiene X —
          hay que aceptar para poder usar el panel. -->
     <div class="modal-overlay" id="terminosOverlay">
-        <div class="modal-box modal-box-lg">
-            <h3 data-i18n="terms.title">Condiciones del Servicio</h3>
+        <div class="modal-box modal-box-lg" role="dialog" aria-modal="true" aria-labelledby="terminosTitulo">
+            <h3 id="terminosTitulo" data-i18n="terms.title">Condiciones del Servicio</h3>
             <p class="card-subtitle" data-i18n="terms.intro">Antes de continuar, necesitamos que leas y aceptes nuestras Condiciones del Servicio.</p>
             <p id="terminosPublicado" class="terms-fecha"></p>
             <div class="terms-resumen">
@@ -1991,7 +1991,7 @@ function mostrarDetalleCita(citaId) {
     if (!box) return;
     box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-            <h3 style="margin:0">${escapeHtmlPanel(nombrePaciente(c))}</h3>
+            <h3 id="citaModalTitulo" style="margin:0">${escapeHtmlPanel(nombrePaciente(c))}</h3>
             <button onclick="cerrarModalCita()" aria-label="${t('common.cerrar')}" style="background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--gray-500);padding:0 0 0 12px">×</button>
         </div>
         <div class="modal-row"><span>${t('common.doctor')}</span><span>${escapeHtmlPanel(nombreDoctor(c))}</span></div>
@@ -2003,12 +2003,23 @@ function mostrarDetalleCita(citaId) {
             ${c.estado !== 'cancelada' ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelarModal')}</button>` : ''}
         </div>
     `;
+    // Fix accesibilidad (09/11/2026, H-188): el foco entra al diálogo, Escape lo cierra y el foco vuelve a donde estaba.
+    modalCitaFoco = document.activeElement;
     document.getElementById('citaModalOverlay').classList.add('open');
+    const cerrarBtn = box.querySelector('button[aria-label]');
+    if (cerrarBtn) cerrarBtn.focus();
 }
+let modalCitaFoco = null;
 function cerrarModalCita() {
     const el = document.getElementById('citaModalOverlay');
     if (el) el.classList.remove('open');
+    if (modalCitaFoco && typeof modalCitaFoco.focus === 'function') { try { modalCitaFoco.focus(); } catch (e) {} }
+    modalCitaFoco = null;
 }
+document.addEventListener('keydown', function (ev) {
+    const ov = document.getElementById('citaModalOverlay');
+    if (ev.key === 'Escape' && ov && ov.classList.contains('open')) cerrarModalCita();
+});
 async function apiFetch(path, opts = {}) {
     // Fix seguridad (30/10/2026, H-196): sin red o con una respuesta que no es JSON (p. ej. un 502 con HTML) se muestra un mensaje amable, no el texto técnico del navegador.
     let res;
@@ -2848,7 +2859,7 @@ async function aceptarTerminosPanel() {
         if (window.__resolverTerminos) { window.__resolverTerminos(); window.__resolverTerminos = null; }
         renderEstadoTerminosSettings();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
         btn.disabled = false;
         btn.textContent = textoOriginal;
     }
@@ -3190,7 +3201,7 @@ async function alternarBot(id, pausar) {
         await apiFetch(`/conversaciones/${id}/bot`, { method: 'PATCH', body: JSON.stringify({ pausado: pausar }) });
         await loadConversaciones();
         abrirConversacion(id);
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 // <<II_JS
 // ─── Imágenes en el inbox · interfaz compartida (05/10/2026) ─────────────────
@@ -3463,7 +3474,7 @@ async function responderConv(id) {
         await apiFetch(`/conversaciones/${id}/responder`, { method: 'POST', body: JSON.stringify({ texto }) });
         await loadConversaciones();
         abrirConversacion(id);
-    } catch (e) { alert('No se pudo enviar: ' + e.message); input.value = texto; }
+    } catch (e) { alert('No se pudo enviar: ' + sopMsg(e)); input.value = texto; }
 }
 
 // Antes el backend metía la fecha cruda de la cita ("2026-09-14T08:00:00")
@@ -3650,7 +3661,7 @@ async function crearPaciente() {
         if (citasCreadas) { loadCitas(); loadDashboard(); }
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── BUBBLES DE DOCTORES (form Agregar Paciente) ─────────────────────
@@ -3850,7 +3861,7 @@ async function enviarRecordatorio(citaId) {
     try {
         await apiFetch(`/cita/${citaId}/enviar-recordatorio`, { method: 'POST' });
         alert(t('citas.msgRecordatorioEnviado'));
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 async function cancelarCita(citaId) {
     if (!confirm(t('citas.confirmCancelarCita'))) return;
@@ -3861,7 +3872,7 @@ async function cancelarCita(citaId) {
         });
         loadCitas();
         loadDashboard();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 // ── SERVICIOS Y FACTURACIÓN ───────────────────────────────────────
 let serviciosCache = [];
@@ -3917,12 +3928,12 @@ async function guardarConocimiento() {
         aviso('success', t('conoc.guardado', { n: r.fragmentos }));
         ['conocTitulo', 'conocTexto', 'conocArchivo'].forEach(id => { document.getElementById(id).value = ''; });
         cargarConocimiento();
-    } catch (e) { aviso('error', e.message); }
+    } catch (e) { aviso('error', sopMsg(e)); }
     btn.disabled = false;
 }
 async function borrarConocimiento(id) {
     if (!CONOC_UUID.test(String(id)) || !confirm(t('conoc.confirmarBorrar'))) return;
-    try { await apiFetch(`/conocimiento/${id}`, { method: 'DELETE' }); cargarConocimiento(); } catch (e) { alert('Error: ' + e.message); }
+    try { await apiFetch(`/conocimiento/${id}`, { method: 'DELETE' }); cargarConocimiento(); } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 async function loadServicios() {
     try {
@@ -3991,7 +4002,7 @@ async function crearServicio() {
         loadServicios();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function eliminarServicio(id) {
@@ -4000,7 +4011,7 @@ async function eliminarServicio(id) {
         await apiFetch(`/servicios/${id}`, { method: 'DELETE' });
         if (editandoServicioId === id) limpiarFormServicio();
         loadServicios();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 function populateFacturaCitaSelect() {
     const sel = document.getElementById('facturaCita');
@@ -4058,7 +4069,7 @@ async function agregarServicioCita(citaId) {
     try {
         await apiFetch(`/cita/${citaId}/servicios`, { method: 'POST', body: JSON.stringify({ servicio_id }) });
         loadFactura();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 // (13/10/2026) Los servicios aplicados a una cita ya no se quitan (registro de cobro): se corrige agregando otro.
 // ── HERRAMIENTAS DE EMERGENCIA ───────────────────────────────────────
@@ -4090,7 +4101,7 @@ async function correrAgendaDia() {
         loadCitas();
         loadDashboard();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function cancelarDiaCompleto() {
@@ -4112,7 +4123,7 @@ async function cancelarDiaCompleto() {
         loadCitas();
         loadDashboard();
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── LISTA DE ESPERA ───────────────────────────────────────────────
@@ -4187,7 +4198,7 @@ async function agregarListaEspera() {
         loadListaEspera();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function marcarAtendidoListaEspera(id) {
@@ -4197,14 +4208,14 @@ async function marcarAtendidoListaEspera(id) {
             body: JSON.stringify({ estado: 'atendido' })
         });
         loadListaEspera();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 async function eliminarListaEspera(id) {
     if (!confirm(t('le.confirmQuitar'))) return;
     try {
         await apiFetch(`/lista-espera/${id}`, { method: 'DELETE' });
         loadListaEspera();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 // ── CITA EN BLOQUE ────────────────────────────────────────────────
 function populatePacienteSelectBloque() {
@@ -4276,7 +4287,7 @@ async function cargarDiasDisponiblesCita() {
             cont.innerHTML += `<div class="form-hint" style="width:100%;color:var(--warning)">${t('citas.doctorSinDias')}</div>`;
         }
     } catch (e) {
-        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${escapeHtmlPanel(e.message)}</span>`;
+        cont.innerHTML = `<span style="color:var(--danger);font-size:13px">${escapeHtmlPanel(sopMsg(e))}</span>`;
     }
 }
 function elegirDiaCita(fecha, btn) {
@@ -4302,7 +4313,7 @@ async function actualizarSlotsCitaIndividual() {
         citaIndividualSlots = await apiFetch(`/slots?fecha=${fecha}&calendar_id=${doc.calendar_id}`);
         renderCitaIndividualSlots();
     } catch (e) {
-        renderCitaIndividualSlots(e.message, true);
+        renderCitaIndividualSlots(sopMsg(e), true);
     }
 }
 function renderCitaIndividualSlots(mensaje, esError) {
@@ -4358,7 +4369,7 @@ async function crearCitaIndividual() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 let bloqueFilasHoras = [];
@@ -4473,7 +4484,7 @@ async function crearCitasBloque() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── CITAS RECURRENTES (varias semanas) ───────────────────────────
@@ -4516,7 +4527,7 @@ async function actualizarSlotsRecurrente() {
         recurrenteSlots = await apiFetch(`/slots?fecha=${fecha}&calendar_id=${doc.calendar_id}`);
         renderRecurrenteSlots();
     } catch (e) {
-        renderRecurrenteSlots(e.message, true);
+        renderRecurrenteSlots(sopMsg(e), true);
     }
     actualizarPreviewRecurrente();
 }
@@ -4598,7 +4609,7 @@ async function crearCitasRecurrentes() {
         loadDashboard();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── DOCTORES ──────────────────────────────────────────────────────
@@ -4912,7 +4923,7 @@ async function guardarDoctor() {
         loadDoctores();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── SETTINGS ──────────────────────────────────────────────────────
@@ -4952,7 +4963,7 @@ async function guardarSlugClinica() {
     } catch (e) {
         // El backend traduce el choque de slugs duplicados a un mensaje claro
         // (ver PATCH /clinica/setup) — acá solo se muestra tal cual.
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // Fecha de publicación de la versión vigente de las condiciones. Viene del
@@ -5037,7 +5048,7 @@ async function loadSettings() {
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
         document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
     } catch (e) {
-        infoEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
+        infoEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(sopMsg(e))}</p>`;
     }
 }
 async function guardarConfigClinica() {
@@ -5071,7 +5082,7 @@ async function guardarConfigClinica() {
         document.getElementById('headerClinica').textContent = body.nombre || 'AutoCita';
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function guardarConfigRecordatorios() {
@@ -5086,7 +5097,7 @@ async function guardarConfigRecordatorios() {
         alertEl.innerHTML = `<div class="alert alert-success">${t('common.guardadoOk')}</div>`;
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── EXPEDIENTES ───────────────────────────────────────────────────
@@ -5175,7 +5186,7 @@ async function loadExpediente() {
             `).join('');
         }
     } catch (e) {
-        listaEl.innerHTML = `<p class="ds-alerta error">${escapeHtmlPanel(e.message)}</p>`;
+        listaEl.innerHTML = `<p class="ds-alerta error">${escapeHtmlPanel(sopMsg(e))}</p>`;
     }
 }
 let notaAudioUrlPendiente = null; // seteado por toggleGrabacionVoz() al transcribir; se manda en el próximo guardado
@@ -5207,7 +5218,7 @@ async function agregarNotaExpediente() {
         loadExpediente();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // ── NOTA DE VOZ (grabación + transcripción con Whisper) ──────────────────
@@ -5251,7 +5262,7 @@ async function toggleGrabacionVoz() {
                 }
                 estadoEl.textContent = data.aviso || t('exp.msgTranscrita');
             } catch (e) {
-                estadoEl.textContent = `${t('exp.errTranscribir')}: ${e.message}`;
+                estadoEl.textContent = `${t('exp.errTranscribir')}: ${sopMsg(e)}`;
             } finally {
                 btn.disabled = false;
                 setTimeout(() => { estadoEl.style.display = 'none'; }, 4000);
@@ -5309,7 +5320,7 @@ async function loadOdontograma(pacienteId) {
         dienteSeleccionado = null;
         renderOdontograma();
     } catch (e) {
-        document.getElementById('odontogramaGrid').innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(e.message)}</p>`;
+        document.getElementById('odontogramaGrid').innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(sopMsg(e))}</p>`;
     }
 }
 // ─── Odontograma: arco dental ────────────────────────────────────────────────
@@ -5450,7 +5461,7 @@ async function guardarDiente() {
         odontogramaCache[dienteSeleccionado] = { estado, notas };
         renderOdontograma();
     } catch (e) {
-        alert('Error: ' + e.message);
+        alert('Error: ' + sopMsg(e));
     }
 }
 // ── EQUIPO ────────────────────────────────────────────────────────
@@ -5501,7 +5512,7 @@ async function invitarMiembro() {
         loadEquipo();
         setTimeout(() => alertEl.innerHTML = '', 4000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function eliminarMiembro(id) {
@@ -5509,7 +5520,7 @@ async function eliminarMiembro(id) {
     try {
         await apiFetch(`/equipo/${id}`, { method: 'DELETE' });
         loadEquipo();
-    } catch (e) { alert('Error: ' + e.message); }
+    } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
 function estadoBadge(estado) {
     // (07/11/2026, Parte 4) Etiquetas del sistema compartido: mismo look en el Dashboard y en Citas.
@@ -5547,7 +5558,7 @@ async function marcarLlego(id) {
         await loadCitas();
         loadDashboard();
     } catch (e) {
-        alert(e.message);
+        alert(sopMsg(e));
     }
 }
 // Al cerrar la cita, el backend responde si ese paciente ya tiene nota para
@@ -5564,7 +5575,7 @@ async function marcarAtendida(id) {
             }
         }
     } catch (e) {
-        alert(e.message);
+        alert(sopMsg(e));
     }
 }
 // Lleva a la sección de Expedientes con ese paciente ya seleccionado, para que
@@ -5642,7 +5653,7 @@ async function loadBloqueos() {
             </div>`;
         }).join('');
     } catch (e) {
-        cont.innerHTML = `<p class="ds-alerta error">${escapeHtmlPanel(e.message)}</p>`;
+        cont.innerHTML = `<p class="ds-alerta error">${escapeHtmlPanel(sopMsg(e))}</p>`;
     }
 }
 // Fix 26/09/2026: ahora escapa también comillas — se usa dentro de atributos
@@ -5674,7 +5685,7 @@ async function crearBloqueo() {
         loadBloqueos();
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
-        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 async function borrarBloqueo(id) {
@@ -5683,7 +5694,7 @@ async function borrarBloqueo(id) {
         await apiFetch(`/bloqueos/${id}`, { method: 'DELETE' });
         loadBloqueos();
     } catch (e) {
-        document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(e.message)}</div>`;
+        document.getElementById('alertBloqueo').innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
 // <compartido:graficos>
