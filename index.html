@@ -649,6 +649,17 @@
         .lang-btn.active { background: var(--primary); color: var(--white); }
 
         .dashboard-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+        /* Lo que logró Sara (09/11/2026): resultados del mes, sin datos de pacientes. */
+        .sara-sub { margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--gray-500); }
+        .sara-comp { display: flex; flex-direction: column; gap: 0; }
+        .sara-comp-fila { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gray-200); font-size: 13px; }
+        .sara-comp-fila:last-child { border-bottom: none; }
+        .sara-comp-fila span { color: var(--gray-500); }
+        .sara-comp-fila strong { font-variant-numeric: tabular-nums; color: var(--gray-900); }
+        .sara-delta { font-weight: 800; }
+        .sara-delta.ok { color: var(--success); }
+        .sara-delta.mal { color: var(--danger); }
+        .sara-mes-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         /* App instalada (pantalla completa en iPhone/Android): respeta la
            muesca y la barra de inicio del teléfono. */
         @media (display-mode: standalone) {
@@ -960,6 +971,21 @@
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.totalCitas">Citas de la semana</p><p class="ds-kpi-valor" id="kpiCitasTotal">—</p><p class="ds-kpi-pie" data-i18n="dash.semanaLunesDomingo">Lunes a domingo</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.pacientes">Pacientes</p><p class="ds-kpi-valor" id="kpiPacientes">—</p><p class="ds-kpi-pie" data-i18n="dash.registradosClinica">Registrados en la clínica</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</p><p class="ds-kpi-valor" id="kpiTasaConfirmacion">—</p><p class="ds-kpi-pie" data-i18n="dash.confirmadasActivas">Citas confirmadas sobre las activas</p></div>
+                    </div>
+                    <div class="ds-card ds-seccion" id="saraCard" style="display:none">
+                        <div class="ds-card-cab">
+                            <div>
+                                <h3 class="ds-card-titulo" data-i18n="sara.titulo">Lo que logró Sara este mes</h3>
+                                <p class="ds-card-sub" data-i18n="sara.sub">Datos verificables de tu clínica, sin estimaciones.</p>
+                            </div>
+                            <div class="sara-mes-cab">
+                                <label class="ds-ayuda" for="saraMes" data-i18n="sara.mes">Mes</label>
+                                <input type="month" id="saraMes" class="ds-input" style="max-width:165px" onchange="cargarLogrosSara()">
+                                <button class="ds-btn sec" type="button" onclick="cargarLogrosSara()" data-i18n="sara.actualizar">Actualizar</button>
+                            </div>
+                        </div>
+                        <div id="saraLogros"><div class="ds-vacio" data-i18n="sara.cargando">Cargando…</div></div>
+                        <p class="ds-ayuda ds-seccion" id="saraFormula"></p>
                     </div>
                     <div id="resumenHoy" class="ds-alertas ds-seccion"></div>
                     <div class="ds-grid-2 ds-seccion">
@@ -2921,6 +2947,7 @@ async function loadDashboard() {
         document.getElementById('kpiTasaConfirmacion').textContent = noCanceladas.length ? `${tasaConfirmacion}%` : '—';
         renderCitasChart(citas);
         renderDashboardDS(citas);
+        cargarLogrosSara();
         loadActividad();
     } catch (e) { console.error('Dashboard:', e); }
 }
@@ -2968,6 +2995,101 @@ function renderDashboardDS(citas) {
         DSGraf.vaciar(metas);
         DSGraf.meta(metas, { etiqueta: 'Citas de la semana confirmadas', valor: semana.filter((c) => c.estado === 'confirmada').length, meta: semana.length });
         DSGraf.meta(metas, { etiqueta: 'Citas de hoy confirmadas', valor: deHoy.filter((c) => c.estado === 'confirmada').length, meta: deHoy.length });
+    }
+}
+
+// ── LOGROS DE SARA (09/11/2026) ─────────────────────────────────
+// Solo agregados de la clínica; nunca nombres, teléfonos ni texto de pacientes.
+var saraCache = null;
+var saraSeq = 0;
+function mesActualSara() {
+    const d = new Date(Date.now() - 6 * 3600 * 1000);   // Costa Rica es UTC-6 todo el año
+    return d.toISOString().slice(0, 7);
+}
+async function cargarLogrosSara() {
+    const card = document.getElementById('saraCard');
+    const puede = userRol === 'dueno';
+    if (card) card.style.display = puede ? '' : 'none';
+    if (!puede) return;   // recepción, doctor y jefe de área no ven resultados de negocio
+    const cont = document.getElementById('saraLogros');
+    const input = document.getElementById('saraMes');
+    if (!cont) return;
+    const seq = ++saraSeq;
+    const mes = (input && input.value) || mesActualSara();
+    if (input) input.value = mes;
+    cont.innerHTML = `<div class="ds-vacio">${t('sara.cargando')}</div>`;
+    try {
+        const datos = await apiFetch('/clinica/logros?mes=' + encodeURIComponent(mes));
+        if (seq !== saraSeq) return;   // el usuario ya pidió otro mes
+        saraCache = datos;
+        renderLogrosSara(saraCache);
+    } catch (e) {
+        if (seq !== saraSeq) return;
+        // El endpoint puede no existir todavía: estado vacío, sin error técnico.
+        saraCache = null;
+        renderLogrosSara(null);
+    }
+}
+function saraFmtNum(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toLocaleString(getLocale()) : '—';
+}
+function saraDelta(actual, anterior) {
+    const a = Number(actual), b = Number(anterior);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return '';
+    const d = a - b;
+    const clase = d > 0 ? 'ok' : d < 0 ? 'mal' : '';
+    const signo = d > 0 ? '+' : '';
+    const valor = d.toLocaleString(getLocale(), { maximumFractionDigits: 1 });
+    return `<span class="sara-delta ${clase}">${escapeHtmlPanel(signo + valor)}</span>`;
+}
+function saraTile(etiqueta, valor, pie) {
+    return `<div class="ds-kpi">` +
+        `<p class="ds-kpi-etiqueta">${escapeHtmlPanel(etiqueta)}</p>` +
+        `<p class="ds-kpi-valor">${escapeHtmlPanel(valor)}</p>` +
+        (pie ? `<p class="ds-kpi-pie">${escapeHtmlPanel(pie)}</p>` : '') +
+        `</div>`;
+}
+function renderLogrosSara(d) {
+    const cont = document.getElementById('saraLogros');
+    const formula = document.getElementById('saraFormula');
+    if (!cont) return;
+    if (!d || (!Number(d.recordatorios_enviados) && !Number(d.citas_confirmadas_despues_recordatorio))) {
+        cont.innerHTML = `<div class="ds-vacio"><strong>${t('sara.vacio')}</strong><span>${t('sara.vacioSub')}</span></div>`;
+        if (formula) formula.textContent = '';
+        return;
+    }
+    const rec = Number(d.recordatorios_enviados || 0);
+    const conf = Number(d.citas_confirmadas_despues_recordatorio || 0);
+    const a = d.anterior || null;
+    const recA = a ? Number(a.recordatorios_enviados || 0) : null;
+    const confA = a ? Number(a.citas_confirmadas_despues_recordatorio || 0) : null;
+    const tiles = [
+        saraTile(t('sara.recordatorios'), saraFmtNum(rec), t('sara.recordatoriosPie')),
+        saraTile(t('sara.confirmadas'), saraFmtNum(conf), t('sara.confirmadasPie'))
+    ];
+    const comparacion = a
+        ? `<div class="sara-comp">` +
+          `<div class="sara-comp-fila"><span>${escapeHtmlPanel(t('sara.recordatorios'))}</span><strong>${saraFmtNum(rec)} ${saraDelta(rec, recA)}</strong></div>` +
+          `<div class="sara-comp-fila"><span>${escapeHtmlPanel(t('sara.confirmadas'))}</span><strong>${saraFmtNum(conf)} ${saraDelta(conf, confA)}</strong></div>` +
+          `</div>`
+        : `<p class="ds-ayuda">${t('sara.sinAnterior')}</p>`;
+    cont.innerHTML = `<div class="ds-kpis">${tiles.join('')}</div>` +
+        `<div class="ds-grid-2 ds-seccion">` +
+        `<div><h4 class="sara-sub">${t('sara.comparacion')}</h4><div class="ds-grafico" id="saraOrigen"></div></div>` +
+        `<div><h4 class="sara-sub">${t('sara.vsAnterior')}</h4>${comparacion}` +
+        `<p class="ds-ayuda">${escapeHtmlPanel(t('sara.soloConteos'))}</p></div>` +
+        `</div>`;
+    if (formula) {
+        const actualizado = d.actualizado_utc ? ` · ${t('sara.actualizado')} ${new Date(d.actualizado_utc).toLocaleString(getLocale())}` : '';
+        formula.textContent = `${t('sara.datos')} ${d.mes || ''}${actualizado}`;
+    }
+    if (window.DSGraf) {
+        DSGraf.barras(document.getElementById('saraOrigen'), {
+            etiquetas: [t('sara.recEste'), t('sara.recAntes'), t('sara.confEste'), t('sara.confAntes')],
+            valores: [rec, recA || 0, conf, confA || 0],
+            etiqueta: t('sara.comparacion')
+        });
     }
 }
 
@@ -6804,6 +6926,16 @@ const translations = {
         'common.agregadoOk': 'Agregado ✓', 'common.guardadoOk': 'Guardado ✓', 'common.pacienteSinNombre': 'Paciente sin nombre',
         'common.cualquiera': 'Cualquiera',
         'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Citas esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
+        'sara.titulo': 'Lo que logró Sara este mes', 'sara.sub': 'Datos verificables de tu clínica, sin estimaciones.',
+        'sara.mes': 'Mes', 'sara.actualizar': 'Actualizar', 'sara.cargando': 'Cargando…',
+        'sara.vacio': 'Todavía no hay datos de este mes.', 'sara.vacioSub': 'Aparecen cuando Sara mande recordatorios y las citas se confirmen.',
+        'sara.recordatorios': 'Recordatorios enviados', 'sara.recordatoriosPie': 'Mensajes de recordatorio que salieron en el mes.',
+        'sara.confirmadas': 'Citas confirmadas después del recordatorio', 'sara.confirmadasPie': 'Citas que pasaron a confirmadas después de un recordatorio.',
+        'sara.comparacion': 'Este mes contra el anterior', 'sara.vsAnterior': 'Contra el mes anterior',
+        'sara.sinAnterior': 'Sin datos del mes anterior.',
+        'sara.recEste': 'Rec. este mes', 'sara.recAntes': 'Rec. anterior', 'sara.confEste': 'Conf. este mes', 'sara.confAntes': 'Conf. anterior',
+        'sara.soloConteos': 'Solo conteos reales; no se estiman horas, ausencias ni conversaciones.',
+        'sara.datos': 'Datos del mes', 'sara.actualizado': 'Actualizado',
         'dash.proximasCitas': 'Próximas Citas', 'dash.noCitas': 'No hay citas próximas',
         'dash.tasaConfirmacion': 'Tasa de confirmación', 'dash.citasPorDia': 'Citas por día (últimos 7 días)',
         'dash.actividadReciente': 'Actividad reciente', 'dash.sinActividad': 'Sin actividad reciente', 'dash.ahora': 'ahora',
@@ -6959,6 +7091,16 @@ const translations = {
         'common.agregadoOk': 'Added ✓', 'common.guardadoOk': 'Saved ✓', 'common.pacienteSinNombre': 'Unnamed patient',
         'common.cualquiera': 'Anyone',
         'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Appointments This Week', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
+        'sara.titulo': 'What Sara accomplished this month', 'sara.sub': 'Verifiable data from your clinic, no estimates.',
+        'sara.mes': 'Month', 'sara.actualizar': 'Refresh', 'sara.cargando': 'Loading…',
+        'sara.vacio': 'No data for this month yet.', 'sara.vacioSub': 'They appear when Sara sends reminders and appointments are confirmed.',
+        'sara.recordatorios': 'Reminders sent', 'sara.recordatoriosPie': 'Reminder messages sent this month.',
+        'sara.confirmadas': 'Appointments confirmed after the reminder', 'sara.confirmadasPie': 'Appointments that became confirmed after a reminder.',
+        'sara.comparacion': 'This month vs. last month', 'sara.vsAnterior': 'Vs. last month',
+        'sara.sinAnterior': 'No data for last month.',
+        'sara.recEste': 'Rem. this month', 'sara.recAntes': 'Rem. last month', 'sara.confEste': 'Conf. this month', 'sara.confAntes': 'Conf. last month',
+        'sara.soloConteos': 'Real counts only; no hours, no-shows or conversations are estimated.',
+        'sara.datos': 'Month data', 'sara.actualizado': 'Updated',
         'dash.proximasCitas': 'Upcoming Appointments', 'dash.noCitas': 'No upcoming appointments',
         'dash.tasaConfirmacion': 'Confirmation rate', 'dash.citasPorDia': 'Appointments by day (last 7 days)',
         'dash.actividadReciente': 'Recent activity', 'dash.sinActividad': 'No recent activity', 'dash.ahora': 'just now',
@@ -7114,6 +7256,16 @@ const translations = {
         'common.agregadoOk': 'Adicionado ✓', 'common.guardadoOk': 'Salvo ✓', 'common.pacienteSinNombre': 'Paciente sem nome',
         'common.cualquiera': 'Qualquer um',
         'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Consultas Esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
+        'sara.titulo': 'O que Sara conquistou este mês', 'sara.sub': 'Dados verificáveis da sua clínica, sem estimativas.',
+        'sara.mes': 'Mês', 'sara.actualizar': 'Atualizar', 'sara.cargando': 'Carregando…',
+        'sara.vacio': 'Ainda não há dados deste mês.', 'sara.vacioSub': 'Aparecem quando Sara enviar lembretes e as consultas forem confirmadas.',
+        'sara.recordatorios': 'Lembretes enviados', 'sara.recordatoriosPie': 'Mensagens de lembrete enviadas no mês.',
+        'sara.confirmadas': 'Consultas confirmadas após o lembrete', 'sara.confirmadasPie': 'Consultas que passaram a confirmadas após um lembrete.',
+        'sara.comparacion': 'Este mês contra o anterior', 'sara.vsAnterior': 'Contra o mês anterior',
+        'sara.sinAnterior': 'Sem dados do mês anterior.',
+        'sara.recEste': 'Lemb. este mês', 'sara.recAntes': 'Lemb. anterior', 'sara.confEste': 'Conf. este mês', 'sara.confAntes': 'Conf. anterior',
+        'sara.soloConteos': 'Somente contagens reais; não se estimam horas, ausências nem conversas.',
+        'sara.datos': 'Dados do mês', 'sara.actualizado': 'Atualizado',
         'dash.proximasCitas': 'Próximas Consultas', 'dash.noCitas': 'Nenhuma consulta próxima',
         'dash.tasaConfirmacion': 'Taxa de confirmação', 'dash.citasPorDia': 'Consultas por dia (últimos 7 dias)',
         'dash.actividadReciente': 'Atividade recente', 'dash.sinActividad': 'Sem atividade recente', 'dash.ahora': 'agora',
