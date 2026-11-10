@@ -702,10 +702,6 @@
         .redes-barra-txt { font-size: 13px; font-weight: 600; color: var(--gray-700); }
         .redes-barra-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
         @media (max-width: 900px) { .sop-grid { grid-template-columns: 1fr; } }
-        .sop-item { border: 1px solid var(--gray-200); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
-        .sop-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
-        .sop-msg { font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
-        .sop-resp { margin-top: 10px; padding: 10px 12px; background: var(--primary-soft, #e8f5ee); border-radius: 8px; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
         .sop-estado { font-size: 13px; margin-top: 8px; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,25,20,0.55); z-index: 2000; align-items: center; justify-content: center; padding: 16px; }
@@ -6081,20 +6077,20 @@ async function cargarSoporte() {
     const r = await fetch(API + '/soporte', { headers: authH() });
     const lista = await r.json().catch(() => []);
     if (!r.ok) throw new Error((lista && lista.error) || ('HTTP ' + r.status));
-    if (!lista.length) { cont.innerHTML = '<div style="color:var(--gray-500);font-size:14px">' + sopEsc(sopT('vacio')) + '</div>'; return; }
-    const claseEstado = { nuevo: 'badge-warning', en_proceso: 'badge-warning', resuelto: 'badge-success', descartado: 'badge-danger' };
-    cont.innerHTML = lista.map((m) => `
-      <div class="sop-item">
-        <div class="sop-meta">
+    if (!lista.length) { cont.innerHTML = '<div class="ds-vacio">' + sopEsc(sopT('vacio')) + '</div>'; return; }
+    const claseEstado = { nuevo: 'aviso', en_proceso: 'info', resuelto: 'ok', descartado: 'sin-punto' };
+    cont.innerHTML = '<ul class="ds-lista">' + lista.map((m) => `
+      <li class="ds-lista-item" style="display:block">
+        <div class="ds-pila ds-ayuda" style="margin-bottom:6px">
           <span>${sopEsc(new Date(m.created_at).toLocaleString())}</span>
-          <span class="badge">${sopEsc(m.tipo === 'ayuda' ? sopT('ayuda') : sopT('sugerencia'))}</span>
-          <span class="badge ${claseEstado[m.estado] || ''}">${sopEsc(sopT(m.estado))}</span>
+          <span class="ds-badge sin-punto">${sopEsc(m.tipo === 'ayuda' ? sopT('ayuda') : sopT('sugerencia'))}</span>
+          <span class="ds-badge ${claseEstado[m.estado] || 'sin-punto'}">${sopEsc(sopT(m.estado))}</span>
         </div>
         ${m.asunto ? `<div style="font-weight:600;margin-bottom:4px">${sopEsc(m.asunto)}</div>` : ''}
-        <div class="sop-msg">${sopEsc(m.mensaje)}</div>
-        ${m.imagenes_n ? `<div style="margin-top:6px;font-size:13px">${sopEsc(sopT('capturas'))}: ${Array.from({ length: Math.min(3, Number(m.imagenes_n) || 0) }, (_, i) => `<button type="button" class="btn btn-ghost btn-sm" data-sop-id="${sopEsc(m.id)}" data-sop-n="${i + 1}">${sopEsc(sopT('verCaptura'))} ${i + 1}</button>`).join(' ')}</div>` : ''}
-        ${m.respuesta ? `<div class="sop-resp"><strong>${sopEsc(sopT('respuesta'))}:</strong> ${sopEsc(m.respuesta)}</div>` : ''}
-      </div>`).join('');
+        <div style="font-size:14px;white-space:pre-wrap;line-height:1.5">${sopEsc(m.mensaje)}</div>
+        ${m.imagenes_n ? `<div class="ds-pila" style="margin-top:6px;font-size:13px"><span>${sopEsc(sopT('capturas'))}:</span> ${Array.from({ length: Math.min(3, Number(m.imagenes_n) || 0) }, (_, i) => `<button type="button" class="ds-btn sec chico" data-sop-id="${sopEsc(m.id)}" data-sop-n="${i + 1}">${sopEsc(sopT('verCaptura'))} ${i + 1}</button>`).join(' ')}</div>` : ''}
+        ${m.respuesta ? `<div class="ds-alerta ok" style="margin-top:10px"><span><strong>${sopEsc(sopT('respuesta'))}:</strong> ${sopEsc(m.respuesta)}</span></div>` : ''}
+      </li>`).join('') + '</ul>';
   } catch (e) {
     cont.innerHTML = '<div style="color:var(--danger);font-size:14px">' + sopEsc(sopT('error') + sopMsg(e)) + '</div>';
   }
