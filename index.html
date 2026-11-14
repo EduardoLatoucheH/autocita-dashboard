@@ -512,6 +512,9 @@
 .fr-btn:hover { color: var(--ds-tinta); background: var(--ds-superficie-2); }
 .fr-btn:focus-visible { outline: 3px solid var(--ds-terracota); outline-offset: 2px; }
 body:not(.facil-app) .fr-btn { bottom: calc(14px + env(safe-area-inset-bottom)); }
+/* Fix (13/11/2026, D1): en Pluggs el botón pasa a un «?» arriba a la derecha para no tapar «Crear · créditos» ni otros botones. */
+body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area-inset-top)); bottom: auto; width: 44px; height: 44px; padding: 0; border-radius: 50%; font: 800 18px/1 var(--ds-fuente); }
+@media (min-width: 901px) { body.facil-app .fr-btn { right: 24px; top: 76px; } }
 .fr-fondo { position: fixed; inset: 0; z-index: 90; display: grid; place-items: end center; padding: 12px; background: rgba(8, 14, 11, .48); }
 .fr-hoja { width: min(520px, 100%); max-height: 86vh; overflow-y: auto; padding: 18px; background: var(--ds-superficie); color: var(--ds-tinta); border: 1px solid var(--ds-borde); border-radius: var(--ds-r-md); box-shadow: var(--ds-sombra-3); position: relative; }
 .fr-t { margin: 0 0 4px; font: 800 17px/1.25 var(--ds-fuente); }
@@ -6177,7 +6180,7 @@ async function borrarBloqueo(id) {
     var h2 = el('h2', 'fr-t', '¿Algo te confundió?'); h2.id = 'frTitulo'; card.appendChild(h2);
     card.appendChild(el('p', 'fr-s', 'Elegí qué pasó. No guardamos tu nombre ni lo que escribiste en los formularios.'));
     var ops = el('div', 'fr-opciones'); ops.setAttribute('role', 'group'); ops.setAttribute('aria-label', 'Qué pasó');
-    [['confusion', 'No entiendo'], ['error', 'Falló'], ['lento', 'Está lento'], ['ayuda', 'Necesito ayuda']].forEach(function (o) {
+    [['confusion', 'No entiendo'], ['error', 'Falló'], ['ayuda', 'Necesito ayuda']].forEach(function (o) {
       var b = el('button', 'fr-opcion', o[1]); b.type = 'button'; b.setAttribute('aria-pressed', o[0] === tipo ? 'true' : 'false');
       b.addEventListener('click', function () { tipo = o[0]; ops.querySelectorAll('button').forEach(function (n) { n.setAttribute('aria-pressed', n === b ? 'true' : 'false'); }); });
       ops.appendChild(b);
@@ -6205,7 +6208,7 @@ async function borrarBloqueo(id) {
   function montar() {
     if (root.FRICCION_SIN_UI || !root.document || !root.document.body) return;
     if (root.document.getElementById('friccionBtn')) return;
-    var b = el('button', 'fr-btn', '¿Algo te confundió?'); b.id = 'friccionBtn'; b.type = 'button'; b.setAttribute('data-friccion-ignore', '');
+    var b = el('button', 'fr-btn', '?'); b.id = 'friccionBtn'; b.type = 'button'; b.setAttribute('aria-label', '¿Algo te confundió?'); b.title = '¿Algo te confundió?'; b.setAttribute('data-friccion-ignore', '');
     b.addEventListener('click', abrir); root.document.body.appendChild(b);
     try {
       if (root.AppFacil && typeof root.AppFacil.ir === 'function' && !root.AppFacil.ir.__friccion) {
