@@ -652,6 +652,18 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
         .actividad-texto { font-size: 13px; color: var(--gray-900); line-height: 1.4; }
         .actividad-meta { font-size: 11.5px; color: var(--gray-500); margin-top: 2px; }
         .actividad-meta strong { color: var(--gray-700); }
+        /* Ola 5 · C (16/11/2026): traspaso sin aviso y bot que habló pausado se destacan en el feed. */
+        .actividad-item.alerta { background: var(--terracotta-soft); border-left: 3px solid var(--terracotta); border-radius: var(--radius-sm); padding-left: 9px; }
+        .actividad-item.alerta.error { background: var(--danger-soft); border-left-color: var(--danger); }
+        .actividad-item.alerta .actividad-dot { background: var(--danger); }
+        .actividad-item.alerta .actividad-texto strong { display: block; margin-bottom: 1px; }
+        /* Ola 5 · C (16/11/2026): «No vino» tiene color propio (terracota), distinto del rojo de cancelada.
+           Vive en el CSS local del panel, no en compartido/diseno.css, para no tocar los otros paneles. */
+        .ds-badge.ausente { background: var(--ds-terracota-claro); border-color: transparent; color: var(--ds-terracota); }
+        /* Filtro de la bandeja «Necesita persona» */
+        .inbox-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .inbox-filtros .ds-btn[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .inbox-filtro-nota { flex-basis: 100%; margin: 0; font-size: 12.5px; color: var(--gray-500); }
 
         .chart-wrap { position: relative; height: 220px; }
 
@@ -667,7 +679,28 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
 
         .loading { text-align: center; color: var(--gray-500); padding: 20px; font-size: 13px; }
         /* Inbox */
-        .inbox-wrap { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+        .inbox-wrap { display: grid; grid-template-columns: minmax(320px, 380px) 1fr; gap: 16px; align-items: start; }
+        /* Ola 5 · cierre (17/11/2026): la fila de la bandeja no corta nombre, motivo ni resumen,
+           y los chips dejan de robarle ancho al texto. */
+        #listaConversaciones .ds-lista-item { align-items: flex-start; }
+        #listaConversaciones .ds-lista-cuerpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        #listaConversaciones .ds-lista-titulo,
+        #listaConversaciones .ds-lista-sub { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+        #listaConversaciones .ds-lista-titulo { line-height: 1.3; }
+        #listaConversaciones .ds-lista-sub { margin: 0; line-height: 1.35; }
+        #listaConversaciones .bandeja-motivo { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+        #listaConversaciones .bandeja-resumen { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+        #listaConversaciones .bandeja-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        /* Ola 5 · cierre: los dos recordatorios de Ajustes se alinean (misma altura y mismo borde superior). */
+        .recordatorios-grid { align-items: start; }
+        @media (min-width: 720px) {
+            .recordatorios-grid > .ds-campo > .ds-etiqueta { display: block; min-height: 36px; }
+        }
+        /* Diálogo del panel (Ola 5 · cierre): reemplaza confirm()/alert() en los flujos que se revisan a ojo. */
+        .dialogo-texto { margin: 0 0 12px; color: var(--gray-700); font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .dialogo-url input { width: 100%; padding: 9px 10px; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--gray-50); color: var(--gray-900); font: inherit; font-size: 13px; }
+        #dialogoOverlay .btn-ghost { background: transparent; border: 1px solid var(--gray-300); color: var(--gray-900); box-shadow: none; }
+        #dialogoOverlay .btn-ghost:hover { background: var(--gray-100); color: var(--gray-900); }
         .inbox-lista { max-height: 70vh; overflow-y: auto; padding: 8px; }
         .inbox-hilo { min-height: 400px; display: flex; flex-direction: column; }
         .conv { padding: 10px; border-radius: 8px; cursor: pointer; border-bottom: 1px solid var(--gray-200); }
@@ -968,6 +1001,21 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
     <div class="modal-overlay" id="citaModalOverlay" onclick="if(event.target===this) cerrarModalCita()">
         <div class="modal-box" id="citaModalBox" role="dialog" aria-modal="true" aria-labelledby="citaModalTitulo"></div>
     </div>
+    <!-- Ola 5 · cierre (17/11/2026): diálogo del panel para «No vino», enlace y errores 409/429.
+         Reemplaza confirm()/alert() en esos caminos para que se puedan revisar a ojo. -->
+    <div class="modal-overlay" id="dialogoOverlay" onclick="if(event.target===this) cerrarDialogoPanel(false)">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="dialogoTitulo" aria-describedby="dialogoTexto">
+            <h3 id="dialogoTitulo"></h3>
+            <p id="dialogoTexto" class="dialogo-texto"></p>
+            <div id="dialogoUrlCaja" class="dialogo-url" style="display:none">
+                <input id="dialogoUrl" type="text" readonly aria-label="Enlace de la cita">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" id="dialogoCancelar">Cancelar</button>
+                <button type="button" class="btn" id="dialogoAceptar">Cerrar</button>
+            </div>
+        </div>
+    </div>
     <!-- Condiciones del Servicio: no se cierra clickeando afuera ni tiene X —
          hay que aceptar para poder usar el panel. -->
     <div class="modal-overlay" id="terminosOverlay">
@@ -1003,7 +1051,7 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
         <div class="logo"><h1>AutoCita</h1><span>Booking AI</span></div>
         <div class="nav-group">
             <button class="nav-link active" data-section="dashboard" data-i18n="nav.dashboard" onclick="showSection('dashboard', this)">Dashboard</button>
-            <button class="nav-link" data-section="inbox" onclick="showSection('inbox', this)">Inbox<span id="badgeNoLeidos" class="badge badge-danger" style="display:none;margin-left:6px"></span></button>
+            <button class="nav-link" data-section="inbox" onclick="showSection('inbox', this)">Inbox<span id="badgeNoLeidos" class="badge badge-danger" style="display:none;margin-left:6px"></span><span id="badgeNecesitan" class="ds-badge ausente sin-punto" style="display:none;margin-left:6px" aria-live="polite"></span></button>
             <button class="nav-link" data-section="pacientes" data-i18n="nav.pacientes" onclick="showSection('pacientes', this)">Pacientes</button>
             <button class="nav-link" data-section="listaCitas" data-i18n="nav.listaCitas" onclick="showSection('listaCitas', this)">Citas</button>
             <button class="nav-link" data-section="citas" data-i18n="nav.citas" onclick="showSection('citas', this)">Crear Cita</button>
@@ -1044,8 +1092,20 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                     <div class="ds-kpis">
                         <div class="ds-kpi"><span class="ds-kpi-acento"></span><p class="ds-kpi-etiqueta" data-i18n="dash.citasHoy">Citas hoy</p><p class="ds-kpi-valor" id="kpiCitasHoy">—</p><p class="ds-kpi-pie" data-i18n="dash.enAgendaHoy">En la agenda de hoy</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.totalCitas">Citas de la semana</p><p class="ds-kpi-valor" id="kpiCitasTotal">—</p><p class="ds-kpi-pie" data-i18n="dash.semanaLunesDomingo">Lunes a domingo</p></div>
+                        <!-- Ola 5 · C (16/11/2026): tasa de ausencias de los últimos 30 días (GET /citas/ausencias). Si no hay base, «—», nunca 0 %. -->
+                        <div class="ds-kpi"><span class="ds-kpi-acento" style="background:var(--ds-terracota)"></span><p class="ds-kpi-etiqueta" data-i18n="dash.tasaAusencias">Tasa de ausencias</p><p class="ds-kpi-valor" id="kpiTasaAusencias">—</p><p class="ds-kpi-pie" id="kpiAusenciasPie" data-i18n="dash.ausenciasPie">Últimos 30 días</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.pacientes">Pacientes</p><p class="ds-kpi-valor" id="kpiPacientes">—</p><p class="ds-kpi-pie" data-i18n="dash.registradosClinica">Registrados en la clínica</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.tasaConfirmacion">Tasa de confirmación</p><p class="ds-kpi-valor" id="kpiTasaConfirmacion">—</p><p class="ds-kpi-pie" data-i18n="dash.confirmadasActivas">Citas confirmadas sobre las activas</p></div>
+                    </div>
+                    <div class="ds-card ds-seccion" id="ausenciasCard" style="display:none">
+                        <div class="ds-card-cab">
+                            <div>
+                                <h3 class="ds-card-titulo" data-i18n="dash.ausenciasPacientesTitle">Pacientes con más ausencias</h3>
+                                <p class="ds-card-sub" data-i18n="dash.ausenciasPacientesSub">Últimos 30 días · solo citas atendidas o ausentes.</p>
+                            </div>
+                        </div>
+                        <div id="ausenciasPacientes"></div>
+                        <p class="ds-ayuda ds-seccion" data-i18n="dash.ausenciasAyuda">Sirve para confirmar por WhatsApp, no para etiquetar a nadie.</p>
                     </div>
                     <div class="ds-card ds-seccion" id="saraCard" style="display:none">
                         <div class="ds-card-cab">
@@ -1116,6 +1176,12 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                             <h2>Inbox</h2>
                             <p>Al responder acá, Sara se calla sola en esa conversación. La reactivás con el botón cuando termines.</p>
                         </div>
+                    </div>
+                    <!-- Ola 5 · C (16/11/2026): filtro «Necesita persona» + cuenta en el menú (GET /conversaciones/necesitan-persona). -->
+                    <div class="inbox-filtros" role="group" aria-label="Filtrar conversaciones">
+                        <button type="button" class="ds-btn sec chico" id="inboxFiltroTodas" aria-pressed="true" onclick="filtrarInbox('todas')">Todas</button>
+                        <button type="button" class="ds-btn sec chico" id="inboxFiltroNecesita" aria-pressed="false" onclick="filtrarInbox('necesita')" style="display:flex;align-items:center;gap:7px">Necesita persona<span id="inboxFiltroCuenta" class="ds-badge error sin-punto" style="display:none">0</span></button>
+                        <p class="inbox-filtro-nota" id="inboxFiltroNota" style="display:none">Sara se calló y el paciente espera a una persona. Tomá la conversación para responder.</p>
                     </div>
                     <div class="inbox-wrap">
                         <div class="ds-card" style="padding:8px;max-height:70vh;overflow-y:auto">
@@ -1384,6 +1450,7 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                                 <option value="pendiente" data-i18n="badge.pendiente">Pendiente</option>
                                 <option value="confirmada" data-i18n="badge.confirmada">Confirmada</option>
                                 <option value="atendida" data-i18n="badge.atendida">Atendida</option>
+                                <option value="ausente" data-i18n="badge.ausente">No vino</option>
                                 <option value="cancelada" data-i18n="badge.cancelada">Cancelada</option>
                             </select>
                             <input type="date" class="ds-input" style="max-width:165px" id="citasFiltroDesde" data-i18n-aria="citas.ariaDesde" aria-label="Desde" onchange="renderTablaCitas()">
@@ -1451,6 +1518,7 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                             <span class="ds-eyebrow" data-i18n="nav.listaEspera">Lista de espera</span>
                             <h2 data-i18n="title.listaEspera">Lista de Espera</h2>
                             <p data-i18n="le.subtitulo">Pacientes que esperan un lugar cuando se libere.</p>
+                            <p class="ds-ayuda" id="lePlazoAyuda" style="margin-top:6px"></p>
                         </div>
                     </div>
                     <div class="ds-card ds-seccion">
@@ -1481,8 +1549,8 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                     <div class="ds-card ds-seccion">
                         <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="le.enEsperaTitle">En espera</h3></div></div>
                         <div class="ds-tabla-envoltura"><table class="ds-tabla">
-                            <thead><tr><th scope="col" data-i18n="common.colPaciente">Paciente</th><th scope="col" data-i18n="common.doctor">Doctor</th><th scope="col" data-i18n="le.colFecha">Fecha deseada</th><th scope="col" data-i18n="le.notas">Notas</th><th scope="col" data-i18n="common.colAccion">Acción</th></tr></thead>
-                            <tbody id="tablaListaEspera"><tr><td colspan="5" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
+                            <thead><tr><th scope="col" data-i18n="common.colPaciente">Paciente</th><th scope="col" data-i18n="common.doctor">Doctor</th><th scope="col" data-i18n="le.colFecha">Fecha deseada</th><th scope="col" data-i18n="le.notas">Notas</th><th scope="col" data-i18n="le.colEstado">Estado</th><th scope="col" data-i18n="common.colAccion">Acción</th></tr></thead>
+                            <tbody id="tablaListaEspera"><tr><td colspan="6" class="loading" data-i18n="common.loading">Cargando...</td></tr></tbody>
                         </table></div>
                     </div>
                 </div>
@@ -1511,6 +1579,7 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                                 <div class="ds-campo"><label class="ds-etiqueta" data-i18n="common.colNombre" for="docNombre">Nombre</label><input class="ds-input" type="text" id="docNombre" placeholder="Dr. Juan Pérez"></div>
                                 <div class="ds-campo"><label class="ds-etiqueta" data-i18n="doc.especialidad" for="docEspecialidad">Especialidad</label><input class="ds-input" type="text" id="docEspecialidad" data-i18n-placeholder="doc.especialidadPh" placeholder="Medicina General"></div>
                                 <div class="ds-campo"><label class="ds-etiqueta" data-i18n="doc.duracion" for="docDuracion">Duración de cita (minutos)</label><input class="ds-input" type="number" id="docDuracion" placeholder="30"></div>
+                                <div class="ds-campo"><label class="ds-etiqueta" data-i18n="doc.buffer" for="docBuffer">Tiempo entre citas (minutos)</label><input class="ds-input" type="number" id="docBuffer" min="0" max="120" step="1" inputmode="numeric" placeholder="0" value="0"><p class="ds-ayuda" data-i18n="doc.bufferNota">0 = sin pausa. Se respeta entre una cita y la siguiente.</p></div>
                                 <div class="ds-campo"><label class="ds-etiqueta" data-i18n="doc.precio" for="docPrecio">Precio de consulta (₡)</label><input class="ds-input" type="number" id="docPrecio" placeholder="25000"></div>
                                 <div class="ds-campo" id="docJefeGrupo" style="display:none"><label class="ds-etiqueta" for="docJefe" data-i18n="doc.jefe">Jefe de área (a quién reporta)</label><select class="ds-select" id="docJefe"></select></div>
                                 <div class="ds-campo"><label class="ds-etiqueta" data-i18n="doc.telefono" for="docTelefono">WhatsApp del doctor (opcional — recibe aviso al agendarse una cita nueva)</label><input class="ds-input" type="text" id="docTelefono" data-i18n-placeholder="doc.telefonoPh" placeholder="Ej: 50688887777"></div>
@@ -1869,18 +1938,34 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                         </div>
                         <div id="alertRecordatorios"></div>
                         <div class="ds-form ds-seccion">
-                            <div class="ds-form-grid">
+                            <div class="ds-form-grid recordatorios-grid">
                                 <div class="ds-campo">
                                     <label class="ds-etiqueta" data-i18n="set.rec1" for="recHoras1">Primer recordatorio (horas antes de la cita)</label>
-                                    <input class="ds-input" type="number" id="recHoras1" min="1" placeholder="24">
+                                    <input class="ds-input" type="number" id="recHoras1" min="1" max="72" step="1" inputmode="numeric" placeholder="24">
                                 </div>
                                 <div class="ds-campo">
                                     <label class="ds-etiqueta" data-i18n="set.rec2" for="recHoras2">Segundo recordatorio (horas antes de la cita)</label>
-                                    <input class="ds-input campo-bloqueado" type="number" id="recHoras2" min="1" placeholder="2" disabled>
-                                    <p class="ds-ayuda" data-i18n="set.rec2Nota">Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.</p>
+                                    <input class="ds-input" type="number" id="recHoras2" min="0" max="6" step="1" inputmode="numeric" placeholder="2">
+                                    <p class="ds-ayuda" data-i18n="set.rec2Nota">0 = no enviar. Se manda solo si la plantilla está aprobada por Meta.</p>
                                 </div>
                             </div>
                         </div>
+                        <div class="ds-card-cab" style="margin:var(--ds-esp-4) 0 var(--ds-esp-2)">
+                            <div>
+                                <h3 class="ds-card-titulo" data-i18n="set.listaEsperaTitle">Lista de espera</h3>
+                                <p class="ds-card-sub" data-i18n="set.listaEsperaSub">Cuánto tiempo tiene una persona para aceptar un cupo que se liberó.</p>
+                            </div>
+                        </div>
+                        <div class="ds-form ds-seccion">
+                            <div class="ds-form-grid">
+                                <div class="ds-campo">
+                                    <label class="ds-etiqueta" data-i18n="set.listaEsperaMinutos" for="leEsperaMinutos">Tiempo para aceptar un cupo (minutos)</label>
+                                    <input class="ds-input" type="number" id="leEsperaMinutos" min="5" max="120" step="1" inputmode="numeric" placeholder="15">
+                                    <p class="ds-ayuda" data-i18n="set.listaEsperaNota">Entre 5 y 120 minutos. Si no contesta a tiempo, el cupo se le ofrece a la siguiente persona.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="ds-ayuda" data-i18n="set.recPlantillasNota">Los avisos automáticos usan plantillas que aprueba Meta. Si una plantilla todavía no está aprobada, el aviso queda pendiente y no se envía: el panel no lo da por enviado.</p>
                         <button class="ds-btn" onclick="guardarConfigRecordatorios()" data-i18n="set.btnGuardar">Guardar</button>
                     </div>
                     <!-- Solo visible para el dueño -->
@@ -2083,13 +2168,18 @@ function renderCalendar() {
             // title y en el texto — XSS en la pantalla principal del panel.
             const nombreFull = escapeHtmlPanel(nombrePaciente(c));
             const nombreCorto = nombreFull.split(' ')[0];
-            const icono = { pendiente: '⏳', recordatorio_enviado: '🔔', confirmada: '✓' }[c.estado] || '';
-            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull} (${escapeHtmlPanel(t('badge.' + (['pendiente', 'recordatorio_enviado', 'confirmada', 'cancelada', 'atendida'].includes(c.estado) ? c.estado : 'pendiente')))})" onclick="mostrarDetalleCita('${c.id}')">${icono} ${horaStr}<br>${nombreCorto}</div>`;
+            const icono = { pendiente: '⏳', recordatorio_enviado: '🔔', confirmada: '✓', ausente: '✕' }[c.estado] || '';
+            const estadoTitulo = ESTADO_CITA_META[c.estado] ? c.estado : 'pendiente';
+            dayHtml += `<div class="cal-cita" style="top:${top}px;height:${height}px;background:${color};cursor:pointer" title="${horaStr} — ${nombreFull} (${escapeHtmlPanel(t('badge.' + estadoTitulo))})" data-cita-id="${escapeHtmlPanel(c.id)}">${icono} ${horaStr}<br>${nombreCorto}</div>`;
         });
         dayHtml += `</div>`;
         html += dayHtml;
     });
     gridEl.innerHTML = html;
+    // Ola 5 · C: el id de la cita va en data-* y el listener se agrega acá (nada de onclick con datos).
+    gridEl.querySelectorAll('[data-cita-id]').forEach((el) => {
+        el.addEventListener('click', () => mostrarDetalleCita(el.getAttribute('data-cita-id')));
+    });
     renderCalendarLeyenda();
 }
 function mostrarDetalleCita(citaId) {
@@ -2110,10 +2200,13 @@ function mostrarDetalleCita(citaId) {
         <div class="modal-row"><span>${t('common.colHora')}</span><span>${horaStr}</span></div>
         <div class="modal-row"><span>${t('common.colEstado')}</span><span>${estadoBadge(c.estado)}</span></div>
         <div class="modal-actions">
-            ${c.estado !== 'cancelada' ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>` : ''}
-            ${c.estado !== 'cancelada' ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelarModal')}</button>` : ''}
+            ${ESTADOS_CITA_MODIFICABLES.includes(c.estado) ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>` : ''}
+            ${ESTADOS_CITA_MODIFICABLES.includes(c.estado) ? `<button class="btn btn-danger btn-sm" onclick="cancelarCita('${c.id}');cerrarModalCita()">${t('citas.btnCancelarModal')}</button>` : ''}
+            ${ESTADOS_CITA_MODIFICABLES.includes(c.estado) && !citaYaEmpezo(c) ? `<button class="btn btn-ghost btn-sm" data-accion="enlace" data-cita-id="${escapeHtmlPanel(c.id)}">${escapeHtmlPanel(t('citas.btnEnlace'))}</button>` : ''}
+            ${puedeMarcarAusente(c) ? `<button class="btn btn-ghost btn-sm" data-accion="ausente" data-cita-id="${escapeHtmlPanel(c.id)}">${escapeHtmlPanel(t('citas.btnNoVino'))}</button>` : ''}
         </div>
     `;
+    enlazarBotonesCita(box);
     // Fix accesibilidad (09/11/2026, H-188): el foco entra al diálogo, Escape lo cierra y el foco vuelve a donde estaba.
     modalCitaFoco = document.activeElement;
     document.getElementById('citaModalOverlay').classList.add('open');
@@ -2131,6 +2224,50 @@ document.addEventListener('keydown', function (ev) {
     const ov = document.getElementById('citaModalOverlay');
     if (ev.key === 'Escape' && ov && ov.classList.contains('open')) cerrarModalCita();
 });
+// ── Diálogo del panel (Ola 5 · cierre, 17/11/2026) ─────────────────────────
+// Reemplaza confirm()/alert() SOLO en los flujos de cita que la auditoría pidió
+// revisar a ojo («No vino», «Copiar enlace» y los errores 409/429). Todo texto
+// entra con textContent. Devuelve true/false según el botón.
+let dialogoResolver = null, dialogoFoco = null;
+function dialogoPanel(op) {
+    op = op || {};
+    const overlay = document.getElementById('dialogoOverlay');
+    if (!overlay) return Promise.resolve(false);
+    if (dialogoResolver) { const previo = dialogoResolver; dialogoResolver = null; previo(false); }
+    document.getElementById('dialogoTitulo').textContent = op.titulo || '';
+    const texto = document.getElementById('dialogoTexto');
+    texto.textContent = op.texto || '';
+    texto.style.display = op.texto ? '' : 'none';
+    const cajaUrl = document.getElementById('dialogoUrlCaja');
+    cajaUrl.style.display = op.url ? '' : 'none';
+    document.getElementById('dialogoUrl').value = op.url || '';
+    const cancelar = document.getElementById('dialogoCancelar');
+    cancelar.style.display = op.cancelar === false ? 'none' : '';
+    cancelar.textContent = op.cancelarTexto || t('common.cancelar');
+    const aceptar = document.getElementById('dialogoAceptar');
+    aceptar.textContent = op.aceptarTexto || t('common.cerrar');
+    aceptar.className = 'btn' + (op.peligro ? ' btn-danger' : '');
+    dialogoFoco = document.activeElement;
+    overlay.classList.add('open');
+    setTimeout(function () { try { aceptar.focus(); } catch (e) {} }, 0);
+    return new Promise(function (resolve) {
+        dialogoResolver = function (valor) {
+            overlay.classList.remove('open');
+            dialogoResolver = null;
+            const foco = dialogoFoco;
+            dialogoFoco = null;
+            if (foco && typeof foco.focus === 'function') { try { foco.focus(); } catch (e) {} }
+            resolve(valor === true);
+        };
+    });
+}
+function cerrarDialogoPanel(valor) { if (dialogoResolver) dialogoResolver(valor === true); }
+document.getElementById('dialogoAceptar').addEventListener('click', function () { cerrarDialogoPanel(true); });
+document.getElementById('dialogoCancelar').addEventListener('click', function () { cerrarDialogoPanel(false); });
+document.addEventListener('keydown', function (ev) {
+    const ov = document.getElementById('dialogoOverlay');
+    if (ev.key === 'Escape' && ov && ov.classList.contains('open')) cerrarDialogoPanel(false);
+});
 async function apiFetch(path, opts = {}) {
     // Fix seguridad (30/10/2026, H-196): sin red o con una respuesta que no es JSON (p. ej. un 502 con HTML) se muestra un mensaje amable, no el texto técnico del navegador.
     let res;
@@ -2146,7 +2283,14 @@ async function apiFetch(path, opts = {}) {
     // does not exist", "Recipient phone number not in allowed list"). Antes se
     // perdía y el usuario solo veía "WhatsApp rechazó el mensaje", que no dice
     // nada y obliga a ir a buscar a los logs de Railway.
-    if (!res.ok) throw new Error(data.detalle ? `${data.error}: ${data.detalle}` : (data.error || 'Error'));
+    if (!res.ok) {
+        // Ola 5 · C (16/11/2026): el contrato pide decidir por `codigo` cuando existe
+        // (cita_futura, cita_no_modificable, horario_ocupado…) y mostrar `error` tal cual.
+        const err = new Error(data.detalle ? `${data.error}: ${data.detalle}` : (data.error || 'Error'));
+        err.codigo = data.codigo;
+        err.status = res.status;
+        throw err;
+    }
     return data;
 }
 async function leerJsonAmable(res) {
@@ -2904,6 +3048,7 @@ function showApp() {
     document.getElementById('loginScreen').classList.remove('visible');
     document.getElementById('appContainer').style.display = 'flex';
     applyPanelLang(currentLang, { skipReload: true });
+    iniciarPollNecesitanPersona();   // Ola 5 · C: refresco cada ~60 s con la pestaña visible
     pagoPendienteGate(loadAll);   // Fix (25/10/2026): una cuenta pendiente de pago ve «Activá tu plan» y no carga el panel
 }
 // ── LOAD ALL ──────────────────────────────────────────────────────
@@ -2920,6 +3065,7 @@ async function loadAll() {
     await loadRol(); // primero el rol, luego el resto según permisos
     await loadPacientes(); // primero pacientes, así el respaldo de nombre ya está listo
     loadConversaciones(); // para que el Resumen de hoy tenga los no leídos ya cargados
+    loadNecesitanPersona(); // Ola 5 · C: insignia y filtro de la bandeja
     loadDashboard();
     loadCitas();
     loadDoctores();
@@ -3037,11 +3183,11 @@ async function loadDashboard() {
         const hoy = claveFechaLocal(new Date());
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
-        const citasHoySinConfirmar = citasHoy.filter(c => c.estado !== 'confirmada' && c.estado !== 'cancelada' && c.estado !== 'atendida').length;
+        const citasHoySinConfirmar = citasHoy.filter(c => c.estado !== 'confirmada' && c.estado !== 'cancelada' && c.estado !== 'atendida' && c.estado !== 'ausente').length;
         renderResumenHoy(citasHoySinConfirmar);
         // Próximas citas: solo futuras (no las que ya pasaron), ordenadas por fecha ascendente.
         const proximas = citas
-            .filter(c => c.estado !== 'cancelada' && c.fecha && new Date(c.fecha) >= ahora)
+            .filter(c => c.estado !== 'cancelada' && c.estado !== 'ausente' && c.fecha && new Date(c.fecha) >= ahora)
             .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
             .slice(0, 5);
         const tbody = document.getElementById('tablaCitasProximas');
@@ -3053,7 +3199,7 @@ async function loadDashboard() {
                 const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
                 const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
                 const badge = estadoBadge(c.estado);
-                const btnRecordatorio = c.estado !== 'cancelada'
+                const btnRecordatorio = ESTADOS_CITA_MODIFICABLES.includes(c.estado)
                     ? `<button class="btn btn-ghost btn-sm" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
                     : '—';
                 // Los mismos botones del ciclo que en "Todas las Citas". Van acá
@@ -3063,6 +3209,7 @@ async function loadDashboard() {
                 return `<tr><td>${escapeHtmlPanel(nombrePaciente(c))}</td><td>${fechaStr}</td><td>${horaStr}</td><td>${badge}</td><td>${botonesCicloCita(c)}${btnRecordatorio}</td></tr>`;
             }).join('');
         }
+        enlazarBotonesCita(tbody);
         const noCanceladas = citas.filter(c => c.estado !== 'cancelada');
         const confirmadas = citas.filter(c => c.estado === 'confirmada');
         const tasaConfirmacion = noCanceladas.length
@@ -3072,8 +3219,56 @@ async function loadDashboard() {
         renderCitasChart(citas);
         renderDashboardDS(citas);
         cargarLogrosSara();
+        cargarAusencias();   // Ola 5 · C: tasa de ausencias en el inicio
         loadActividad();
     } catch (e) { console.error('Dashboard:', e); }
+}
+
+// ── AUSENCIAS (Ola 5 · C, 16/11/2026) ─────────────────────────────
+// GET /citas/ausencias: el servidor manda `tasa` con 1 decimal o null.
+// Null se muestra «—», nunca 0 %: no hay base para calcularla.
+let ausenciasCache = null;
+async function cargarAusencias() {
+    const valor = document.getElementById('kpiTasaAusencias');
+    const pie = document.getElementById('kpiAusenciasPie');
+    const card = document.getElementById('ausenciasCard');
+    const cont = document.getElementById('ausenciasPacientes');
+    if (!valor || !pie) return;
+    try {
+        const d = await apiFetch('/citas/ausencias');
+        ausenciasCache = d || null;
+        const tasa = d && d.tasa !== null && d.tasa !== undefined && Number.isFinite(Number(d.tasa)) ? Number(d.tasa) : null;
+        valor.textContent = tasa === null ? '—' : tasa.toLocaleString(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+        pie.textContent = d && Number(d.total) > 0
+            ? `${Number(d.ausentes) || 0} de ${Number(d.total) || 0} citas · ${t('dash.ausenciasPie')}`
+            : t('dash.ausenciasSinDatos');
+        const pacientes = Array.isArray(d?.pacientes_con_ausencias) ? d.pacientes_con_ausencias : [];
+        // El rol doctor ve solo su agenda en el resto del panel; acá no le mostramos
+        // nombres de pacientes de otros profesionales. Agregado sí lo ve todo el equipo.
+        const mostrar = userRol !== 'doctor' && pacientes.length > 0;
+        if (card) card.style.display = mostrar ? '' : 'none';
+        if (cont && mostrar) {
+            cont.replaceChildren();
+            pacientes.slice(0, 10).forEach((p) => {
+                const fila = document.createElement('div');
+                fila.className = 'ds-lista-item';
+                const nombre = document.createElement('span');
+                nombre.className = 'ds-lista-titulo';
+                nombre.textContent = String(p.nombre || 'Paciente');
+                const detalle = document.createElement('span');
+                detalle.className = 'ds-lista-sub';
+                detalle.textContent = `${Number(p.ausentes) || 0} de ${Number(p.citas) || 0} citas`;
+                fila.appendChild(nombre);
+                fila.appendChild(detalle);
+                cont.appendChild(fila);
+            });
+        }
+    } catch (e) {
+        valor.textContent = '—';
+        pie.textContent = t('dash.ausenciasNoCalculada');
+        if (card) card.style.display = 'none';
+        console.error('Ausencias:', e);
+    }
 }
 
 // (05/11/2026, Fase 4) Gráfico con el sistema compartido: SVG propio, sin Chart.js.
@@ -3086,7 +3281,7 @@ function renderCitasChart(citas) {
         d.setDate(d.getDate() - i);
         const key = claveFechaLocal(d);
         dias.push(d.toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric' }));
-        conteos.push(citas.filter(c => c.fecha && c.fecha.startsWith(key) && c.estado !== 'cancelada').length);
+        conteos.push(citas.filter(c => c.fecha && c.fecha.startsWith(key) && c.estado !== 'cancelada' && c.estado !== 'ausente').length);
     }
     DSGraf.barras(cont, { etiquetas: dias, valores: conteos, etiqueta: 'Citas por día de los últimos 7 días' });
 }
@@ -3097,14 +3292,16 @@ function renderDashboardDS(citas) {
     const dona = document.getElementById('estadoDona');
     const metas = document.getElementById('metasCitaDS');
     if (dona) {
-        const cuenta = { confirmada: 0, pendiente: 0, cancelada: 0, atendida: 0 };
+        // Ola 5 · C: «No vino» tiene su propio conteo y color; recordatorio_enviado sigue contando como pendiente.
+        const cuenta = { confirmada: 0, pendiente: 0, cancelada: 0, atendida: 0, ausente: 0 };
         (citas || []).forEach((c) => {
             if (!c.estado) return;
             if (cuenta[c.estado] != null) cuenta[c.estado]++;
+            else if (c.estado === 'recordatorio_enviado') cuenta.pendiente++;
             else if (c.estado !== 'cancelada') cuenta.pendiente++;
         });
-        const COLORES = { confirmada: 'var(--ds-verde)', pendiente: 'var(--ds-aviso)', cancelada: 'var(--ds-error)', atendida: 'var(--ds-info)' };
-        const ETIQUETAS = { confirmada: 'Confirmadas', pendiente: 'Pendientes', cancelada: 'Canceladas', atendida: 'Atendidas' };
+        const COLORES = { confirmada: 'var(--ds-verde)', pendiente: 'var(--ds-aviso)', cancelada: 'var(--ds-error)', atendida: 'var(--ds-info)', ausente: 'var(--ds-terracota)' };
+        const ETIQUETAS = { confirmada: 'Confirmadas', pendiente: 'Pendientes', cancelada: 'Canceladas', atendida: 'Atendidas', ausente: 'No vino' };
         const partes = Object.keys(cuenta).filter((k) => cuenta[k] > 0).map((k) => ({ etiqueta: ETIQUETAS[k], valor: cuenta[k], color: COLORES[k] }));
         DSGraf.dona(dona, { centro: String((citas || []).length), sub: 'citas', partes, etiqueta: 'Citas por estado' });
     }
@@ -3113,9 +3310,9 @@ function renderDashboardDS(citas) {
         const diaSemana = (ahora.getDay() + 6) % 7;
         const ini = new Date(ahora); ini.setHours(0, 0, 0, 0); ini.setDate(ahora.getDate() - diaSemana);
         const fin = new Date(ini); fin.setDate(ini.getDate() + 7);
-        const semana = (citas || []).filter((c) => { const f = c.fecha ? fechaLocal(c.fecha) : null; return f && f >= ini && f < fin && c.estado !== 'cancelada'; });
+        const semana = (citas || []).filter((c) => { const f = c.fecha ? fechaLocal(c.fecha) : null; return f && f >= ini && f < fin && c.estado !== 'cancelada' && c.estado !== 'ausente'; });
         const hoy = claveFechaLocal(new Date());
-        const deHoy = (citas || []).filter((c) => c.fecha && c.fecha.startsWith(hoy) && c.estado !== 'cancelada');
+        const deHoy = (citas || []).filter((c) => c.fecha && c.fecha.startsWith(hoy) && c.estado !== 'cancelada' && c.estado !== 'ausente');
         DSGraf.vaciar(metas);
         DSGraf.meta(metas, { etiqueta: 'Citas de la semana confirmadas', valor: semana.filter((c) => c.estado === 'confirmada').length, meta: semana.length });
         DSGraf.meta(metas, { etiqueta: 'Citas de hoy confirmadas', valor: deHoy.filter((c) => c.estado === 'confirmada').length, meta: deHoy.length });
@@ -3232,6 +3429,14 @@ function tiempoRelativo(fechaIso) {
 // ── INBOX ────────────────────────────────────────────────────────
 let conversacionesCache = [];
 let convActiva = null;
+// Ola 5 · C (16/11/2026): bandeja «Necesita persona». El endpoint dedicado manda
+// { total, conversaciones[] } (máx. 50, más recientes primero). El contador del
+// menú y este filtro se refrescan al abrir y cada ~60 s con la pestaña visible.
+let necesitanPersonaCache = { total: 0, conversaciones: [] };
+let filtroInbox = 'todas';
+let pollNecesitanTimer = null;
+let ultimaNecesitanMs = 0;
+const REFRESCO_NECESITAN_MS = 55000;   // con el loadAll de 45 s, el efectivo queda ~60 s
 
 async function loadConversaciones() {
     try {
@@ -3243,32 +3448,175 @@ async function loadConversaciones() {
         badge.textContent = sinLeer;
     } catch (e) { console.error('Conversaciones:', e); }
 }
+async function loadNecesitanPersona(forzar) {
+    // El panel ya refresca todo cada 45 s; esta guarda evita duplicar el pedido
+    // y deja el refresco efectivo en ~60 s. Las acciones del usuario fuerzan.
+    if (!forzar && Date.now() - ultimaNecesitanMs < REFRESCO_NECESITAN_MS) {
+        actualizarBadgeNecesitan();
+        return true;
+    }
+    if (document.visibilityState && document.visibilityState !== 'visible') {
+        actualizarBadgeNecesitan();
+        return true;
+    }
+    ultimaNecesitanMs = Date.now();
+    let ok = true;
+    try {
+        const d = await apiFetch('/conversaciones/necesitan-persona');
+        necesitanPersonaCache = {
+            total: Math.max(0, Number(d && d.total) || 0),
+            conversaciones: Array.isArray(d && d.conversaciones) ? d.conversaciones : [],
+        };
+    } catch (e) {
+        ok = false;
+        if (!(e && e.status === 403)) console.error('Necesitan persona:', e);
+        necesitanPersonaCache = { total: 0, conversaciones: [] };
+    }
+    actualizarBadgeNecesitan();
+    if (filtroInbox === 'necesita') renderConversaciones();
+    return ok;
+}
+function actualizarBadgeNecesitan() {
+    const n = necesitanPersonaCache.total;
+    const badge = document.getElementById('badgeNecesitan');
+    if (badge) {
+        badge.textContent = n;
+        badge.style.display = n ? 'inline-flex' : 'none';
+        badge.title = n === 1 ? '1 conversación necesita una persona' : `${n} conversaciones necesitan una persona`;
+        badge.setAttribute('aria-label', badge.title);
+    }
+    const cuenta = document.getElementById('inboxFiltroCuenta');
+    if (cuenta) {
+        cuenta.textContent = n;
+        cuenta.style.display = n ? 'inline-flex' : 'none';
+    }
+}
+function iniciarPollNecesitanPersona() {
+    if (pollNecesitanTimer) return;
+    pollNecesitanTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') loadNecesitanPersona();
+    }, 60000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') loadNecesitanPersona(true);
+    });
+}
+function filtrarInbox(filtro) {
+    filtroInbox = filtro === 'necesita' ? 'necesita' : 'todas';
+    const todas = document.getElementById('inboxFiltroTodas');
+    const nec = document.getElementById('inboxFiltroNecesita');
+    const nota = document.getElementById('inboxFiltroNota');
+    if (todas) todas.setAttribute('aria-pressed', String(filtroInbox === 'todas'));
+    if (nec) nec.setAttribute('aria-pressed', String(filtroInbox === 'necesita'));
+    if (nota) nota.style.display = filtroInbox === 'necesita' ? 'block' : 'none';
+    if (filtroInbox === 'necesita') loadNecesitanPersona(true);
+    else renderConversaciones();
+}
+function listaConversacionesVisible() {
+    return filtroInbox === 'necesita' ? necesitanPersonaCache.conversaciones : conversacionesCache;
+}
 function renderConversaciones() {
     const wrap = document.getElementById('listaConversaciones');
-    if (!conversacionesCache.length) { wrap.innerHTML = '<div class="ds-vacio">Sin conversaciones todavía</div>'; return; }
-    wrap.innerHTML = conversacionesCache.map(c => {
-      const nombre = c.nombre_perfil || c.telefono || '';
-      const inicial = String(nombre).trim().charAt(0).toUpperCase() || '?';
-      return `
-      <button type="button" class="ds-lista-item ds-lista-boton ${convActiva === c.id ? 'activo' : ''}" onclick="abrirConversacion('${c.id}')">
-        <span class="ds-avatar">${escapeHtmlPanel(inicial)}</span>
-        <span class="ds-lista-cuerpo">
-          <span class="ds-lista-titulo">${escapeHtmlPanel(nombre)}</span>
-          ${c.nombre_perfil ? `<span class="ds-lista-sub">${escapeHtmlPanel(c.telefono)}</span>` : ''}
-          <span class="ds-lista-sub">${escapeHtmlPanel(c.ultimo_mensaje_texto || '')}</span>
-          <span class="ds-lista-sub">${tiempoRelativo(c.ultimo_mensaje_at)}${c.bot_pausado ? ` · Sara pausada${c.pausa_horas_restantes ? ` · vuelve en ${c.pausa_horas_restantes} h` : ''}` : ''}</span>
-        </span>
-        ${c.no_leidos ? `<span class="ds-badge error sin-punto">${c.no_leidos}</span>` : ''}
-      </button>`;
-    }).join('');
+    if (!wrap) return;
+    const lista = listaConversacionesVisible();
+    if (!lista.length) {
+        wrap.replaceChildren();
+        const vacio = document.createElement('div');
+        vacio.className = 'ds-vacio';
+        vacio.textContent = filtroInbox === 'necesita'
+            ? 'Nadie necesita una persona ahora. Sara está respondiendo.'
+            : 'Sin conversaciones todavía';
+        wrap.appendChild(vacio);
+        return;
+    }
+    wrap.replaceChildren();
+    lista.forEach((c) => wrap.appendChild(itemConversacion(c)));
+}
+// Item de la bandeja construido con DOM + textContent: el resumen del traspaso
+// es texto del paciente y no puede pasar por innerHTML (contrato, sección 4).
+function itemConversacion(c) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ds-lista-item ds-lista-boton' + (convActiva === c.id ? ' activo' : '');
+    btn.dataset.convId = String(c.id || '');
+    btn.addEventListener('click', () => abrirConversacion(c.id));
+
+    // H-397 (17/11/2026): sin nombre de perfil, se muestra el teléfono con los
+    // últimos 4 dígitos, nunca el número completo.
+    const nombrePerfil = String(c.nombre_perfil || '').trim();
+    const nombre = nombrePerfil || telefonoCortoPanel(c.telefono) || 'Paciente';
+    const avatar = document.createElement('span');
+    avatar.className = 'ds-avatar';
+    avatar.textContent = nombrePerfil ? nombrePerfil.charAt(0).toUpperCase() : 'P';
+    btn.appendChild(avatar);
+
+    const cuerpo = document.createElement('span');
+    cuerpo.className = 'ds-lista-cuerpo';
+    const titulo = document.createElement('span');
+    titulo.className = 'ds-lista-titulo';
+    titulo.textContent = nombre;
+    cuerpo.appendChild(titulo);
+
+    if (nombrePerfil && c.telefono) {
+        const tel = document.createElement('span');
+        tel.className = 'ds-lista-sub';
+        tel.textContent = telefonoCortoPanel(c.telefono);
+        cuerpo.appendChild(tel);
+    }
+    // El endpoint del filtro no repite `necesita_persona`; en la vista filtrada
+    // todo lo que llega es un traspaso. En la lista completa se usa la bandera.
+    const esTraspaso = !!c.necesita_persona || filtroInbox === 'necesita';
+    const motivoOTexto = esTraspaso
+        ? textoMotivoTraspaso(c.traspaso_motivo)
+        : (c.ultimo_mensaje_texto || '');
+    if (motivoOTexto) {
+        const linea = document.createElement('span');
+        linea.className = 'ds-lista-sub bandeja-motivo';
+        linea.textContent = String(motivoOTexto).slice(0, 180);
+        cuerpo.appendChild(linea);
+    }
+    if (esTraspaso && c.traspaso_resumen) {
+        const resumen = document.createElement('span');
+        resumen.className = 'ds-lista-sub bandeja-resumen';
+        const txt = String(c.traspaso_resumen);
+        resumen.textContent = txt.length > 140 ? txt.slice(0, 140) + '…' : txt;
+        cuerpo.appendChild(resumen);
+    }
+    const meta = document.createElement('span');
+    meta.className = 'ds-lista-sub';
+    const cuando = tiempoRelativo(c.traspaso_at || c.ultimo_mensaje_at);
+    const pausa = !esTraspaso && c.bot_pausado ? (textoSaraVuelve(c.pausa_horas_restantes) || 'Sara pausada') : '';
+    meta.textContent = [cuando, pausa].filter(Boolean).join(' · ');
+    cuerpo.appendChild(meta);
+    // Los chips van dentro del cuerpo (debajo del texto), no como columna al
+    // costado: así el nombre, el motivo y el resumen usan todo el ancho.
+    // En la vista filtrada «Necesita persona» es redundante y no se repite.
+    const chips = [];
+    if (esTraspaso && filtroInbox !== 'necesita') chips.push('Necesita persona');
+    if (c.no_leidos) chips.push(String(c.no_leidos));
+    if (chips.length) {
+        const filaChips = document.createElement('span');
+        filaChips.className = 'bandeja-chips';
+        chips.forEach((texto) => {
+            const chip = document.createElement('span');
+            chip.className = 'ds-badge error sin-punto';
+            chip.textContent = texto;
+            filaChips.appendChild(chip);
+        });
+        cuerpo.appendChild(filaChips);
+    }
+    btn.appendChild(cuerpo);
+    return btn;
 }
 async function abrirConversacion(id) {
     convActiva = id;
     renderConversaciones();
-    const c = conversacionesCache.find(x => x.id === id);
+    let c = conversacionesCache.find(x => x.id === id);
     const hilo = document.getElementById('hiloConversacion');
     hilo.innerHTML = '<div class="loading">Cargando...</div>';
     try {
+        // Si se abrió desde el filtro y la conversación no estaba en la lista
+        // completa, se recarga una vez para tener ventana/pausa reales.
+        if (!c) { await loadConversaciones(); c = conversacionesCache.find(x => x.id === id); }
         const msgs = await apiFetch(`/conversaciones/${id}/mensajes`);
         const burbujas = msgs.map((m, i) => `
           <div class="ds-burbuja ${m.direccion === 'entrante' ? 'entra' : 'sale'}">
@@ -3284,24 +3632,48 @@ async function abrirConversacion(id) {
             ? `<p class="ds-ayuda" style="padding:8px 16px;margin:0">Podés responder libre por ${c.ventana_horas_restantes} h más</p>`
             : `<p class="ds-ayuda" style="padding:8px 16px;margin:0;color:var(--ds-error)">Pasaron las 24 horas desde el último mensaje del paciente. Meta ya no deja responder libre: hace falta una plantilla aprobada.</p>`;
 
+        // Tomar manda pausado:true (el servidor quita el aviso). Devolver manda
+        // pausado:false y Sara retoma. Si estaba pausada por otra razón, se
+        // ofrece «Devolver a Sara» en vez de «Pausar».
+        let accionBot;
+        if (c?.necesita_persona) accionBot = { pausar: true, texto: 'Tomar conversación' };
+        else if (c?.bot_pausado) accionBot = { pausar: false, texto: 'Devolver a Sara' };
+        else accionBot = { pausar: true, texto: 'Pausar a Sara' };
+
+        // H-397 (17/11/2026): sin nombre de perfil, el encabezado usa el
+        // teléfono enmascarado; nunca el número completo.
+        const nombrePerfilHilo = String(c?.nombre_perfil || '').trim();
+        const nombreHilo = nombrePerfilHilo || telefonoCortoPanel(c?.telefono) || 'Paciente';
         hilo.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--ds-borde)">
             <div style="min-width:0">
-              <strong style="color:var(--ds-tinta)">${escapeHtmlPanel(c?.nombre_perfil || c?.telefono || '')}</strong>
-              ${c?.nombre_perfil ? `<div class="ds-ayuda">${escapeHtmlPanel(c?.telefono || '')}</div>` : ''}
+              <strong style="color:var(--ds-tinta)">${escapeHtmlPanel(nombreHilo)}</strong>
+              ${nombrePerfilHilo ? `<div class="ds-ayuda">${escapeHtmlPanel(telefonoCortoPanel(c?.telefono))}</div>` : ''}
             </div>
-            <button class="ds-btn sec chico" onclick="alternarBot('${id}', ${c?.bot_pausado ? 'false' : 'true'})">
-              ${c?.bot_pausado ? 'Reactivar a Sara' : 'Pausar a Sara'}
-            </button>
+            <button class="ds-btn sec chico" data-accion="bot" data-pausar="${accionBot.pausar ? 'true' : 'false'}">${escapeHtmlPanel(accionBot.texto)}</button>
           </div>
-          ${c?.bot_pausado ? `<p class="ds-ayuda" style="padding:8px 16px 0;margin:0">Sara está callada en esta conversación${c.pausa_horas_restantes ? `. Vuelve sola en ${c.pausa_horas_restantes} h, o reactivala vos` : ''}.</p>` : ''}
+          ${c?.necesita_persona ? `<div class="ds-alerta aviso" style="margin:12px 16px 0"><span class="ds-alerta-icono">!</span><div class="ds-alerta-txt"><strong id="traspasoMotivo"></strong><p id="traspasoResumen" style="margin:4px 0 0;white-space:pre-wrap"></p></div></div>` : ''}
+          ${c?.bot_pausado ? `<p class="ds-ayuda" style="padding:8px 16px 0;margin:0">Sara está callada en esta conversación${c.necesita_persona ? '' : (textoSaraVuelve(c.pausa_horas_restantes) ? `. ${textoSaraVuelve(c.pausa_horas_restantes)}` : '')}.</p>` : ''}
           <div class="msgs ds-hilo" style="flex:1">${burbujas || '<div class="ds-vacio">Sin mensajes</div>'}</div>
           ${aviso}
           <div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--ds-borde)">
             <input class="ds-input" id="respTexto" aria-label="Escribí tu respuesta" placeholder="Escribí tu respuesta" style="flex:1" ${c?.ventana_abierta ? '' : 'disabled'}>
-            <button class="ds-btn" onclick="responderConv('${id}')" ${c?.ventana_abierta ? '' : 'disabled'}>Enviar</button>
+            <button class="ds-btn" data-accion="responder" ${c?.ventana_abierta ? '' : 'disabled'}>Enviar</button>
           </div>
           <div id="iiHost" style="padding:0 16px 12px"></div>`;
+        // El resumen es texto del paciente: solo textContent.
+        if (c?.necesita_persona) {
+            const motivoEl = document.getElementById('traspasoMotivo');
+            const resumenEl = document.getElementById('traspasoResumen');
+            if (motivoEl) motivoEl.textContent = textoMotivoTraspaso(c.traspaso_motivo);
+            if (resumenEl) resumenEl.textContent = String(c.traspaso_resumen || '');
+        }
+        hilo.querySelectorAll('[data-accion="bot"]').forEach((b) => {
+            b.addEventListener('click', () => alternarBot(id, b.getAttribute('data-pausar') === 'true'));
+        });
+        hilo.querySelectorAll('[data-accion="responder"]').forEach((b) => {
+            b.addEventListener('click', () => responderConv(id));
+        });
         iiHidratar(hilo, msgs, id);
         iiMontar(id, !!c?.ventana_abierta);
         const cont = hilo.querySelector('.msgs');
@@ -3313,6 +3685,7 @@ async function alternarBot(id, pausar) {
     try {
         await apiFetch(`/conversaciones/${id}/bot`, { method: 'PATCH', body: JSON.stringify({ pausado: pausar }) });
         await loadConversaciones();
+        await loadNecesitanPersona(true);
         abrirConversacion(id);
     } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
@@ -3585,7 +3958,9 @@ async function responderConv(id) {
     input.value = '';
     try {
         await apiFetch(`/conversaciones/${id}/responder`, { method: 'POST', body: JSON.stringify({ texto }) });
+        // Responder a mano también quita el aviso «necesita persona» (backend A1).
         await loadConversaciones();
+        await loadNecesitanPersona(true);
         abrirConversacion(id);
     } catch (e) { alert('No se pudo enviar: ' + sopMsg(e)); input.value = texto; }
 }
@@ -3600,23 +3975,75 @@ function formatearTextoActividad(texto) {
     if (!texto) return texto;
     return texto.replace(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::\d{2})?/g, (_, yyyy, mm, dd, hh, min) => `${dd}/${mm} a las ${hh}:${min}`);
 }
+// Ola 5 · C: las alertas nuevas de A1 se destacan en el feed. «traspaso_sin_aviso»
+// es la más importante: el paciente NO recibió el aviso de que lo atiende una persona.
+const ACTIVIDAD_TRASPASO = {
+    traspaso_sin_aviso: { nivel: 'error', titulo: 'El paciente NO recibió el aviso', nota: 'Escribile vos por WhatsApp para que no quede esperando.' },
+    bot_hablo_pausado: { nivel: 'alerta', titulo: 'Sara escribió en una conversación tomada', nota: 'Revisá el hilo y respondé vos.' },
+    traspaso_persona: { nivel: 'alerta', titulo: 'Una conversación necesita una persona', nota: 'Entrá al Inbox y tomala.' },
+};
+function actividadVacia(cont) {
+    const fila = document.createElement('div');
+    fila.className = 'actividad-item';
+    const txt = document.createElement('div');
+    txt.className = 'actividad-texto';
+    txt.style.color = 'var(--gray-500)';
+    txt.textContent = t('dash.sinActividad') || 'Sin actividad reciente';
+    fila.appendChild(txt);
+    cont.replaceChildren(fila);
+}
 async function loadActividad() {
     const cont = document.getElementById('actividadLista');
     if (!cont) return;
     try {
         const items = await apiFetch('/actividad?limite=15');
-        if (!items || !items.length) {
-            cont.innerHTML = `<div class="actividad-item"><div class="actividad-texto" style="color:var(--gray-500)">${t('dash.sinActividad') || 'Sin actividad reciente'}</div></div>`;
-            return;
-        }
-        cont.innerHTML = items.map(item => {
-            const texto = formatearTextoActividad(item.detalle || item.accion);
-            const meta = `${item.usuario_email ? `<strong>${escapeHtmlPanel(item.usuario_email)}</strong> · ` : ''}${tiempoRelativo(item.created_at)}`;
-            return `<div class="actividad-item"><div class="actividad-dot"></div><div><div class="actividad-texto">${escapeHtmlPanel(texto)}</div><div class="actividad-meta">${meta}</div></div></div>`;
-        }).join('');
+        if (!items || !items.length) { actividadVacia(cont); return; }
+        cont.replaceChildren();
+        items.forEach(item => {
+            const fila = document.createElement('div');
+            fila.className = 'actividad-item';
+            const alerta = ACTIVIDAD_TRASPASO[item.accion];
+            if (alerta) {
+                fila.classList.add('alerta');
+                if (alerta.nivel === 'error') fila.classList.add('error');
+            }
+            const dot = document.createElement('div');
+            dot.className = 'actividad-dot';
+            const caja = document.createElement('div');
+            const texto = document.createElement('div');
+            texto.className = 'actividad-texto';
+            if (alerta) {
+                const fuerte = document.createElement('strong');
+                fuerte.textContent = alerta.titulo;
+                texto.appendChild(fuerte);
+            }
+            const detalle = document.createElement('span');
+            detalle.textContent = formatearTextoActividad(item.detalle || item.accion || '');
+            texto.appendChild(detalle);
+            if (alerta && alerta.nota) {
+                const nota = document.createElement('div');
+                nota.className = 'ds-ayuda';
+                nota.textContent = alerta.nota;
+                texto.appendChild(nota);
+            }
+            const meta = document.createElement('div');
+            meta.className = 'actividad-meta';
+            if (item.usuario_email) {
+                const quien = document.createElement('strong');
+                quien.textContent = String(item.usuario_email);
+                meta.appendChild(quien);
+                meta.appendChild(document.createTextNode(' · '));
+            }
+            meta.appendChild(document.createTextNode(tiempoRelativo(item.created_at)));
+            caja.appendChild(texto);
+            caja.appendChild(meta);
+            fila.appendChild(dot);
+            fila.appendChild(caja);
+            cont.appendChild(fila);
+        });
     } catch (e) {
         console.error('Actividad:', e);
-        cont.innerHTML = `<div class="actividad-item"><div class="actividad-texto" style="color:var(--gray-500)">${t('dash.sinActividad') || 'Sin actividad reciente'}</div></div>`;
+        actividadVacia(cont);
     }
 }
 // ── PACIENTES ─────────────────────────────────────────────────────
@@ -3918,10 +4345,13 @@ function renderTablaCitas() {
         const fechaStr = fecha ? fecha.toLocaleDateString(getLocale()) : '—';
         const horaStr = fecha ? fecha.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—';
         const badge = estadoBadge(c.estado);
-        const btnCancelar = c.estado !== 'cancelada'
+        // Ola 5 · C: cancelar y recordar solo aplican a citas modificables;
+        // «No vino» (ausente) y «atendida» ya no se tocan desde acá.
+        const modificable = ESTADOS_CITA_MODIFICABLES.includes(c.estado);
+        const btnCancelar = modificable
             ? `<button class="ds-btn peligro chico" style="margin-right:4px" onclick="cancelarCita('${c.id}')">${t('citas.btnCancelar')}</button>`
             : '';
-        const btnRecordatorio = c.estado !== 'cancelada'
+        const btnRecordatorio = modificable
             ? `<button class="ds-btn sec chico" onclick="enviarRecordatorio('${c.id}')">🔔 ${t('citas.recordatorio')}</button>`
             : '—';
         const btnCiclo = botonesCicloCita(c);
@@ -3934,6 +4364,7 @@ function renderTablaCitas() {
             <td>${btnCiclo}${btnCancelar}${btnRecordatorio}</td>
         </tr>`;
     }).join('');
+    enlazarBotonesCita(tbody);
 }
 function csvEscape(val) {
     let s = (val === null || val === undefined) ? '' : String(val);
@@ -3973,8 +4404,13 @@ function exportarCitasCSV() {
 async function enviarRecordatorio(citaId) {
     try {
         await apiFetch(`/cita/${citaId}/enviar-recordatorio`, { method: 'POST' });
+        // Solo se dice «enviado» cuando el servidor confirmó (wamid).
         alert(t('citas.msgRecordatorioEnviado'));
-    } catch (e) { alert('Error: ' + sopMsg(e)); }
+    } catch (e) {
+        // Ola 5 · C: si Meta rechaza la plantilla, no se promete que salió.
+        if (e && e.status === 502) alert(t('citas.errRecordatorioPlantilla'));
+        else alert('Error: ' + sopMsg(e));
+    }
 }
 async function cancelarCita(citaId) {
     if (!confirm(t('citas.confirmCancelarCita'))) return;
@@ -4242,12 +4678,13 @@ async function cancelarDiaCompleto() {
 // ── LISTA DE ESPERA ───────────────────────────────────────────────
 async function loadListaEspera() {
     try {
+        actualizarPlazoListaEspera();
         const data = await apiFetch('/lista-espera');
         populateListaEsperaSelects();
         const tbody = document.getElementById('tablaListaEspera');
         if (!tbody) return;
         if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="ds-vacio">${t('le.nadie')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="ds-vacio">${t('le.nadie')}</td></tr>`;
         } else {
             tbody.innerHTML = data.map(le => {
                 // Fix seguridad 27/09/2026: estos dos campos venían sin escapeHtmlPanel
@@ -4258,15 +4695,20 @@ async function loadListaEspera() {
                 const nombrePac = escapeHtmlPanel(le.pacientes?.nombre || t('common.pacienteSinNombre'));
                 const nombreDoc = escapeHtmlPanel(le.doctores?.nombre || t('common.cualquiera'));
                 const fecha = le.fecha_deseada ? new Date(le.fecha_deseada + 'T00:00:00').toLocaleDateString(getLocale()) : '—';
+                // Ola 5 · C: estado explícito. GET /lista-espera devuelve las pendientes;
+                // si el servidor manda notificado/atendido/expirado, se pinta sin mentir.
+                const em = metaEstadoListaEspera(le.estado);
+                const acciones = (le.estado || 'pendiente') === 'pendiente'
+                    ? `<button class="ds-btn chico" style="margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">${t('le.btnAtendido')}</button>
+                       <button class="ds-btn peligro chico" onclick="eliminarListaEspera('${le.id}')">${t('le.btnQuitar')}</button>`
+                    : `<span class="ds-ayuda">${t('le.sinAcciones')}</span>`;
                 return `<tr>
                     <td><strong>${nombrePac}</strong></td>
                     <td>${nombreDoc}</td>
                     <td>${fecha}</td>
                     <td>${escapeHtmlPanel(le.notas || '—')}</td>
-                    <td>
-                        <button class="ds-btn chico" style="margin-right:4px" onclick="marcarAtendidoListaEspera('${le.id}')">${t('le.btnAtendido')}</button>
-                        <button class="ds-btn peligro chico" onclick="eliminarListaEspera('${le.id}')">${t('le.btnQuitar')}</button>
-                    </td>
+                    <td><span class="ds-badge ${em.clase} sin-punto">${escapeHtmlPanel(em.texto)}</span></td>
+                    <td>${acciones}</td>
                 </tr>`;
             }).join('');
         }
@@ -4730,6 +5172,9 @@ async function loadDoctores() {
     try {
         const data = await apiFetch('/doctores');
         doctoresCache = data || [];
+        // Ola 5 · C: si la tabla de citas se pintó antes de que llegaran los
+        // doctores, el nombre del doctor quedaba en «—» hasta la próxima carga.
+        renderTablaCitas();
         renderDoctorBubblesPaciente();
         renderFilasBloque();
         renderCalendarLeyenda();
@@ -4773,7 +5218,7 @@ function renderTablaDoctores() {
         <tr>
             <td><strong>${escapeHtmlPanel(d.nombre)}</strong></td>
             <td>${escapeHtmlPanel(d.especialidad || '')}</td>
-            <td>${d.duracion_cita || 30} min</td>
+            <td>${d.duracion_cita || 30} min${Number(d.buffer_minutos) > 0 ? `<div class="ds-ayuda">+${Number(d.buffer_minutos)} min entre citas</div>` : ''}</td>
             <td>₡${Number(d.precio || 0).toLocaleString(getLocale())}</td>
             <td>${escapeHtmlPanel(d.horario || t('doc.horarioGeneral'))}</td>
             <td><span class="ds-badge ${d.disponible ? 'ok' : 'error'}">${d.disponible ? t('doc.activo') : t('doc.inactivo')}</span></td>
@@ -4789,6 +5234,7 @@ function editarDoctor(id) {
     document.getElementById('docNombre').value = doc.nombre || '';
     document.getElementById('docEspecialidad').value = doc.especialidad || '';
     document.getElementById('docDuracion').value = doc.duracion_cita || 30;
+    document.getElementById('docBuffer').value = doc.buffer_minutos ?? 0;   // Ola 5 · A5/C: 0 se conserva
     document.getElementById('docPrecio').value = doc.precio || 0;
     document.getElementById('docTelefono').value = doc.telefono || '';
     document.getElementById('docHorario').value = doc.horario || '';
@@ -4832,6 +5278,7 @@ function cancelarEdicionDoctor() {
     editandoDoctorId = null;
     cargarOpcionesJefe(null);
     ['docNombre', 'docEspecialidad', 'docDuracion', 'docPrecio', 'docTelefono', 'docHorario', 'docHoraInicio', 'docHoraFin', 'docAlmuerzoInicio', 'docAlmuerzoFin', 'docInstrucciones', 'docFotoUrl', 'docBio'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('docBuffer').value = 0;
     marcarDias([]);
     horariosDiaCache = {};
     const chk = document.getElementById('docEspecial'); if (chk) chk.checked = false;
@@ -4996,6 +5443,13 @@ async function guardarDoctor() {
     const nombre = document.getElementById('docNombre').value;
     const especialidad = document.getElementById('docEspecialidad').value;
     const duracion_cita = parseInt(document.getElementById('docDuracion').value) || 30;
+    // Ola 5 · A5/C: entero 0–120. Un valor inválido se avisa acá y no se manda
+    // corregido en silencio; el servidor vuelve a validar y responde 400.
+    const buffer_minutos = enteroEnRango(document.getElementById('docBuffer').value, 0, 120);
+    if (buffer_minutos === null) {
+        alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(t('doc.errBuffer'))}</div>`;
+        return;
+    }
     const precio = parseFloat(document.getElementById('docPrecio').value) || 0;
     const telefono = document.getElementById('docTelefono').value || null;
     const horario = document.getElementById('docHorario').value || null;
@@ -5016,7 +5470,7 @@ async function guardarDoctor() {
     }
     const dias_semana = diasSeleccionados();
     const horarios_por_dia = leerHorariosPorDia();
-    const body = { nombre, especialidad, duracion_cita, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones, dias_semana, horarios_por_dia, foto_url, bio_corta };
+    const body = { nombre, especialidad, duracion_cita, buffer_minutos, precio, telefono, horario, hora_inicio, hora_fin, almuerzo_inicio, almuerzo_fin, instrucciones, dias_semana, horarios_por_dia, foto_url, bio_corta };
     if (editandoDoctorId && userRol === 'dueno') body.jefe_doctor_id = document.getElementById('docJefe').value || null;
     try {
         if (editandoDoctorId) {
@@ -5159,7 +5613,10 @@ async function loadSettings() {
         `;
         infoEl.classList.remove('loading');
         document.getElementById('recHoras1').value = clinica.recordatorio_horas_1 ?? 24;
-        document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;
+        document.getElementById('recHoras2').value = clinica.recordatorio_horas_2 ?? 2;   // 0 se conserva: 0 ?? 2 = 0
+        const leMin = document.getElementById('leEsperaMinutos');
+        if (leMin) leMin.value = clinica.lista_espera_minutos ?? 15;
+        actualizarPlazoListaEspera();
     } catch (e) {
         infoEl.innerHTML = `<p style="color:var(--danger)">${escapeHtmlPanel(sopMsg(e))}</p>`;
     }
@@ -5198,15 +5655,37 @@ async function guardarConfigClinica() {
         alertEl.innerHTML = `<div class="alert alert-error">${escapeHtmlPanel(sopMsg(e))}</div>`;
     }
 }
+function actualizarPlazoListaEspera() {
+    const el = document.getElementById('lePlazoAyuda');
+    if (!el) return;
+    const n = clinicaCache && clinicaCache.lista_espera_minutos != null ? Number(clinicaCache.lista_espera_minutos) : null;
+    el.textContent = Number.isInteger(n) && n >= 5 && n <= 120
+        ? `Quien recibe un cupo tiene ${n} minutos para aceptarlo.`
+        : 'El plazo para aceptar un cupo se configura en Ajustes.';
+}
 async function guardarConfigRecordatorios() {
     const alertEl = document.getElementById('alertRecordatorios');
-    const recordatorio_horas_1 = parseInt(document.getElementById('recHoras1').value) || 24;
-    const recordatorio_horas_2 = parseInt(document.getElementById('recHoras2').value) || 2;
+    // Ola 5 · C: el `||` convertía 0 en 2 y el apagado nunca se podía guardar.
+    // `Number.isInteger` conserva 0; un valor no entero cae al valor de siempre.
+    const valores = {
+        recordatorio_horas_1: enteroRecordatorio(document.getElementById('recHoras1').value, 24),
+        recordatorio_horas_2: enteroRecordatorio(document.getElementById('recHoras2').value, 2),
+        lista_espera_minutos: enteroRecordatorio(document.getElementById('leEsperaMinutos')?.value, 15),
+    };
+    // Se manda solo lo que cambió (el contrato lo pide así).
+    const body = {};
+    Object.keys(valores).forEach((k) => {
+        if (!clinicaCache || clinicaCache[k] !== valores[k]) body[k] = valores[k];
+    });
+    if (!Object.keys(body).length) {
+        alertEl.innerHTML = `<div class="alert alert-success">${escapeHtmlPanel(t('set.sinCambios'))}</div>`;
+        setTimeout(() => alertEl.innerHTML = '', 3000);
+        return;
+    }
     try {
-        await apiFetch('/clinica/setup', {
-            method: 'PATCH',
-            body: JSON.stringify({ recordatorio_horas_1, recordatorio_horas_2 })
-        });
+        await apiFetch('/clinica/setup', { method: 'PATCH', body: JSON.stringify(body) });
+        clinicaCache = { ...(clinicaCache || {}), ...valores };
+        actualizarPlazoListaEspera();
         alertEl.innerHTML = `<div class="alert alert-success">${t('common.guardadoOk')}</div>`;
         setTimeout(() => alertEl.innerHTML = '', 3000);
     } catch (e) {
@@ -5635,12 +6114,84 @@ async function eliminarMiembro(id) {
         loadEquipo();
     } catch (e) { alert('Error: ' + sopMsg(e)); }
 }
+// ── OLA 5 · PARTE C (16/11/2026) · piezas puras del panel ─────────────────────
+// Se pueden probar sin DOM (evals/tests/panel-parte-c.test.js). Las etiquetas
+// visibles salen del diccionario de idioma: acá solo vive el estado → clase.
+const ESTADOS_CITA_MODIFICABLES = ['pendiente', 'recordatorio_enviado', 'confirmada'];
+const ESTADO_CITA_META = {
+    pendiente: { clase: 'aviso', clave: 'badge.pendiente' },
+    recordatorio_enviado: { clase: 'aviso', clave: 'badge.recordatorio_enviado' },
+    confirmada: { clase: 'ok', clave: 'badge.confirmada' },
+    cancelada: { clase: 'error', clave: 'badge.cancelada' },
+    atendida: { clase: 'ok', clave: 'badge.atendida' },
+    // «No vino»: etiqueta propia y color terracota, distinto del rojo de cancelada.
+    ausente: { clase: 'ausente', clave: 'badge.ausente' },
+};
+function metaEstadoCita(estado) {
+    return ESTADO_CITA_META[estado] || ESTADO_CITA_META.pendiente;
+}
 function estadoBadge(estado) {
     // (07/11/2026, Parte 4) Etiquetas del sistema compartido: mismo look en el Dashboard y en Citas.
-    const map = { pendiente: 'aviso', recordatorio_enviado: 'aviso', confirmada: 'ok', cancelada: 'error', atendida: 'ok' };
-    const label = { pendiente: t('badge.pendiente'), recordatorio_enviado: t('badge.recordatorio_enviado'), confirmada: t('badge.confirmada'), cancelada: t('badge.cancelada'), atendida: t('badge.atendida') };
-    return `<span class="ds-badge ${map[estado] || 'aviso'}">${label[estado] || label.pendiente}</span>`;
+    const m = metaEstadoCita(estado);
+    return `<span class="ds-badge ${m.clase}">${escapeHtmlPanel(t(m.clave))}</span>`;
 }
+// ¿La cita ya empezó? El servidor decide con la hora de Costa Rica; acá solo se
+// usa para MOSTRAR el botón «No vino» (el PUT vuelve a validar y tiene la última palabra).
+function citaYaEmpezo(c, ahoraMs = Date.now()) {
+    if (!c || !c.fecha) return false;
+    const txt = String(c.fecha);
+    const ms = Date.parse(txt.length === 16 ? txt + ':00' : txt);
+    return Number.isFinite(ms) && ms <= ahoraMs;
+}
+function puedeMarcarAusente(c, ahoraMs = Date.now()) {
+    if (!c) return false;
+    if (!ESTADOS_CITA_MODIFICABLES.includes(c.estado)) return false;
+    if (c.llego_at || c.atendida_at) return false;   // si llegó, no es «No vino»
+    return citaYaEmpezo(c, ahoraMs);
+}
+function textoSaraVuelve(horas) {
+    if (horas === null || horas === undefined || horas === '') return '';
+    const n = Math.ceil(Number(horas));
+    if (!Number.isFinite(n) || n <= 0) return 'Sara vuelve en breve';
+    return `Sara vuelve en ${n} h`;
+}
+function textoMotivoTraspaso(motivo) {
+    const textos = {
+        paciente_pide: 'El paciente pidió hablar con una persona',
+        bot_no_puede: 'Sara no pudo resolverlo',
+        tope_mensajes: 'La conversación pasó el tope de mensajes automáticos',
+    };
+    return textos[motivo] || 'Una persona tiene que revisar esta conversación';
+}
+// El bug del `|| 2`: 0 es un valor válido (apagado) y no puede convertirse en 2.
+function enteroRecordatorio(valor, defecto) {
+    const s = String(valor ?? '').trim();
+    const n = Number(s);
+    return s !== '' && Number.isInteger(n) ? n : defecto;
+}
+// Para campos donde un valor inválido NO se corrige en silencio (buffer del doctor).
+function enteroEnRango(valor, min, max) {
+    const s = String(valor ?? '').trim();
+    if (s === '') return null;
+    const n = Number(s);
+    return Number.isInteger(n) && n >= min && n <= max ? n : null;
+}
+function telefonoCortoPanel(tel) {
+    const digitos = String(tel || '').replace(/\D/g, '');
+    return digitos.length >= 4 ? '•••• ' + digitos.slice(-4) : String(tel || '');
+}
+// Lista de espera: el panel no dice «reservado» salvo que la entrada esté
+// «atendida» (el backend solo la marca así cuando la cita existe de verdad).
+function metaEstadoListaEspera(estado) {
+    const m = {
+        pendiente: { clase: '', texto: 'En espera' },
+        notificado: { clase: 'aviso', texto: 'Cupo ofrecido' },
+        atendido: { clase: 'ok', texto: 'Atendida' },
+        expirado: { clase: 'error', texto: 'Venció el plazo' },
+    };
+    return m[estado] || m.pendiente;
+}
+// ── FIN OLA 5 · PARTE C (piezas puras) ───────────────────────────────────────
 
 // ─── Ciclo de la cita: llegó → atendida → expediente ─────────────────────────
 // El backend ya guardaba llego_at y atendida_at desde hace días, pero no había
@@ -5654,14 +6205,105 @@ function estadoBadge(estado) {
 // Los tres estados son excluyentes y avanzan en un solo sentido — nadie
 // "des-llega" ni "des-atiende" — así que se muestra un único botón a la vez.
 function botonesCicloCita(c) {
-    if (c.estado === 'cancelada') return '';
+    // Ola 5 · C: cancelada/atendida/ausente ya no se tocan con los botones del ciclo.
+    if (!ESTADOS_CITA_MODIFICABLES.includes(c.estado)) return '';
     if (c.atendida_at) {
         return `<span class="ds-badge ok sin-punto" title="${escapeHtmlPanel(c.atendida_at)}" style="margin-right:6px">✓ ${t('citas.atendida')}</span>`;
     }
+    // «No vino» solo en citas cuya hora ya pasó y siguen modificables. El id va en
+    // data-* y el listener se enlaza después de pintar (sin onclick con datos).
+    const noVino = puedeMarcarAusente(c)
+        ? `<button class="ds-btn sec chico" style="margin-right:4px" data-accion="ausente" data-cita-id="${escapeHtmlPanel(c.id)}">${escapeHtmlPanel(t('citas.btnNoVino'))}</button>`
+        : '';
     if (c.llego_at) {
-        return `<button class="ds-btn chico" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>`;
+        return `<button class="ds-btn chico" style="margin-right:4px" onclick="marcarAtendida('${c.id}')">${t('citas.btnAtendida')}</button>${noVino}`;
     }
-    return `<button class="ds-btn sec chico" style="margin-right:4px" onclick="marcarLlego('${c.id}')">${t('citas.btnLlego')}</button>`;
+    return `<button class="ds-btn sec chico" style="margin-right:4px" onclick="marcarLlego('${c.id}')">${t('citas.btnLlego')}</button>${noVino}`;
+}
+// Enlaza los botones nuevos que llevan el id en data-* (Ola 5 · C).
+function enlazarBotonesCita(cont) {
+    if (!cont) return;
+    cont.querySelectorAll('[data-accion="ausente"]').forEach((b) => {
+        b.addEventListener('click', () => marcarAusente(b.getAttribute('data-cita-id')));
+    });
+    cont.querySelectorAll('[data-accion="enlace"]').forEach((b) => {
+        b.addEventListener('click', () => copiarEnlaceCita(b.getAttribute('data-cita-id')));
+    });
+}
+// «No vino»: pide confirmación (no es reversible desde el panel) y manda
+// PUT /cita/:id {estado:'ausente'}. El servidor valida cita_futura/cita_no_modificable.
+async function marcarAusente(id) {
+    if (!id) return;
+    const confirmado = await dialogoPanel({
+        titulo: t('citas.btnNoVino'),
+        texto: t('citas.confirmAusente'),
+        aceptarTexto: t('citas.btnNoVino'),
+        peligro: true,
+    });
+    if (!confirmado) return;
+    try {
+        await apiFetch(`/cita/${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            body: JSON.stringify({ estado: 'ausente' }),
+        });
+        cerrarModalCita();
+        await loadCitas();
+        loadDashboard();
+        await dialogoPanel({ titulo: t('citas.msgAusente'), cancelar: false });
+    } catch (e) {
+        // 409 cita_futura: el botón no debía estar; se avisa y se recarga.
+        // 409 cita_no_modificable: alguien la canceló/atendió mientras tanto.
+        if (e && (e.codigo === 'cita_futura' || e.codigo === 'cita_no_modificable')) {
+            cerrarModalCita();
+            await loadCitas();
+            loadDashboard();
+        }
+        await dialogoPanel({ titulo: t('citas.errNoVino'), texto: sopMsg(e), cancelar: false });
+    }
+}
+// Enlace firmado para reprogramar/cancelar (POST /cita/:id/enlace). Se copia
+// al portapapeles para pegarlo en un chat; el servidor decide si hay enlace.
+async function copiarEnlaceCita(id) {
+    if (!id) return;
+    try {
+        const r = await apiFetch(`/cita/${encodeURIComponent(id)}/enlace`, { method: 'POST' });
+        if (!r || !r.url) throw new Error(t('citas.errEnlace'));
+        const copiado = await copiarAlPortapapeles(r.url);
+        // Sin segundos y sin el punto final del formato: el título ya cierra con punto.
+        const vence = r.vence_en ? new Date(r.vence_en).toLocaleString(getLocale(), { dateStyle: 'short', timeStyle: 'short' }).replace(/[.\s]+$/, '') : '';
+        // La ficha de la cita se cierra antes del resultado: así no quedan dos
+        // tarjetas blancas superpuestas.
+        cerrarModalCita();
+        await dialogoPanel({
+            titulo: copiado && vence ? t('citas.enlaceCopiado', { fecha: vence }) : t('citas.enlaceListo'),
+            texto: copiado ? '' : t('citas.enlaceManual'),
+            url: r.url,
+            cancelar: false,
+        });
+    } catch (e) {
+        // 409/404/429/503: se muestra el texto del servidor, sin prometer nada.
+        cerrarModalCita();
+        await dialogoPanel({ titulo: t('citas.errEnlace'), texto: sopMsg(e), cancelar: false });
+    }
+}
+async function copiarAlPortapapeles(texto) {
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(texto);
+            return true;
+        }
+    } catch (e) { /* sigue el respaldo */ }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = texto;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-1000px;left:-1000px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return !!ok;
+    } catch (e) { return false; }
 }
 async function marcarLlego(id) {
     try {
@@ -6240,7 +6882,7 @@ function showSection(id, btn) {
     if (id === 'settings' && userRol === 'dueno') loadEquipo();
     if (id === 'settings') cargarConocimiento();      // (21/10/2026) material de la clínica para Sara (solo dueño y recepción)
     if (id === 'bloqueos') loadBloqueos();
-    if (id === 'inbox') loadConversaciones();
+    if (id === 'inbox') { loadConversaciones(); loadNecesitanPersona(true); }
     if (id === 'ayuda') cargarSoporte();
     if (id === 'redes') renderRedes();
     closeMobileMenu();
@@ -7381,7 +8023,7 @@ const translations = {
         'terms.p3': 'Podés cancelar el servicio cuando quieras escribiendo a hola@automatiaai.com.',
         'terms.p4': 'Está prohibido usar la cuenta para hacer ingeniería inversa, copiar el servicio, extraer datos de forma automática o construir un producto competidor.',
         'terms.verCompletas': 'Leer las condiciones completas ↗', 'terms.verPrivacidad': 'Política de privacidad ↗', 'terms.verEliminacion': 'Eliminación de datos ↗', 'terms.checkbox': 'He leído y acepto las Condiciones del Servicio', 'terms.btnAceptar': 'Aceptar y continuar',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'set.rec2Nota': 'Todavía no disponible: falta la plantilla aprobada por Meta para este segundo aviso. El valor se guarda pero no se envía nada.', 'nav.bloqueos': 'Bloqueos', 'bloq.title': 'Bloqueos de agenda', 'bloq.subtitulo': 'Días u horas que no se ofrecen, ni por Sara ni desde el panel.', 'bloq.nuevoTitle': 'Bloquear un espacio', 'bloq.nuevoSub': 'Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.', 'bloq.desde': 'Desde', 'bloq.hasta': 'Hasta', 'bloq.soloHoras': 'Solo unas horas de esos días (si no, se bloquea el día completo)', 'bloq.horaDesde': 'Hora desde', 'bloq.horaHasta': 'Hora hasta', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ej: Vacaciones, congreso, cirugía', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueos vigentes', 'bloq.vacio': 'No hay bloqueos vigentes.', 'bloq.diaCompleto': 'Día completo', 'bloq.ok': 'Bloqueo creado — los cupos ya se recalcularon.', 'bloq.errDatos': 'Elegí el doctor y la fecha de inicio.', 'bloq.errHoras': 'Poné las dos horas.', 'bloq.confirmBorrar': '¿Eliminar este bloqueo? Los cupos vuelven a quedar disponibles.', 'doc.especial': 'Horarios especiales por día (un día con horario distinto al resto)', 'doc.especialSinDias': 'Marque primero los días que atiende.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Lo configura AutomatIA', 'set.whatsappPhoneIdNota': 'Este dato lo configura AutomatIA al dar de alta la clínica. Si está vacío, los recordatorios automáticos no salen — escribinos.', 'set.rec2Nota': '0 = no enviar. Se manda solo si la plantilla está aprobada por Meta.', 'nav.bloqueos': 'Bloqueos', 'bloq.title': 'Bloqueos de agenda', 'bloq.subtitulo': 'Días u horas que no se ofrecen, ni por Sara ni desde el panel.', 'bloq.nuevoTitle': 'Bloquear un espacio', 'bloq.nuevoSub': 'Vacaciones, un congreso, una tarde de junta. Los cupos de ese rango dejan de ofrecerse — a nadie, ni a Sara ni desde el panel.', 'bloq.desde': 'Desde', 'bloq.hasta': 'Hasta', 'bloq.soloHoras': 'Solo unas horas de esos días (si no, se bloquea el día completo)', 'bloq.horaDesde': 'Hora desde', 'bloq.horaHasta': 'Hora hasta', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ej: Vacaciones, congreso, cirugía', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueos vigentes', 'bloq.vacio': 'No hay bloqueos vigentes.', 'bloq.diaCompleto': 'Día completo', 'bloq.ok': 'Bloqueo creado — los cupos ya se recalcularon.', 'bloq.errDatos': 'Elegí el doctor y la fecha de inicio.', 'bloq.errHoras': 'Poné las dos horas.', 'bloq.confirmBorrar': '¿Eliminar este bloqueo? Los cupos vuelven a quedar disponibles.', 'doc.especial': 'Horarios especiales por día (un día con horario distinto al resto)', 'doc.especialSinDias': 'Marque primero los días que atiende.', 'doc.dias': 'Días que atiende', 'doc.diasHint': 'Si no marca ninguno, se generan cupos todos los días (como antes).', 'doc.horario': 'Horario que ve el paciente', 'doc.horarioVacio': 'Marque los días y las horas y acá verá el texto que Sara le dice al paciente.', 'dia.lun': 'Lun', 'dia.mar': 'Mar', 'dia.mie': 'Mié', 'dia.jue': 'Jue', 'dia.vie': 'Vie', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto que Sara le muestra al paciente', 'set.horarioGeneralDesc': 'Se usa para calcular las horas disponibles de los doctores que no tienen su propio horario configurado.',
         'set.noEncontrada': 'No se encontró información de la clínica', 'set.recordatoriosTitle': 'Configuración de recordatorios',
         'set.recordatoriosDesc': 'Definí con cuánta anticipación se manda cada recordatorio automático por WhatsApp.',
@@ -7399,6 +8041,12 @@ const translations = {
         'exp.quienConsulto': 'Quién consultó este expediente',
         'doc.jefe': 'Jefe de área (a quién reporta)', 'doc.jefeNinguno': 'Ninguno (no reporta a nadie)',
         'badge.recordatorio_enviado': 'Recordatorio enviado',
+        'badge.ausente': 'No vino',
+        'citas.btnNoVino': 'No vino', 'citas.confirmAusente': '¿Marcar esta cita como «No vino»? No se puede deshacer desde el panel.', 'citas.msgAusente': 'Cita marcada como «No vino».', 'citas.errNoVino': 'No se pudo marcar la cita.', 'citas.enlaceListo': 'Enlace de la cita', 'citas.btnEnlace': 'Copiar enlace', 'citas.enlaceCopiado': 'Enlace copiado. Vence el {fecha}.', 'citas.enlaceManual': 'Copiá este enlace y pegalo en el chat:', 'citas.errEnlace': 'No se pudo crear el enlace.', 'citas.errRecordatorioPlantilla': 'El recordatorio no salió. Puede que la plantilla todavía no esté aprobada por Meta; probá de nuevo más tarde.',
+        'dash.tasaAusencias': 'Tasa de ausencias', 'dash.ausenciasPie': 'Últimos 30 días', 'dash.ausenciasSinDatos': 'Sin citas atendidas ni ausentes en 30 días', 'dash.ausenciasNoCalculada': 'No se pudo calcular ahora', 'dash.ausenciasPacientesTitle': 'Pacientes con más ausencias', 'dash.ausenciasPacientesSub': 'Últimos 30 días · solo citas atendidas o ausentes.', 'dash.ausenciasAyuda': 'Sirve para confirmar por WhatsApp, no para etiquetar a nadie.',
+        'set.listaEsperaTitle': 'Lista de espera', 'set.listaEsperaSub': 'Cuánto tiempo tiene una persona para aceptar un cupo que se liberó.', 'set.listaEsperaMinutos': 'Tiempo para aceptar un cupo (minutos)', 'set.listaEsperaNota': 'Entre 5 y 120 minutos. Si no contesta a tiempo, el cupo se le ofrece a la siguiente persona.', 'set.recPlantillasNota': 'Los avisos automáticos usan plantillas que aprueba Meta. Si una plantilla todavía no está aprobada, el aviso queda pendiente y no se envía: el panel no lo da por enviado.', 'set.sinCambios': 'No había cambios para guardar.',
+        'doc.buffer': 'Tiempo entre citas (minutos)', 'doc.bufferNota': '0 = sin pausa. Se respeta entre una cita y la siguiente.', 'doc.errBuffer': 'El tiempo entre citas debe ser un número entero de 0 a 120 minutos.',
+        'le.colEstado': 'Estado', 'le.sinAcciones': 'Sin acciones pendientes.',
     },
     en: {
         'nav.dashboard': 'Dashboard', 'nav.pacientes': 'Patients', 'nav.citas': 'Create Appointment', 'nav.listaCitas': 'Appointments', 'title.listaCitas': 'Appointments',
@@ -7546,7 +8194,7 @@ const translations = {
         'terms.p3': 'You can cancel the service at any time by writing to hola@automatiaai.com.',
         'terms.p4': 'You may not use your account to reverse engineer or copy the service, scrape data automatically, or build a competing product.',
         'terms.verCompletas': 'Read the full terms ↗', 'terms.verPrivacidad': 'Privacy policy ↗', 'terms.verEliminacion': 'Data deletion ↗', 'terms.checkbox': 'I have read and accept the Terms of Service', 'terms.btnAceptar': 'Accept and continue',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'set.rec2Nota': 'Not available yet: the Meta-approved template for this second reminder is still pending. The value is saved but nothing is sent.', 'nav.bloqueos': 'Blocks', 'bloq.title': 'Schedule blocks', 'bloq.subtitulo': 'Days or hours no one can book — not through Sara, not from the panel.', 'bloq.nuevoTitle': 'Block time off', 'bloq.nuevoSub': 'Vacation, a conference, an afternoon meeting. Those slots stop being offered — to anyone, Sara included.', 'bloq.desde': 'From', 'bloq.hasta': 'To', 'bloq.soloHoras': 'Only certain hours of those days (otherwise the whole day is blocked)', 'bloq.horaDesde': 'From time', 'bloq.horaHasta': 'To time', 'bloq.motivo': 'Reason (optional)', 'bloq.motivoPh': 'e.g. Vacation, conference, surgery', 'bloq.btnCrear': 'Block', 'bloq.listaTitle': 'Active blocks', 'bloq.vacio': 'No active blocks.', 'bloq.diaCompleto': 'Full day', 'bloq.ok': 'Block created — slots have been recalculated.', 'bloq.errDatos': 'Pick the doctor and the start date.', 'bloq.errHoras': 'Set both times.', 'bloq.confirmBorrar': 'Delete this block? Those slots become available again.', 'doc.especial': 'Special hours per day (one day with different hours)', 'doc.especialSinDias': 'Select the working days first.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Set up by AutomatIA', 'set.whatsappPhoneIdNota': 'AutomatIA sets this up when your clinic is onboarded. If it is empty, automatic reminders will not go out — contact us.', 'set.rec2Nota': '0 = do not send. It is sent only if the template is approved by Meta.', 'nav.bloqueos': 'Blocks', 'bloq.title': 'Schedule blocks', 'bloq.subtitulo': 'Days or hours no one can book — not through Sara, not from the panel.', 'bloq.nuevoTitle': 'Block time off', 'bloq.nuevoSub': 'Vacation, a conference, an afternoon meeting. Those slots stop being offered — to anyone, Sara included.', 'bloq.desde': 'From', 'bloq.hasta': 'To', 'bloq.soloHoras': 'Only certain hours of those days (otherwise the whole day is blocked)', 'bloq.horaDesde': 'From time', 'bloq.horaHasta': 'To time', 'bloq.motivo': 'Reason (optional)', 'bloq.motivoPh': 'e.g. Vacation, conference, surgery', 'bloq.btnCrear': 'Block', 'bloq.listaTitle': 'Active blocks', 'bloq.vacio': 'No active blocks.', 'bloq.diaCompleto': 'Full day', 'bloq.ok': 'Block created — slots have been recalculated.', 'bloq.errDatos': 'Pick the doctor and the start date.', 'bloq.errHoras': 'Set both times.', 'bloq.confirmBorrar': 'Delete this block? Those slots become available again.', 'doc.especial': 'Special hours per day (one day with different hours)', 'doc.especialSinDias': 'Select the working days first.', 'doc.dias': 'Working days', 'doc.diasHint': 'If none are selected, slots are generated every day (as before).', 'doc.horario': 'Schedule the patient sees', 'doc.horarioVacio': 'Pick the days and hours and the text Sara tells patients will appear here.', 'dia.lun': 'Mon', 'dia.mar': 'Tue', 'dia.mie': 'Wed', 'dia.jue': 'Thu', 'dia.vie': 'Fri', 'dia.sab': 'Sat', 'dia.dom': 'Sun',
         'set.horarioTextoDesc': 'text shown to patients', 'set.horarioGeneralDesc': 'Used to calculate available times for doctors who don\'t have their own hours configured.',
         'set.noEncontrada': 'Clinic information not found', 'set.recordatoriosTitle': 'Reminder settings',
         'set.recordatoriosDesc': 'Set how far in advance each automatic WhatsApp reminder is sent.',
@@ -7564,6 +8212,12 @@ const translations = {
         'exp.quienConsulto': 'Who accessed this record',
         'doc.jefe': 'Area lead (who they report to)', 'doc.jefeNinguno': 'None (reports to no one)',
         'badge.recordatorio_enviado': 'Reminder sent',
+        'badge.ausente': 'No-show',
+        'citas.btnNoVino': 'No-show', 'citas.confirmAusente': 'Mark this appointment as a no-show? This cannot be undone from the panel.', 'citas.msgAusente': 'Appointment marked as a no-show.', 'citas.errNoVino': 'The appointment could not be marked.', 'citas.enlaceListo': 'Appointment link', 'citas.btnEnlace': 'Copy link', 'citas.enlaceCopiado': 'Link copied. It expires on {fecha}.', 'citas.enlaceManual': 'Copy this link and paste it in the chat:', 'citas.errEnlace': 'The link could not be created.', 'citas.errRecordatorioPlantilla': 'The reminder was not sent. The template may still be pending Meta approval; try again later.',
+        'dash.tasaAusencias': 'No-show rate', 'dash.ausenciasPie': 'Last 30 days', 'dash.ausenciasSinDatos': 'No attended or missed appointments in 30 days', 'dash.ausenciasNoCalculada': 'Could not calculate right now', 'dash.ausenciasPacientesTitle': 'Patients with the most no-shows', 'dash.ausenciasPacientesSub': 'Last 30 days · attended or missed appointments only.', 'dash.ausenciasAyuda': 'Use it to confirm by WhatsApp, not to label anyone.',
+        'set.listaEsperaTitle': 'Waiting list', 'set.listaEsperaSub': 'How long someone has to accept a slot that opened up.', 'set.listaEsperaMinutos': 'Time to accept a slot (minutes)', 'set.listaEsperaNota': 'Between 5 and 120 minutes. If they do not answer in time, the slot goes to the next person.', 'set.recPlantillasNota': 'Automatic reminders use Meta-approved templates. If a template is not approved yet, the reminder stays pending and is not sent: the panel never claims it went out.', 'set.sinCambios': 'There were no changes to save.',
+        'doc.buffer': 'Time between appointments (minutes)', 'doc.bufferNota': '0 = no gap. It is respected between one appointment and the next.', 'doc.errBuffer': 'Time between appointments must be a whole number from 0 to 120 minutes.',
+        'le.colEstado': 'Status', 'le.sinAcciones': 'No pending actions.',
     },
     pt: {
         'nav.dashboard': 'Painel', 'nav.pacientes': 'Pacientes', 'nav.citas': 'Criar Consulta', 'nav.listaCitas': 'Consultas', 'title.listaCitas': 'Consultas',
@@ -7711,7 +8365,7 @@ const translations = {
         'terms.p3': 'Você pode cancelar o serviço quando quiser escrevendo para hola@automatiaai.com.',
         'terms.p4': 'É proibido usar a conta para fazer engenharia reversa, copiar o serviço, extrair dados automaticamente ou criar um produto concorrente.',
         'terms.verCompletas': 'Ler as condições completas ↗', 'terms.verPrivacidad': 'Política de privacidade ↗', 'terms.verEliminacion': 'Exclusão de dados ↗', 'terms.checkbox': 'Li e aceito as Condições do Serviço', 'terms.btnAceptar': 'Aceitar e continuar',
-        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'set.rec2Nota': 'Ainda não disponível: falta o modelo aprovado pela Meta para este segundo aviso. O valor é salvo mas nada é enviado.', 'nav.bloqueos': 'Bloqueios', 'bloq.title': 'Bloqueios de agenda', 'bloq.subtitulo': 'Dias ou horas que não são oferecidos — nem pela Sara, nem pelo painel.', 'bloq.nuevoTitle': 'Bloquear um espaço', 'bloq.nuevoSub': 'Férias, um congresso, uma tarde de reunião. Essas vagas deixam de ser oferecidas — a ninguém, nem à Sara.', 'bloq.desde': 'De', 'bloq.hasta': 'Até', 'bloq.soloHoras': 'Apenas algumas horas desses dias (caso contrário bloqueia o dia inteiro)', 'bloq.horaDesde': 'Hora de', 'bloq.horaHasta': 'Hora até', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ex: Férias, congresso, cirurgia', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueios vigentes', 'bloq.vacio': 'Não há bloqueios vigentes.', 'bloq.diaCompleto': 'Dia inteiro', 'bloq.ok': 'Bloqueio criado — as vagas foram recalculadas.', 'bloq.errDatos': 'Escolha o médico e a data inicial.', 'bloq.errHoras': 'Informe as duas horas.', 'bloq.confirmBorrar': 'Excluir este bloqueio? As vagas voltam a ficar disponíveis.', 'doc.especial': 'Horários especiais por dia (um dia com horário diferente)', 'doc.especialSinDias': 'Marque primeiro os dias de atendimento.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
+        'set.whatsappPhoneId': 'WhatsApp Phone Number ID (Meta)', 'set.whatsappPhoneIdPh': 'Configurado pela AutomatIA', 'set.whatsappPhoneIdNota': 'A AutomatIA configura este dado ao cadastrar a clínica. Se estiver vazio, os lembretes automáticos não são enviados — fale com a gente.', 'set.rec2Nota': '0 = não enviar. Só é enviado se o modelo estiver aprovado pela Meta.', 'nav.bloqueos': 'Bloqueios', 'bloq.title': 'Bloqueios de agenda', 'bloq.subtitulo': 'Dias ou horas que não são oferecidos — nem pela Sara, nem pelo painel.', 'bloq.nuevoTitle': 'Bloquear um espaço', 'bloq.nuevoSub': 'Férias, um congresso, uma tarde de reunião. Essas vagas deixam de ser oferecidas — a ninguém, nem à Sara.', 'bloq.desde': 'De', 'bloq.hasta': 'Até', 'bloq.soloHoras': 'Apenas algumas horas desses dias (caso contrário bloqueia o dia inteiro)', 'bloq.horaDesde': 'Hora de', 'bloq.horaHasta': 'Hora até', 'bloq.motivo': 'Motivo (opcional)', 'bloq.motivoPh': 'Ex: Férias, congresso, cirurgia', 'bloq.btnCrear': 'Bloquear', 'bloq.listaTitle': 'Bloqueios vigentes', 'bloq.vacio': 'Não há bloqueios vigentes.', 'bloq.diaCompleto': 'Dia inteiro', 'bloq.ok': 'Bloqueio criado — as vagas foram recalculadas.', 'bloq.errDatos': 'Escolha o médico e a data inicial.', 'bloq.errHoras': 'Informe as duas horas.', 'bloq.confirmBorrar': 'Excluir este bloqueio? As vagas voltam a ficar disponíveis.', 'doc.especial': 'Horários especiais por dia (um dia com horário diferente)', 'doc.especialSinDias': 'Marque primeiro os dias de atendimento.', 'doc.dias': 'Dias de atendimento', 'doc.diasHint': 'Se não marcar nenhum, são gerados horários todos os dias (como antes).', 'doc.horario': 'Horário que o paciente vê', 'doc.horarioVacio': 'Marque os dias e as horas e aqui verá o texto que a Sara diz ao paciente.', 'dia.lun': 'Seg', 'dia.mar': 'Ter', 'dia.mie': 'Qua', 'dia.jue': 'Qui', 'dia.vie': 'Sex', 'dia.sab': 'Sáb', 'dia.dom': 'Dom',
         'set.horarioTextoDesc': 'texto mostrado ao paciente', 'set.horarioGeneralDesc': 'Usado para calcular os horários disponíveis dos doutores que não têm horário próprio configurado.',
         'set.noEncontrada': 'Informações da clínica não encontradas', 'set.recordatoriosTitle': 'Configuração de lembretes',
         'set.recordatoriosDesc': 'Defina com quanta antecedência cada lembrete automático é enviado por WhatsApp.',
@@ -7729,6 +8383,12 @@ const translations = {
         'exp.quienConsulto': 'Quem consultou este prontuário',
         'doc.jefe': 'Chefe de área (a quem reporta)', 'doc.jefeNinguno': 'Nenhum (não reporta a ninguém)',
         'badge.recordatorio_enviado': 'Lembrete enviado',
+        'badge.ausente': 'Não veio',
+        'citas.btnNoVino': 'Não veio', 'citas.confirmAusente': 'Marcar esta consulta como «Não veio»? Não pode ser desfeito pelo painel.', 'citas.msgAusente': 'Consulta marcada como «Não veio».', 'citas.errNoVino': 'Não foi possível marcar a consulta.', 'citas.enlaceListo': 'Link da consulta', 'citas.btnEnlace': 'Copiar link', 'citas.enlaceCopiado': 'Link copiado. Vence em {fecha}.', 'citas.enlaceManual': 'Copie este link e cole no chat:', 'citas.errEnlace': 'Não foi possível criar o link.', 'citas.errRecordatorioPlantilla': 'O lembrete não saiu. O modelo pode ainda não estar aprovado pela Meta; tente de novo mais tarde.',
+        'dash.tasaAusencias': 'Taxa de ausências', 'dash.ausenciasPie': 'Últimos 30 dias', 'dash.ausenciasSinDatos': 'Sem consultas atendidas ou ausentes em 30 dias', 'dash.ausenciasNoCalculada': 'Não foi possível calcular agora', 'dash.ausenciasPacientesTitle': 'Pacientes com mais ausências', 'dash.ausenciasPacientesSub': 'Últimos 30 dias · apenas consultas atendidas ou ausentes.', 'dash.ausenciasAyuda': 'Serve para confirmar por WhatsApp, não para rotular ninguém.',
+        'set.listaEsperaTitle': 'Lista de espera', 'set.listaEsperaSub': 'Quanto tempo alguém tem para aceitar uma vaga que foi liberada.', 'set.listaEsperaMinutos': 'Tempo para aceitar uma vaga (minutos)', 'set.listaEsperaNota': 'Entre 5 e 120 minutos. Se não responder a tempo, a vaga vai para a próxima pessoa.', 'set.recPlantillasNota': 'Os lembretes automáticos usam modelos aprovados pela Meta. Se um modelo ainda não estiver aprovado, o lembrete fica pendente e não é enviado: o painel não afirma que saiu.', 'set.sinCambios': 'Não havia mudanças para salvar.',
+        'doc.buffer': 'Tempo entre consultas (minutos)', 'doc.bufferNota': '0 = sem pausa. É respeitado entre uma consulta e a seguinte.', 'doc.errBuffer': 'O tempo entre consultas deve ser um número inteiro de 0 a 120 minutos.',
+        'le.colEstado': 'Estado', 'le.sinAcciones': 'Sem ações pendentes.',
     }
 };
 const LOCALE_MAP = { es: 'es-CR', en: 'en-US', pt: 'pt-BR' };
