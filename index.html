@@ -1089,6 +1089,11 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                         </div>
                         <span class="ds-badge ok" id="dashEstadoCita" data-i18n="dash.alDia">Al día</span>
                     </div>
+                    <!-- Brief 32 (punto 3): primero lo que hay que hacer hoy; los números van después. -->
+                    <div class="ds-card ds-seccion" id="paraHoyCard">
+                        <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.paraHoy">Para hoy</h3><p class="ds-card-sub" data-i18n="dash.paraHoySub">Lo que necesita una decisión antes de cerrar.</p></div></div>
+                        <div id="resumenHoy" class="ds-alertas"></div>
+                    </div>
                     <div class="ds-kpis">
                         <div class="ds-kpi"><span class="ds-kpi-acento"></span><p class="ds-kpi-etiqueta" data-i18n="dash.citasHoy">Citas hoy</p><p class="ds-kpi-valor" id="kpiCitasHoy">—</p><p class="ds-kpi-pie" data-i18n="dash.enAgendaHoy">En la agenda de hoy</p></div>
                         <div class="ds-kpi"><p class="ds-kpi-etiqueta" data-i18n="dash.totalCitas">Citas de la semana</p><p class="ds-kpi-valor" id="kpiCitasTotal">—</p><p class="ds-kpi-pie" data-i18n="dash.semanaLunesDomingo">Lunes a domingo</p></div>
@@ -1122,7 +1127,6 @@ body.facil-app .fr-btn { left: auto; right: 12px; top: calc(72px + env(safe-area
                         <div id="saraLogros"><div class="ds-vacio" data-i18n="sara.cargando">Cargando…</div></div>
                         <p class="ds-ayuda ds-seccion" id="saraFormula"></p>
                     </div>
-                    <div id="resumenHoy" class="ds-alertas ds-seccion"></div>
                     <div class="ds-grid-2 ds-seccion">
                         <div class="ds-card">
                             <div class="ds-card-cab"><div><h3 class="ds-card-titulo" data-i18n="dash.citasPorDia">Citas por día</h3><p class="ds-card-sub" data-i18n="dash.ultimos7">Últimos 7 días</p></div></div>
@@ -3184,6 +3188,7 @@ async function loadDashboard() {
         const citasHoy = citas.filter(c => c.fecha && c.fecha.startsWith(hoy));
         document.getElementById('kpiCitasHoy').textContent = citasHoy.length;
         const citasHoySinConfirmar = citasHoy.filter(c => c.estado !== 'confirmada' && c.estado !== 'cancelada' && c.estado !== 'atendida' && c.estado !== 'ausente').length;
+        citasHoySinConfirmarCache = citasHoySinConfirmar;
         renderResumenHoy(citasHoySinConfirmar);
         // Próximas citas: solo futuras (no las que ya pasaron), ordenadas por fecha ascendente.
         const proximas = citas
@@ -3433,6 +3438,7 @@ let convActiva = null;
 // { total, conversaciones[] } (máx. 50, más recientes primero). El contador del
 // menú y este filtro se refrescan al abrir y cada ~60 s con la pestaña visible.
 let necesitanPersonaCache = { total: 0, conversaciones: [] };
+let citasHoySinConfirmarCache = 0;      // Brief 32 (punto 3): el resumen de «Para hoy» se repinta cuando llega el conteo de la bandeja.
 let filtroInbox = 'todas';
 let pollNecesitanTimer = null;
 let ultimaNecesitanMs = 0;
@@ -3473,6 +3479,7 @@ async function loadNecesitanPersona(forzar) {
         necesitanPersonaCache = { total: 0, conversaciones: [] };
     }
     actualizarBadgeNecesitan();
+    renderResumenHoy(citasHoySinConfirmarCache);      // Brief 32 (punto 3): «Para hoy» incluye la bandeja
     if (filtroInbox === 'necesita') renderConversaciones();
     return ok;
 }
@@ -7646,6 +7653,16 @@ function renderResumenHoy(citasHoySinConfirmar) {
     const caja = document.getElementById('resumenHoy');
     if (!caja) return;
     const items = [];
+    // Brief 32 (punto 3): si la bandeja tiene a alguien esperando, es lo primero que se ve en el inicio.
+    const nPersona = Math.max(0, Number(necesitanPersonaCache.total) || 0);
+    if (nPersona > 0) {
+        items.push({
+            nivel: 'error',
+            titulo: nPersona + t(nPersona === 1 ? 'resumen.necesitaPersona' : 'resumen.necesitaPersonaN'),
+            detalle: t('resumen.tomarla'),
+            ir: 'inbox',
+        });
+    }
     if (citasHoySinConfirmar > 0) {
         items.push({
             nivel: 'aviso',
@@ -7919,6 +7936,8 @@ const translations = {
         'common.agregadoOk': 'Agregado ✓', 'common.guardadoOk': 'Guardado ✓', 'common.pacienteSinNombre': 'Paciente sin nombre',
         'common.cualquiera': 'Cualquiera',
         'dash.citasHoy': 'Citas Hoy', 'dash.totalCitas': 'Citas esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Doctores',
+        'dash.paraHoy': 'Para hoy', 'dash.paraHoySub': 'Lo que necesita una decisión antes de cerrar.',
+        'resumen.necesitaPersona': ' conversación esperando a una persona', 'resumen.necesitaPersonaN': ' conversaciones esperando a una persona', 'resumen.tomarla': 'Entrá al Inbox y tomá la conversación.',
         'sara.titulo': 'Lo que logró Sara este mes', 'sara.sub': 'Datos verificables de tu clínica, sin estimaciones.',
         'sara.mes': 'Mes', 'sara.actualizar': 'Actualizar', 'sara.cargando': 'Cargando…',
         'sara.vacio': 'Todavía no hay datos de este mes.', 'sara.vacioSub': 'Aparecen cuando Sara mande recordatorios y las citas se confirmen.',
@@ -8090,6 +8109,8 @@ const translations = {
         'common.agregadoOk': 'Added ✓', 'common.guardadoOk': 'Saved ✓', 'common.pacienteSinNombre': 'Unnamed patient',
         'common.cualquiera': 'Anyone',
         'dash.citasHoy': "Today's Appointments", 'dash.totalCitas': 'Appointments This Week', 'dash.pacientes': 'Patients', 'dash.doctores': 'Doctors',
+        'dash.paraHoy': 'For today', 'dash.paraHoySub': 'What needs a decision before you close.',
+        'resumen.necesitaPersona': ' conversation waiting for a person', 'resumen.necesitaPersonaN': ' conversations waiting for a person', 'resumen.tomarla': 'Open the Inbox and take the conversation.',
         'sara.titulo': 'What Sara accomplished this month', 'sara.sub': 'Verifiable data from your clinic, no estimates.',
         'sara.mes': 'Month', 'sara.actualizar': 'Refresh', 'sara.cargando': 'Loading…',
         'sara.vacio': 'No data for this month yet.', 'sara.vacioSub': 'They appear when Sara sends reminders and appointments are confirmed.',
@@ -8261,6 +8282,8 @@ const translations = {
         'common.agregadoOk': 'Adicionado ✓', 'common.guardadoOk': 'Salvo ✓', 'common.pacienteSinNombre': 'Paciente sem nome',
         'common.cualquiera': 'Qualquer um',
         'dash.citasHoy': 'Consultas Hoje', 'dash.totalCitas': 'Consultas Esta Semana', 'dash.pacientes': 'Pacientes', 'dash.doctores': 'Médicos',
+        'dash.paraHoy': 'Para hoje', 'dash.paraHoySub': 'O que precisa de uma decisão antes de fechar.',
+        'resumen.necesitaPersona': ' conversa esperando uma pessoa', 'resumen.necesitaPersonaN': ' conversas esperando uma pessoa', 'resumen.tomarla': 'Entre no Inbox e assuma a conversa.',
         'sara.titulo': 'O que Sara conquistou este mês', 'sara.sub': 'Dados verificáveis da sua clínica, sem estimativas.',
         'sara.mes': 'Mês', 'sara.actualizar': 'Atualizar', 'sara.cargando': 'Carregando…',
         'sara.vacio': 'Ainda não há dados deste mês.', 'sara.vacioSub': 'Aparecem quando Sara enviar lembretes e as consultas forem confirmadas.',
