@@ -101,7 +101,8 @@
             --gray-100: #F3F1EC;
             --gray-200: #E6E3DC;
             --gray-300: #D8D5CC;
-            --gray-500: #8B8880;
+            /* Fix H-411 (17/11/2026, AA): #8B8880 daba 3,5:1 sobre blanco; #6E6B64 da 5,2:1 y 4,7:1 sobre el verde suave. */
+            --gray-500: #6E6B64;
             --gray-700: #4A4842;
             --gray-900: #1D1C1A;
             --white: #FFFFFF;
@@ -2704,21 +2705,26 @@ function ppEstilos() {
     + '.pp-plan.sel{border-color:var(--primary,#2d6a4f);box-shadow:0 0 0 3px var(--primary-soft,#eaf4ee)}'
     + '.pp-plan.nodisp{cursor:default;opacity:.75}.pp-plan.nodisp:hover{border-color:var(--gray-200,#e5eae6)}'
     + '.pp-insignia{position:absolute;top:-10px;left:14px;padding:2px 10px;border-radius:999px;background:var(--primary,#2d6a4f);color:var(--white,#fff);font-size:11px;font-weight:700;letter-spacing:.02em}'
-    + '.pp-nombre{font-size:15px;font-weight:700}.pp-desc{font-size:12.5px;color:var(--gray-500,#71807a);line-height:1.4;min-height:34px}'
-    + '.pp-precio{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}.pp-precio small{display:block;margin-top:3px;font-size:12px;font-weight:600;line-height:1.3;color:var(--gray-500,#71807a);letter-spacing:0}'
+    + '.pp-nombre{font-size:15px;font-weight:700}.pp-desc{font-size:12.5px;color:var(--gray-500,#5f6e67);line-height:1.4;min-height:34px}'
+    + '.pp-precio{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}.pp-precio small{display:block;margin-top:3px;font-size:12px;font-weight:600;line-height:1.3;color:var(--gray-500,#5f6e67);letter-spacing:0}'
     + '.pp-lista{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.35;color:var(--gray-700,#3c4a43)}'
     + '.pp-lista li{padding-left:18px;position:relative}.pp-lista li::before{content:"\\2713";position:absolute;left:0;color:var(--primary,#2d6a4f);font-weight:700}'
     + '.pp-cant{display:flex;align-items:center;gap:8px;margin:2px 0 12px;font-size:13px;color:var(--gray-700,#3c4a43)}.pp-cant input{width:64px;text-align:center}'
     + '.pp-fila{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}.pp-fila.total{border-top:1px solid var(--gray-200,#e5eae6);margin-top:4px;padding-top:10px;font-size:16px;font-weight:800}'
-    + '.pp-muted{font-size:12.5px;color:var(--gray-500,#71807a);line-height:1.5}'
+    + '.pp-muted{font-size:12.5px;color:var(--gray-500,#5f6e67);line-height:1.5}'
     + '.pp-capa{position:fixed;inset:0;z-index:9999;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;box-sizing:border-box;background:var(--gray-50,#fafbfa)}'
     + '.pp-caja{width:100%;max-width:760px;margin:auto;background:var(--white,#fff);color:var(--gray-900,#16211b);border-radius:14px;padding:28px 24px;box-shadow:0 8px 30px rgba(0,0,0,.12);box-sizing:border-box}'
-    + '.pp-pasos{display:flex;gap:6px 14px;flex-wrap:wrap;list-style:none;margin:0 0 18px;padding:0;font-size:12.5px;color:var(--gray-500,#71807a)}'
+    + '.pp-pasos{display:flex;gap:6px 14px;flex-wrap:wrap;list-style:none;margin:0 0 18px;padding:0;font-size:12.5px;color:var(--gray-500,#5f6e67)}'
     + '.pp-pasos li{display:flex;align-items:center;gap:6px}.pp-pasos b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--gray-200,#e5eae6);font-size:11px}'
     + '.pp-pasos li.on{color:var(--gray-900,#16211b);font-weight:600}.pp-pasos li.on b{background:var(--primary,#2d6a4f);border-color:var(--primary,#2d6a4f);color:var(--white,#fff)}'
     + '.pp-aviso.ok{background:var(--primary-soft,#eaf4ee);border-bottom-color:var(--primary,#2d6a4f)}'
     + '@media(max-width:560px){.pp-capa{padding:12px 8px}.pp-caja{padding:20px 16px}.pp-caja .btn{flex:1 1 100%;justify-content:center;text-align:center}.pp-precio{font-size:24px}.pp-desc{min-height:0}}'
-    + '.pp-aviso{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;padding:10px 16px;background:var(--warning-soft,#fff3e0);color:var(--gray-900,#16211b);font-size:13.5px;border-bottom:1px solid var(--warning,#e0a355)}';
+    + '.pp-aviso{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;padding:10px 16px;background:var(--warning-soft,#fff3e0);color:var(--gray-900,#16211b);font-size:13.5px;border-bottom:1px solid var(--warning,#e0a355)}'
+    + '.pp-tarjeta{margin:10px 0 14px;padding:14px 16px;border:1.5px solid var(--primary,#2d6a4f);border-radius:12px;background:var(--primary-soft,#eaf4ee)}'
+    + '.pp-tarjeta-fila{display:flex;justify-content:space-between;align-items:baseline;gap:8px 12px;flex-wrap:wrap;font-size:15px}'
+    + '.pp-tarjeta-fila span{font-size:20px;font-weight:800;letter-spacing:-.01em}'
+    + '.pp-tarjeta .btn{min-height:44px}'
+    + '@media(max-width:560px){.pp-tarjeta{padding:12px}.pp-tarjeta .btn{width:100%;justify-content:center}}';
   document.head.appendChild(st);
 }
 // Selector de planes: tarjetas con la comparación en una pantalla, el recomendado destacado y, si el precio es por profesional, la cantidad.
@@ -2759,7 +2765,7 @@ function ppSelectorPlanes(cont, planes, est, cambio) {
     const pr = ppEl('div', null, null, 'pp-precio');
     if (p.disponible) { pr.appendChild(document.createTextNode(ppUsd(p.precio_usd))); pr.appendChild(ppEl('small', null, p.por_profesional ? 'por profesional, al mes' : 'al mes')); }
     else if (p.a_medida) pr.appendChild(ppEl('span', 'font-size:18px', 'A medida'));
-    else pr.appendChild(ppEl('span', 'font-size:16px;color:var(--gray-500,#71807a)', 'Disponible pronto'));
+    else pr.appendChild(ppEl('span', 'font-size:16px;color:var(--gray-500,#5f6e67)', 'Disponible pronto'));
     t.appendChild(pr);
     const ul = ppEl('ul', null, null, 'pp-lista');
     (p.incluye || []).forEach((x) => ul.appendChild(ppEl('li', null, x)));
@@ -2822,6 +2828,7 @@ const PP_TITULOS = {
 };
 function ppPantalla(d, opcional) {
   ppEstilos();
+  ppSoltarPageshowTarjeta();      // la pantalla se vuelve a pintar: el oyente anterior apuntaría a nodos que ya no están
   let capa = document.getElementById('pagoPendiente');
   if (capa) capa.remove();
   const app = document.getElementById('appContainer');
@@ -2859,6 +2866,7 @@ function ppPantalla(d, opcional) {
   estado.setAttribute('role', 'status');
   const cuerpo = ppEl('div');
   caja.appendChild(cuerpo);
+  let tarjetaActiva = false, avisar = null;   // uso fácil: si hay tarjeta, «Ya realicé el pago» pasa a secundario
   const recargar = async () => {
     try {
       const r = await fetch(API + '/pago/estado', { headers: authH() });
@@ -2870,11 +2878,11 @@ function ppPantalla(d, opcional) {
   const mensajeError = (e) => { estado.textContent = e; };
   const conPago = ['pendiente', 'vencido', 'en_gracia', 'por_vencer'].includes(d.estado);
   if (d.estado === 'pendiente') ppPasoPlan(cuerpo, d, recargar, mensajeError);
-  if (conPago) ppPasoPago(cuerpo, d, inst, correo);
+  if (conPago) ppPasoPago(cuerpo, d, inst, correo, () => { tarjetaActiva = true; if (avisar) avisar.className = 'btn btn-ghost'; });
   caja.appendChild(estado);
   const fila = ppEl('div', 'display:flex;gap:10px;flex-wrap:wrap;margin-top:8px');
   if (conPago) {
-    const avisar = ppEl('button', null, d.avisado ? 'Aviso enviado' : 'Ya realicé el pago', 'btn');
+    avisar = ppEl('button', null, d.avisado ? 'Aviso enviado' : 'Ya realicé el pago', tarjetaActiva ? 'btn btn-ghost' : 'btn');
     avisar.type = 'button';
     if (d.avisado && d.estado === 'pendiente') avisar.disabled = true;
     avisar.onclick = async () => {
@@ -2979,7 +2987,7 @@ function ppPasoPlan(cuerpo, d, recargar, mensajeError) {
   bloque.appendChild(cambiar);
 }
 // Paso 2: cómo pagar. Datos del servidor (tabla ajustes_pago), solo con textContent.
-function ppPasoPago(cuerpo, d, inst, correo) {
+function ppPasoPago(cuerpo, d, inst, correo, alActivarTarjeta) {
   const bloque = ppEl('div', 'margin:6px 0 10px');
   bloque.appendChild(ppEl('h3', 'margin:0 0 6px;font-size:16px', 'Cómo pagar'));
   if (d.estado !== 'pendiente' && d.plan) {
@@ -2989,6 +2997,10 @@ function ppPasoPago(cuerpo, d, inst, correo) {
     bloque.appendChild(f);
   }
   const linea = (txt, negrita) => bloque.appendChild(ppEl('p', 'margin:0 0 10px;line-height:1.5;font-size:15px' + (negrita ? ';font-weight:600' : ''), txt));
+  // Brief 33 · pago con tarjeta: si el servidor lo habilita, la opción va antes de SINPE; si no, no se ve nada.
+  const tarjetaCaja = ppEl('div');
+  bloque.appendChild(tarjetaCaja);
+  ppTarjetaBloque(tarjetaCaja, alActivarTarjeta);
   // El número SINPE no se parte en dos líneas en pantallas angostas (sigue siendo texto normal, se copia tal cual).
   const sinpe = ppEl('p', 'margin:0 0 10px;line-height:1.5;font-size:15px');
   sinpe.appendChild(document.createTextNode('Realizá el pago por SINPE Móvil al '));
@@ -3000,8 +3012,148 @@ function ppPasoPago(cuerpo, d, inst, correo) {
   linea('Tu acceso se autoriza en menos de 24 horas una vez confirmado el pago.', true);
   cuerpo.appendChild(bloque);
 }
-function ppPantallaError(siguiente) {
+// ── Pago con tarjeta (brief 33 · docs/briefs/33-contrato-pago-tarjeta.md) ──
+// El monto lo decide el servidor y la tarjeta se escribe en la página de la pasarela:
+// acá no hay precio propio ni campos de tarjeta.
+const PP_REF_TARJETA = 'pago_tarjeta_ref';
+// Fix H-410 (17/11/2026): al volver con «Atrás» desde la pasarela y restaurarse la página desde la caché, el botón
+// quedaba deshabilitado con «Te llevamos a pagar…». En pageshow se rehabilita y se limpia el mensaje.
+let ppAlVolverTarjeta = null;
+function ppSoltarPageshowTarjeta() {
+  if (ppAlVolverTarjeta) { window.removeEventListener('pageshow', ppAlVolverTarjeta); ppAlVolverTarjeta = null; }
+}
+function ppMoneda(monto, moneda) {
+  // Fix H-411 (17/11/2026): Chrome y WebKit agrupan es-CR distinto; se fija el punto para que el monto sea el mismo.
+  if (moneda === 'CRC') return '₡' + Number(monto || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 }).replace(/\s/g, '.');
+  return 'US$ ' + Number(monto || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function ppPeriodoTarjeta(p) {
+  if (!p || !/^\d{4}-\d{2}$/.test(String(p))) return '';
+  const d = new Date(String(p) + '-01T12:00:00');
+  return isNaN(d) ? String(p) : d.toLocaleDateString('es-CR', { month: 'long', year: 'numeric' });
+}
+function ppOlvidarRefTarjeta() { try { sessionStorage.removeItem(PP_REF_TARJETA); } catch (e) { /* sin almacenamiento */ } }
+function ppLimpiarQueryPago() {
+  try {
+    const u = new URL(location.href);
+    if (u.searchParams.get('pago') !== 'tarjeta') return;
+    u.searchParams.delete('pago');
+    history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+  } catch (e) { /* nada */ }
+}
+async function ppTarjetaBloque(contenedor, alActivar) {
+  let t = null;
+  try {
+    const r = await fetch(API + '/pago-tarjeta/estado', { headers: authH() });
+    if (!r.ok) return;
+    t = await r.json();
+  } catch (e) { return; }      // rutas todavía sin conectar o bandera apagada
+  if (!t || !t.activo) return;
+  if (t.pagado) { contenedor.appendChild(ppEl('p', 'margin:0 0 14px', t.mensaje || 'Tu plan de este mes ya está pagado.', 'pp-muted')); return; }
+  if (alActivar) alActivar();      // con tarjeta disponible, ella es la acción principal de la pantalla
+  const caja = ppEl('div', null, null, 'pp-tarjeta');
+  const fila = ppEl('div', null, null, 'pp-tarjeta-fila');
+  fila.appendChild(ppEl('strong', null, 'Pagá este mes con tarjeta'));
+  if (t.monto != null) fila.appendChild(ppEl('span', null, ppMoneda(t.monto, t.moneda) + (ppPeriodoTarjeta(t.periodo) ? ' · ' + ppPeriodoTarjeta(t.periodo) : '')));
+  caja.appendChild(fila);
+  caja.appendChild(ppEl('p', 'margin:4px 0 10px;line-height:1.45', 'Se abre la página segura de la pasarela. Acá no escribís los datos de la tarjeta.', 'pp-muted'));
+  const msg = ppEl('p', 'margin:8px 0 0;line-height:1.45');
+  msg.setAttribute('role', 'status');
+  const b = ppEl('button', null, 'Pagar con tarjeta', 'btn');
+  b.type = 'button';
+  b.onclick = async () => {
+    b.disabled = true; msg.textContent = 'Abriendo el pago…';
+    try {
+      const r = await fetch(API + '/pago-tarjeta/cobro', { method: 'POST', headers: authH(), body: '{}' });
+      const x = await r.json().catch(() => ({}));
+      if (!r.ok || !/^https:\/\//i.test(String(x.enlace || ''))) {
+        msg.textContent = x.mensaje || 'No pudimos abrir el pago. No se te cobró nada. Probá de nuevo en un minuto o pagá por SINPE.';
+        b.disabled = false; return;
+      }
+      try { sessionStorage.setItem(PP_REF_TARJETA, String(x.referencia || '').slice(0, 120)); } catch (e) { /* sin almacenamiento */ }
+      msg.textContent = 'Te llevamos a pagar ' + ppMoneda(x.monto, x.moneda) + '…';
+      location.href = x.enlace;
+    } catch (e) {
+      msg.textContent = 'No pudimos abrir el pago. No se te cobró nada. Probá de nuevo en un minuto o pagá por SINPE.';
+      b.disabled = false;
+    }
+  };
+  caja.appendChild(b); caja.appendChild(msg);
+  // Un solo oyente vivo: al repintar la pantalla se retira el anterior y se registra el del botón actual.
+  ppSoltarPageshowTarjeta();
+  ppAlVolverTarjeta = () => {
+    if (!b.disabled) return;
+    b.disabled = false;
+    msg.textContent = '';
+  };
+  window.addEventListener('pageshow', ppAlVolverTarjeta);
+  contenedor.appendChild(caja);
+}
+// Al volver de la pasarela (?pago=tarjeta) se consulta el estado cada 4 s, hasta ~2 minutos.
+// El plan se activa solo cuando el servidor confirma el cobro, nunca por la redirección de vuelta.
+function ppTarjetaEspera(ref, siguiente) {
   ppEstilos();
+  ppSoltarPageshowTarjeta();
+  const previa = document.getElementById('pagoTarjetaEspera');
+  if (previa) previa.remove();
+  const app = document.getElementById('appContainer');
+  if (app) app.style.display = 'none';
+  const login = document.getElementById('loginScreen');
+  if (login) login.classList.remove('visible');
+  const capa = ppEl('div', null, null, 'pp-capa');
+  capa.id = 'pagoTarjetaEspera';
+  const caja = ppEl('div', null, null, 'pp-caja');
+  caja.style.maxWidth = '520px';
+  caja.appendChild(ppEl('h2', 'margin:0 0 8px;font-size:22px', 'Pago con tarjeta'));
+  const msg = ppEl('p', 'margin:0 0 16px;line-height:1.5;font-size:15px', 'Estamos confirmando tu pago…');
+  msg.setAttribute('role', 'status');
+  caja.appendChild(msg);
+  const fila = ppEl('div', 'display:flex;gap:10px;flex-wrap:wrap');
+  caja.appendChild(fila);
+  capa.appendChild(caja);
+  document.body.appendChild(capa);
+  let id = null, intentos = 0, terminado = false;
+  const salir = () => { if (app) app.style.display = ''; capa.remove(); };
+  const volver = () => { ppOlvidarRefTarjeta(); salir(); pagoPendienteGate(() => siguiente()); };
+  const detener = () => { if (id) { clearInterval(id); id = null; } };
+  const fin = (texto, botones) => {
+    if (terminado) return;
+    terminado = true; detener(); msg.textContent = texto; fila.textContent = '';
+    (botones || []).forEach((x) => {
+      const b = ppEl('button', null, x.texto, x.prim ? 'btn' : 'btn btn-ghost');
+      b.type = 'button'; b.onclick = x.accion; fila.appendChild(b);
+    });
+  };
+  const reintentar = () => {
+    terminado = false; intentos = 0; msg.textContent = 'Estamos confirmando tu pago…'; fila.textContent = '';
+    consultar(); id = setInterval(consultar, 4000);
+  };
+  const consultar = async () => {
+    if (terminado) return;
+    intentos++;
+    try {
+      const r = await fetch(API + '/pago-tarjeta/cobro/' + encodeURIComponent(ref), { headers: authH() });
+      if (r.status === 404) { ppOlvidarRefTarjeta(); salir(); pagoPendienteGate(() => siguiente()); return; }
+      const x = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        // Fix H-411 (17/11/2026): un 429/502 del sondeo muestra ya el mensaje del servidor (antes esperaba ~2 min).
+        if (x && x.mensaje) msg.textContent = x.mensaje;
+        if (intentos >= 30) fin('No pudimos confirmar el pago. Revisá tu plan antes de volver a pagar; si no aparece, escribinos.', [{ texto: 'Reintentar', prim: true, accion: reintentar }, { texto: 'Volver', accion: volver }]);
+        return;
+      }
+      if (x.estado === 'esperando') msg.textContent = (typeof x.mensaje === 'string' && x.mensaje) ? x.mensaje : 'Estamos confirmando tu pago…';
+      if (x.estado === 'confirmado') { ppOlvidarRefTarjeta(); fin('Listo, tu plan está activo.', [{ texto: 'Entrar', prim: true, accion: () => { salir(); siguiente(); } }]); return; }
+      if (x.estado === 'rechazado') { ppOlvidarRefTarjeta(); fin('No se pudo cobrar. No se te cobró nada. Probá con otra tarjeta o pagá por SINPE.', [{ texto: 'Volver a pagar', prim: true, accion: volver }]); return; }
+      if (x.estado === 'revision') { ppOlvidarRefTarjeta(); fin('Recibimos tu pago y lo está revisando una persona. Te avisamos por correo.', [{ texto: 'Volver', prim: true, accion: volver }]); return; }
+      if (intentos >= 30) fin('Todavía no nos llegó la confirmación. No se te cobró dos veces: revisá tu plan en un rato o escribinos.', [{ texto: 'Reintentar', prim: true, accion: reintentar }, { texto: 'Volver', accion: volver }]);
+    } catch (e) {
+      if (intentos >= 30) fin('No pudimos confirmar el pago. Revisá tu plan antes de volver a pagar; si no aparece, escribinos.', [{ texto: 'Reintentar', prim: true, accion: reintentar }, { texto: 'Volver', accion: volver }]);
+    }
+  };
+  consultar();
+  id = setInterval(consultar, 4000);
+}
+function ppPantallaError(siguiente) {  ppEstilos();
   const previa = document.getElementById('pagoPendiente');
   if (previa) previa.remove();
   const app = document.getElementById('appContainer');
@@ -3065,6 +3217,12 @@ function ppBienvenida(d) {
 }
 // Pregunta al servidor el estado de la cuenta. Si está operativa, sigue con `siguiente` (cargar el panel). Falla-cerrado: sin respuesta, no se carga el panel.
 async function pagoPendienteGate(siguiente) {
+  // Brief 33 · pago con tarjeta: al volver de la pasarela (?pago=tarjeta) se muestra la espera
+  // y se consulta al servidor; el panel no se carga hasta que la confirmación sea del servidor.
+  let refTarjeta = '';
+  try { if (new URLSearchParams(location.search).get('pago') === 'tarjeta') refTarjeta = sessionStorage.getItem(PP_REF_TARJETA) || ''; } catch (e) { /* sin almacenamiento */ }
+  ppLimpiarQueryPago();
+  if (refTarjeta) { ppTarjetaEspera(refTarjeta, siguiente); return; }
   let d = null;
   try {
     const r = await fetch(API + '/pago/estado', { headers: authH() });
