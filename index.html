@@ -2232,7 +2232,26 @@ document.addEventListener('keydown', function (ev) {
 // Reemplaza confirm()/alert() SOLO en los flujos de cita que la auditoría pidió
 // revisar a ojo («No vino», «Copiar enlace» y los errores 409/429). Todo texto
 // entra con textContent. Devuelve true/false según el botón.
-let dialogoResolver = null, dialogoFoco = null;
+let dialogoResolver = null, dialogoFoco = null, dialogoFondo = [];
+// H-401 (17/11/2026): mientras el diálogo está abierto, el fondo queda inerte
+// (no recibe foco ni lo anuncia un lector de pantalla) y el Tab circula solo
+// dentro de la caja; Escape cierra.
+function dialogoFondoInerte(activo) {
+    if (!activo) {
+        dialogoFondo.forEach(function (n) { n.removeAttribute('inert'); });
+        dialogoFondo = [];
+        return;
+    }
+    dialogoFondo = Array.prototype.slice.call(document.querySelectorAll('#appContainer > .sidebar, #appContainer > .main, #sidebarOverlay')).filter(function (n) { return !n.hasAttribute('inert'); });
+    dialogoFondo.forEach(function (n) { n.setAttribute('inert', ''); });
+}
+function dialogoFocales() {
+    const caja = document.querySelector('#dialogoOverlay .modal-box');
+    if (!caja) return [];
+    return Array.prototype.slice.call(caja.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')).filter(function (n) {
+        return !n.disabled && n.offsetParent !== null;
+    });
+}
 function dialogoPanel(op) {
     op = op || {};
     const overlay = document.getElementById('dialogoOverlay');
@@ -2252,12 +2271,14 @@ function dialogoPanel(op) {
     aceptar.textContent = op.aceptarTexto || t('common.cerrar');
     aceptar.className = 'btn' + (op.peligro ? ' btn-danger' : '');
     dialogoFoco = document.activeElement;
+    dialogoFondoInerte(true);
     overlay.classList.add('open');
     setTimeout(function () { try { aceptar.focus(); } catch (e) {} }, 0);
     return new Promise(function (resolve) {
         dialogoResolver = function (valor) {
             overlay.classList.remove('open');
             dialogoResolver = null;
+            dialogoFondoInerte(false);
             const foco = dialogoFoco;
             dialogoFoco = null;
             if (foco && typeof foco.focus === 'function') { try { foco.focus(); } catch (e) {} }
@@ -2270,7 +2291,18 @@ document.getElementById('dialogoAceptar').addEventListener('click', function () 
 document.getElementById('dialogoCancelar').addEventListener('click', function () { cerrarDialogoPanel(false); });
 document.addEventListener('keydown', function (ev) {
     const ov = document.getElementById('dialogoOverlay');
-    if (ev.key === 'Escape' && ov && ov.classList.contains('open')) cerrarDialogoPanel(false);
+    if (!ov || !ov.classList.contains('open')) return;
+    if (ev.key === 'Escape') { ev.preventDefault(); cerrarDialogoPanel(false); return; }
+    if (ev.key !== 'Tab') return;
+    // H-401: el Tab no se escapa hacia la página de atrás.
+    const focales = dialogoFocales();
+    if (!focales.length) { ev.preventDefault(); return; }
+    const primero = focales[0], ultimo = focales[focales.length - 1], activo = document.activeElement;
+    if (ev.shiftKey) {
+        if (activo === primero || !ov.contains(activo)) { ev.preventDefault(); ultimo.focus(); }
+    } else if (activo === ultimo || !ov.contains(activo)) {
+        ev.preventDefault(); primero.focus();
+    }
 });
 async function apiFetch(path, opts = {}) {
     // Fix seguridad (30/10/2026, H-196): sin red o con una respuesta que no es JSON (p. ej. un 502 con HTML) se muestra un mensaje amable, no el texto técnico del navegador.
